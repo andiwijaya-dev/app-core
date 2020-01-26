@@ -2,7 +2,7 @@
 
 namespace Andiwijaya\AppCore\Models\Traits;
 
-use App\Models\Log;
+use Andiwijaya\AppCore\Models\Log;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Session;
 
