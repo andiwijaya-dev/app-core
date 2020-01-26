@@ -20,7 +20,7 @@ trait LoggedTraitV3{
 
   public function logs(){
 
-    return $this->morphMany('App\Models\Log', 'loggable');
+    return $this->morphMany('Andiwijaya\AppCore\Models\Log', 'loggable');
 
   }
 
