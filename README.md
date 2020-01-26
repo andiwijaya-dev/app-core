@@ -8,7 +8,7 @@ Pull this package in through Composer.
 
     {
         "require": {
-            "andiwijaya/web-cache": "1.*"
+            "andiwijaya/app-core": "1.*"
         }
     }
 
