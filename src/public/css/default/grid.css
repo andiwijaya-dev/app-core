@@ -1,0 +1,69 @@
+@media screen{
+
+  .grid{
+    overflow-x: auto;
+  }
+
+  .grid table{
+    table-layout: fixed;
+    width: 100%;
+    border-collapse: collapse;
+  }
+  .grid th{
+    text-align: left;
+    background: #f5f5f5;
+    position: relative;
+  }
+  .grid th label{
+    color: #888;
+  }
+  .grid td, .grid th{
+    border: solid 1px #e5e5e5;
+    overflow: hidden;
+  }
+  .grid label{
+    margin: 0;
+    padding: .6em;
+    display: inline-block;
+  }
+
+  .grid .resizer{
+    position: absolute;
+    right: 0;
+    top: 0;
+    bottom: 0;
+    width: 4px;
+    background: transparent;
+    cursor: e-resize;
+  }
+  .grid th:hover .resizer{
+    background-color: rgba(0, 0, 0, .1);
+  }
+
+  .grid-load-more{
+    border: none;
+    background: transparent;
+  }
+
+
+  .grid.min th{
+    background: #fff;
+    border: none;
+    border-bottom: solid 1px #ddd;
+  }
+  .grid.min td{
+    border: none;
+    border-bottom: solid 1px #eee;
+  }
+
+}
+
+@media screen and (min-width:320px) and (max-width:800px){
+
+
+}
+
+@media screen and (min-width:800px){
+
+
+}

@@ -1,0 +1,53 @@
+@media screen{
+
+  .tabs{
+    white-space: nowrap;
+    overflow-x: auto;
+  }
+  .tabs .item{
+    padding: .8em 1.2em;
+    border-bottom: solid 2px #ccc;
+    color: #999;
+    cursor: pointer;
+  }
+  .tabs .item.active{
+    border-bottom: solid 2px #E92030;
+    color: #333;
+  }
+
+  .tabs.style-1{
+    border-radius: .2em;
+  }
+  .tabs.style-1 .item{
+    background: #eee;
+    border: none;
+  }
+  .tabs.style-1 .item.active{
+    background: #E92030;
+    color: #FFF;
+  }
+
+  .tabs.min{
+  }
+  .tabs.min .item{
+    color: #aaa;
+    border: none;
+    padding: .6rem;
+  }
+  .tabs.min .item.active{
+    color: #E92030;
+  }
+
+
+
+}
+
+@media screen and (min-width:320px) and (max-width:800px){
+
+
+}
+
+@media screen and (min-width:800px){
+
+
+}

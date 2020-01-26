@@ -1,0 +1,35 @@
+{
+    "name": "andiwijaya/app-core",
+    "description": "App core",
+    "license": "MIT",
+    "keywords": [ "andiwijaya" ],
+    "authors": [
+        {
+            "name": "Andi Wijaya",
+            "email": "andyv4@gmail.com"
+        }
+    ],
+    "minimum-stability": "dev",
+    "require": {
+        "laravel/framework": "5.8.*",
+        "ixudra/curl": "^6.18",
+        "jenssegers/agent": "^2.6",
+        "maatwebsite/excel": "^3.1",
+        "predis/predis": "^1.1"
+    },
+    "extra": {
+        "laravel": {
+            "providers": [
+                "Andiwijaya\\AppCore\\AppCoreServiceProvider"
+            ]
+        }
+    },
+    "autoload": {
+        "psr-4": {
+            "Andiwijaya\\AppCore\\": "src/"
+        },
+        "files": [
+            "src/helpers.php"
+        ]
+    }
+}

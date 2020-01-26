@@ -1,0 +1,68 @@
+@media screen{
+
+  .carousel{
+    white-space: nowrap;
+    overflow: hidden;
+    position: relative;
+  }
+  .carousel.scrolled{
+    overflow-x: auto;
+  }
+  .carousel>*{
+    transition: all 300ms ease;
+    white-space: nowrap;
+  }
+  .carousel .img{
+    /*pointer-events: none;*/
+  }
+  .carousel>*.no-animation{
+    transition: none;
+  }
+  .carousel .prev-btn{
+    position: absolute;
+    top: 50%;
+    left: 10px;
+    transform: translate3d(0, -50%, 0);
+  }
+  .carousel .next-btn{
+    position: absolute;
+    top: 50%;
+    right: 10px;
+    transform: translate3d(0, -50%, 0);
+  }
+  .carousel .prev-btn,
+  .carousel .next-btn{
+    opacity: 0;
+  }
+  .carousel:hover .prev-btn,
+  .carousel:hover .next-btn{
+    opacity: 1;
+  }
+  .carousel .prev-btn>*,
+  .carousel .next-btn>*{
+    color: rgba(255, 255, 255, .6);
+    background: rgba(0, 0, 0, .8);
+    border-radius: 100%;
+    width: 1.5rem;
+    height: 1.5rem;
+    position: relative;
+  }
+  .carousel .prev-btn>*>*,
+  .carousel .next-btn>*>*{
+    position: absolute;
+    top: 50%;
+    left: 50%;
+    transform: translate3d(-50%, -50%, 0);
+  }
+
+}
+
+@media screen and (min-width:320px) and (max-width:800px){
+
+
+}
+
+@media screen and (min-width:800px){
+
+
+}

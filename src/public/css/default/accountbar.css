@@ -1,0 +1,15 @@
+@media screen{
+
+  .account-bar{
+
+  }
+  .account-bar .avatar{
+    border-radius: 100%;
+    background-color: #fff;
+  }
+  .account-bar .avatar *{
+    color: rgba(255, 255, 255 , .6);
+    box-shadow: 0 0 1px rgba(0, 0, 0, .6);
+  }
+
+}

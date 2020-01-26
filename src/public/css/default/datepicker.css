@@ -1,0 +1,54 @@
+@media screen{
+
+  .datepicker{
+    background: #fff;
+    align-items: center;
+    border: solid 1px #DDD;
+    border-radius: .2rem;
+    position: relative;
+  }
+  div.datepicker{
+    display: block;
+  }
+  span.datepicker{
+    display: inline-block;
+  }
+  .datepicker.min{
+    border: none;
+    background: transparent;
+  }
+  .datepicker>input{
+    padding: .6rem;
+    border: none;
+    background: transparent;
+    outline: none;
+    width: 100%;
+  }
+  .datepicker>.icon{
+    padding: .7em;
+    color: #888;
+    top: 50%;
+    transform: translate3d(0, -50%, 0);
+    right: 0;
+    position: absolute;
+  }
+
+  .datepicker-popup{
+    padding: 1.2rem;
+  }
+  .datepicker-popup table{
+    width: 100%;
+  }
+  .datepicker-popup td,
+  .datepicker-popup th{
+    text-align: center;
+    padding: .6rem;
+  }
+  .datepicker-popup td.less{
+    color: #aaa;
+  }
+  .datepicker .icon{
+    padding: .6rem;
+  }
+
+}

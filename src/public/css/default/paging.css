@@ -1,0 +1,15 @@
+@media screen{
+
+  .paging{
+
+  }
+
+  .paging a{
+    padding: .6rem;
+    display: inline-block;
+  }
+  .paging a.active{
+    font-weight: bold;
+  }
+
+}

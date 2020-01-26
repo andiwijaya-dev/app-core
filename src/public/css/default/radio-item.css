@@ -1,0 +1,27 @@
+@media screen{
+
+  .radio-item{
+
+  }
+  .radio-item input[type=radio]{
+    display: none;
+  }
+  .radio-item label{
+    display: block;
+    text-align: center;
+  }
+
+  .radio-item input[type=radio]:checked + label{
+    border-color: #E92030;
+  }
+
+  .radio-item.more input[type=radio]:checked + label{
+    border-color: #E92030;
+    background: #E92030;
+    color: #fff;
+  }
+  .radio-item.more input[type=radio]:checked + label *{
+    color: #fff;
+  }
+
+}

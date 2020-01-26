@@ -1,0 +1,162 @@
+@media screen{
+
+  .lh-1{ line-height: .6em !important; }
+  .lh-2{ line-height: 1.2em !important; }
+  .lh-3{ line-height: 1.8em !important; }
+
+  .w-1{ width: 10%; }
+  .w-2{ width: 20%; }
+  .w-3{ width: 30%; }
+  .w-4{ width: 40%; }
+  .w-5{ width: 50%; }
+  .w-6{ width: 60%; }
+  .w-7{ width: 70%; }
+  .w-8{ width: 80%; }
+  .w-9{ width: 90%; }
+
+  .w-320{ width: 320px; }
+  .w-360{ width: 360px; }
+  .w-420{ width: 420px; }
+  .w-480{ width: 480px; }
+  .w-520{ width: 520px; }
+  .w-540{ width: 540px; }
+  .w-560{ width: 560px; }
+  .w-640{ width: 640px; }
+  .w-800{ width: 800px; }
+
+  .h-50{ height:50%; }
+  .h-60{ height:60%; }
+  .h-80{ height:80%; }
+
+  .cl-green{ color: #8CC152; }
+
+  .align-left{ text-align: left !important; }
+  .align-center{ text-align: center !important; }
+  .align-right{ text-align: right !important; }
+
+  .line-through{
+    text-decoration: line-through;
+  }
+
+  .upper{ text-transform: uppercase !important; }
+  .lower{ text-transform: lowercase !important; }
+  .capitalize{ text-transform: capitalize !important; }
+
+  .relative{ position: relative !important; }
+
+  .selectable{ cursor: pointer; }
+  .nowrap{ white-space: nowrap; }
+  .inline-block{ display: inline-block !important; }
+  .block{ display: block !important; min-width:100% !important; width:100% !important; max-width:100% !important; }
+  .hidden{ display: none !important; }
+  .ellipsis{ overflow: hidden; text-overflow:ellipsis; white-space: nowrap; }
+  .centered{
+    position: absolute;
+    left: 50%;
+    top: 50%;
+    transform: translate3d(-50%, -50%, 0);
+  }
+  .bordered{
+    border: solid 1px #eee !important;;
+  }
+  .bordered-left{
+    border-left: solid 1px #eee !important;
+  }
+  .bordered-right{
+    border-right: solid 1px #eee !important;
+  }
+  .bordered-top{
+    border-top: solid 1px #eee !important;
+  }
+  .bordered-bottom{
+    border-bottom: solid 1px #eee !important;
+  }
+  .shadowed{
+    box-shadow: 0 0 26px rgba(0, 0, 0, .02);
+  }
+
+}
+
+@media screen and (min-width:320px) and (max-width:800px){
+
+  .w-sm-1{ width: 10%; }
+  .w-sm-2{ width: 20%; }
+  .w-sm-3{ width: 30%; }
+  .w-sm-4{ width: 40%; }
+  .w-sm-5{ width: 50%; }
+  .w-sm-6{ width: 60%; }
+  .w-sm-7{ width: 70%; }
+  .w-sm-8{ width: 80%; }
+  .w-sm-9{ width: 90%; }
+  
+  .lh-sm-1{ line-height: .6em !important; }
+  .lh-sm-2{ line-height: 1.2em !important; }
+  .lh-sm-3{ line-height: 1.8em !important; }
+
+  .align-sm-left{ text-align: left !important; }
+  .align-sm-center{ text-align: center !important; }
+  .align-sm-right{ text-align: right !important; }
+
+  .inline-block-sm{ display: inline-block !important; }
+  .block-sm{ display: block !important; min-width:100% !important; width:100% !important; max-width:100% !important; }
+  .hidden-sm{ display: none !important; }
+
+  .bordered-sm{
+    border: solid 1px #eee !important;;
+  }
+  .bordered-sm-left{
+    border-left: solid 1px #eee !important;
+  }
+  .bordered-sm-right{
+    border-right: solid 1px #eee !important;
+  }
+  .bordered-sm-top{
+    border-top: solid 1px #eee !important;
+  }
+  .bordered-sm-bottom{
+    border-bottom: solid 1px #eee !important;
+  }
+
+}
+
+@media screen and (min-width:800px){
+
+  .w-lg-1{ width: 10%; }
+  .w-lg-2{ width: 20%; }
+  .w-lg-3{ width: 30%; }
+  .w-lg-4{ width: 40%; }
+  .w-lg-5{ width: 50%; }
+  .w-lg-6{ width: 60%; }
+  .w-lg-7{ width: 70%; }
+  .w-lg-8{ width: 80%; }
+  .w-lg-9{ width: 90%; }
+  
+  .lh-lg-1{ line-height: .6em !important; }
+  .lh-lg-2{ line-height: 1.2em !important; }
+  .lh-lg-3{ line-height: 1.8em !important; }
+
+  .align-lg-left{ text-align: left !important; }
+  .align-lg-center{ text-align: center !important; }
+  .align-lg-right{ text-align: right !important; }
+
+  .inline-block-lg{ display: inline-block !important; }
+  .block-lg{ display: block !important; min-width:100% !important; width:100% !important; max-width:100% !important; }
+  .hidden-lg{ display: none !important; }
+
+  .bordered-lg{
+    border: solid 1px #eee !important;;
+  }
+  .bordered-lg-left{
+    border-left: solid 1px #eee !important;
+  }
+  .bordered-lg-right{
+    border-right: solid 1px #eee !important;
+  }
+  .bordered-lg-top{
+    border-top: solid 1px #eee !important;
+  }
+  .bordered-lg-bottom{
+    border-bottom: solid 1px #eee !important;
+  }
+
+}

@@ -1,0 +1,115 @@
+@media screen{
+
+  div.legend{
+    display: flex;
+  }
+  span.legend{
+    display: inline-flex;
+  }
+  .legend>*{
+    text-align: center;
+    flex: 1 1 auto;
+  }
+  .legend a{
+    padding: 0;
+    display: inline;
+  }
+  .legend div{
+    position: relative;
+  }
+  .legend .circle-fake{
+    opacity: 0;
+    width: 20px;
+    height: 20px;
+  }
+  .legend .circle{
+    width: 20px;
+    height: 20px;
+    border-radius: 20px;
+    border: solid 4px #fff;
+    background: #aaa;
+    position: absolute;
+    top: 50%;
+    left: 50%;
+    transform: translate(-50%, -50%);
+  }
+  .legend .circle.active{
+    background: red;
+  }
+  .legend .line{
+    position: absolute;
+    height: 6px;
+    left: 0;
+    right: 0;
+    background: #eee;
+    display: inline-block;
+    top: 50%;
+    transform: translateY(-50%);
+  }
+  .legend .text{
+    white-space: nowrap;
+    font-size: .8em;
+    margin: 0 1em;
+  }
+  .legend>*:first-child .line{
+    left: 50%;
+  }
+  .legend>*:last-child .line{
+    right: 50%;
+  }
+
+  .vlegend{
+
+  }
+  .vlegend .item{
+    padding: .6rem;
+    padding-left: 2rem;
+    position: relative;
+    color: #aaa;
+  }
+  .vlegend .item.active{
+    color: inherit;
+  }
+  .vlegend .item *{
+    vertical-align: middle;
+  }
+  .vlegend .circle{
+    position: absolute;
+    left: 0;
+    top: 50%;
+    transform: translate3d(0, -50%, 0);
+    width: .8em;
+    height: .8em;
+    border-radius: .8em;
+    border: solid 1px #E92030;
+    background: #fff;
+  }
+  .vlegend .vline{
+    position: absolute;
+    width: 2px;
+    left: calc((.8em - 1px) / 2);
+    top: 0;
+    bottom: 0;
+    background: #E92030;
+  }
+  .vlegend .item:first-child .vline{
+    top: 50%;
+  }
+  .vlegend .item:last-child .vline{
+    bottom: 50%;
+  }
+  .vlegend .item.active .circle{
+    background: #E92030;
+  }
+
+}
+
+@media screen and (min-width:320px) and (max-width:800px){
+
+
+}
+
+@media screen and (min-width:800px){
+
+
+}

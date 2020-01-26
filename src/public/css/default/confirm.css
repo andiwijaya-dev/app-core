@@ -1,0 +1,25 @@
+@media screen{
+
+  .confirm-popup{
+    width: 30%;
+    background: #fff;
+    border: solid 1px #ccc;
+    position: absolute;
+    top: 0;
+    left: 50%;
+    transform: translate3d(-50%, -10%, 0);
+    opacity: 0;
+    transition: all 200ms ease;
+    padding: .6rem;
+  }
+
+  .confirm-popup.active{
+    transform: translate3d(-50%, 0, 0);
+    opacity: 1;
+  }
+
+  .confirm-popup button{
+    min-width: 100px;
+  }
+
+}

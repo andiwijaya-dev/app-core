@@ -1,0 +1,47 @@
+@media screen{
+
+  .switch{
+
+
+  }
+
+  .switch>*{
+    vertical-align: middle;
+  }
+
+  .switch input{
+    display: none;
+  }
+
+  .switch label{
+    background: #eee;
+    border-radius: 1em;
+    display: inline-block;
+    padding: .15em .2em;
+    width: 2.2em;
+  }
+  .switch label>span{
+    width: 1em;
+    height: 1em;
+    border-radius: 1em;
+    background: #fff;
+    border: solid 1px #ccc;
+    transition: margin 200ms ease;
+  }
+
+  .switch>input:checked + label{
+    background: red;
+  }
+  .switch>input:checked + label>span{
+    margin-left: .8em;
+    border-color: #CF1D2C;
+  }
+
+  .switch>input:checked + label + *{
+    display: none;
+  }
+  .switch>input:not(:checked) + label + * + *{
+    display: none;
+  }
+
+}
