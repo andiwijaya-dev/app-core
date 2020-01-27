@@ -101,7 +101,7 @@ if(!function_exists('paging_url_replace')){
 
 }
 
-if(!function_exists('')){
+if(!function_exists('random_voucher_code')){
 
   function random_voucher_code($count, $prefix, $digitcount, $existingvouchers = null, $numeric_only = false){
 

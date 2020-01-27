@@ -42,6 +42,10 @@ class AppCoreServiceProvider extends ServiceProvider
 
       $this->loadViewsFrom(__DIR__ . '/views', 'andiwijaya');
 
+      $this->loadMigrationsFrom(__DIR__.'/database/migrations');
+
+      $this->loadRoutesFrom(__DIR__.'/routes.php');
+
       $this->publishes([
         __DIR__.'/public' => public_path('vendor/andiwijaya'),
         __DIR__.'/views/app.blade.php' => resource_path('views/admin/app.blade.php'),
