@@ -119,6 +119,8 @@ class CMSListController extends BaseController
 
     if($request->ajax()){
 
+      $grid_id = '#' . Str::slug($this->module);
+
       $return = [];
       switch($action) {
 
@@ -130,9 +132,9 @@ class CMSListController extends BaseController
         case 'apply-columns':
           $sections = view($this->list_view, $params)->renderSections();
 
-          $return['#' . Str::slug($this->module) . ' thead'] = $sections['header'];
-          $return['#' . Str::slug($this->module) . ' tbody'] = ($page > 1 ? '>>' : '') . ($params['items']->total() > 0 ? $sections['items'] : "");
-          $return['#' . Str::slug($this->module) . ' tfoot'] = $sections['paging'];
+          $return["{$grid_id} thead"] = $sections['header'];
+          $return["{$grid_id} tbody"] = ($page > 1 ? '>>' : '') . ($params['items']->total() > 0 ? $sections['items'] : "");
+          $return["{$grid_id} tfoot"] = $sections['paging'];
           $return['script'] = "$('#columns-modal').close();$('." . (Str::slug($this->module)) . "-grid').grid()";
           break;
 
@@ -146,7 +148,10 @@ class CMSListController extends BaseController
 
           $return['#' . Str::slug($this->module) . ' tbody'] = ($page > 1 ? '>>' : '') . ($params['items']->total() > 0 ? $sections['items'] : "");
           $return['#' . Str::slug($this->module) . ' tfoot'] = $sections['paging'];
-          $return['script'] = "$('#filter-modal').close()";
+          $return['script'] = implode(';', [
+            "$('#filter-modal').close()",
+            "$('{$grid_id}').grid_update()"
+          ]);
           break;
 
         case 'resize-column':
@@ -155,8 +160,9 @@ class CMSListController extends BaseController
         default:
           $sections = view($this->list_view, $params)->renderSections();
 
-          $return['#' . Str::slug($this->module) . ' tbody'] = ($page > 1 ? '>>' : '') . ($params['items']->total() > 0 ? $sections['items'] : "");
-          $return['#' . Str::slug($this->module) . ' tfoot'] = $sections['paging'];
+          $return["{$grid_id} tbody"] = ($page > 1 ? '>>' : '') . ($params['items']->total() > 0 ? $sections['items'] : "");
+          $return["{$grid_id} tfoot"] = $sections['paging'];
+          $return['script'] = "$('{$grid_id}').grid_update()";
           break;
       }
       return $return;

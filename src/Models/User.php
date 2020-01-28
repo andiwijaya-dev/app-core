@@ -2,20 +2,27 @@
 
 namespace Andiwijaya\AppCore\Models;
 
+use Andiwijaya\AppCore\Models\Traits\CMSListUpdateTrait;
+use Andiwijaya\AppCore\Models\Traits\FilterableTrait;
+use Andiwijaya\AppCore\Models\Traits\LoggedTraitV3;
+use Andiwijaya\AppCore\Models\Traits\SearchableTrait;
 use Illuminate\Database\Eloquent\Model;
+use Illuminate\Support\Facades\Validator;
 
 class User extends Model
 {
+  use LoggedTraitV3, CMSListUpdateTrait, FilterableTrait;
 
   protected $table = 'user';
 
-  /**
-   * The attributes that are mass assignable.
-   *
-   * @var array
-   */
+  protected $filter_searchable = [
+    'name:like',
+    'email:like',
+    'code:like',
+  ];
+
   protected $fillable = [
-    'name', 'user_id', 'email', 'password',
+    'code', 'name', 'email',
   ];
 
   /**
@@ -36,65 +43,117 @@ class User extends Model
     'email_verified_at' => 'datetime',
   ];
 
+
   public function notifications(){
 
     return $this->hasMany('Andiwijaya\AppCore\Models\UserNotification', 'user_id', 'id');
 
   }
 
+  public function privileges(){
 
-  public function scopeFilter($model, array $params, $callback = null){
+    return $this->hasMany('Andiwijaya\AppCore\Models\UserPrivilege', 'user_id', 'id');
 
-    if(isset($params['search']) && $params['search'])
-      $model->search($params['search']);
+  }
 
-    if(isset($params['filters']) && is_array($params['filters'])){
+  public function getPrivilege($module_id, $key){
 
-      foreach($params['filters'] as $filter){
+    foreach($this->privileges as $privilege)
+      if($privilege->module_id == $module_id && isset($privilege->{$key}))
+        return $privilege->{$key};
+    return 0;
 
-        $model->where(function($query) use($filter){
+  }
 
-          $name = $filter['name'];
 
-          foreach($filter['values'] as $idx=>$item){
+  public function preSave(){
 
-            switch($item['operator']){
+    $validator = Validator::make($this->attributes,
+      [
+        'code'=>($this->exists ? 'sometimes|' : '') . 'required|unique:user,code' . ($this->exists ? ',' . $this->id : ''),
+        'email'=>($this->exists ? 'sometimes|' : '') . 'required|email|unique:user,email' . ($this->exists ? ',' . $this->id : ''),
+        'name'=>($this->exists ? 'sometimes|' : '') . 'required'
+      ],
+      [
+        'code.required'=>'Kode user harus diisi.',
+        'code.unique'=>'Kode user sudah ada.',
+        'email.required'=>'Email harus diisi.',
+        'email.unique'=>'Email sudah ada.',
+        'name.required'=>'Nama harus diisi.'
+      ]
+    );
+    if($validator->fails()) throw new \Exception($validator->errors()->first());
 
-              case '=':
-                $item['operand'] == 'or' ? $query->orWhere($name, '=', $item['value']) :
-                  $query->where($name, '=', $item['value']);
+    if(isset($this->fill_attributes['privileges']) &&
+      ($privileges = array_diff_assoc2($this->privileges, $this->fill_attributes['privileges'])))
+      $this->updates['privileges'] = $privileges;
+
+    if(isset($this->fill_attributes['password']) && strlen($this->fill_attributes['password']) > 0){
+
+      $validator = Validator::make($this->fill_attributes,
+        [
+          'password'=>'required|min:6|confirmed',
+        ],
+        [
+          'password.required'=>'Password harus diisi.',
+          'password.min'=>'Minimal password diisi 6 karakter',
+          'password.confirmed'=>'Konfirmasi password tidak sama'
+        ]
+      );
+      if($validator->fails()) throw new \Exception($validator->errors()->first());
+
+      $this->password = md5($this->fill_attributes['password']);
+
+    }
+
+  }
+
+  public function postSave(){
+
+    if(isset($this->fill_attributes['privileges'])){
+
+      if(isset($this->updates['privileges'])){
+
+        foreach($this->updates['privileges'] as $item){
+
+          if(isset($item['_type'])){
+            switch($item['_type']){
+
+              case Log::TYPE_REMOVE:
+                UserPrivilege::where([
+                  'user_id'=>$this->id,
+                  'module_id'=>$item['module_id']
+                ])
+                  ->delete();
                 break;
 
-              case 'contains':
-                $item['operand'] == 'or' ? $query->orWhere($name, 'like', "%{$item['value']}%") :
-                  $query->where($name, 'like', "%{$item['value']}%");
+              case Log::TYPE_UPDATE:
+                UserPrivilege::where([
+                  'user_id'=>$this->id,
+                  'module_id'=>$item['module_id']
+                ])
+                  ->first()
+                  ->fill($item['_updates'])
+                  ->save();
                 break;
 
-              case 'begins_with':
-                $item['operand'] == 'or' ? $query->orWhere($name, 'like', "{$item['value']}%") :
-                  $query->where($name, 'like', "{$item['value']}%");
+              case Log::TYPE_CREATE:
+                (new UserPrivilege([
+                  'user_id'=>$this->id,
+                  'module_id'=>$item['module_id']
+                ]))
+                  ->fill($item)
+                  ->save();
                 break;
-
-              case 'ends_with':
-                $item['operand'] == 'or' ? $query->orWhere($name, 'like', "%{$item['value']}") :
-                  $query->where($name, 'like', "%{$item['value']}");
-                break;
-
 
             }
-
           }
 
-        });
+        }
 
       }
 
     }
-
-    if(is_callable($callback))
-      $callback($model);
-
-    return $model;
 
   }
 

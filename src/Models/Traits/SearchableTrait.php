@@ -51,12 +51,16 @@ trait SearchableTrait{
    */
   public function scopeSearch($query, $term)
   {
-    $columns = implode(',',$this->searchable);
+    if(isset($this->searchable) && is_array($this->searchable) && count($this->searchable) > 0){
 
-    //$query->whereRaw("MATCH ({$columns}) AGAINST (?)" , $this->fullTextWildcards($term));
-    $query->whereRaw("MATCH ({$columns}) AGAINST (? IN BOOLEAN MODE)", $this->fullTextWildcards($term));
+      $columns = implode(',',$this->searchable);
 
-    return $query;
+      //$query->whereRaw("MATCH ({$columns}) AGAINST (?)" , $this->fullTextWildcards($term));
+      $query->whereRaw("MATCH ({$columns}) AGAINST (? IN BOOLEAN MODE)", $this->fullTextWildcards($term));
+
+      return $query;
+
+    }
   }
 
 
