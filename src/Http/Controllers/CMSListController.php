@@ -18,6 +18,8 @@ class CMSListController extends BaseController
 {
   use AuthorizesRequests, DispatchesJobs, ValidatesRequests;
 
+  protected $module_id = null; // Used for privilege
+
   protected $default_columns = [];
 
   protected $columns = [];
@@ -190,8 +192,13 @@ class CMSListController extends BaseController
 
     if($request->ajax()){
 
-      // Render response
       $params = $this->getParams($request);
+
+      if(Session::has('user') && ($user = Session::get('user')) instanceof User &&
+        $this->module_id > 0 && !$user->getPrivilege($this->module_id, 'create'))
+        exc('Anda tidak memiliki akses untuk membuat.');
+
+      // Render response
       $params['module'] = $this->module;
       $params['title'] = $this->title;
       $params['columns'] = $this->columns;
@@ -251,6 +258,18 @@ class CMSListController extends BaseController
     $obj = $request->all();
 
     if($request->ajax()){
+
+      // Privileges
+      if($request->get('id') > 0){
+        if(Session::has('user') && ($user = Session::get('user')) instanceof User &&
+          $this->module_id > 0 && !$user->getPrivilege($this->module_id, 'update'))
+          exc('Anda tidak memiliki akses untuk edit');
+      }
+      else{
+        if(Session::has('user') && ($user = Session::get('user')) instanceof User &&
+          $this->module_id > 0 && !$user->getPrivilege($this->module_id, 'create'))
+          exc('Anda tidak memiliki akses untuk membuat');
+      }
 
       // Perform save
       $model = $this->model;
@@ -324,6 +343,10 @@ class CMSListController extends BaseController
 
   public function destroy(Request $request, $id){
 
+    if(Session::has('user') && ($user = Session::get('user')) instanceof User &&
+      $this->module_id > 0 && !$user->getPrivilege($this->module_id, 'delete'))
+      exc('Anda tidak memiliki akses untuk menghapus ini.');
+
     // Perform delete
     $model = $this->model;
     $instance = $model::where('id', '=', $id)->first();
@@ -348,7 +371,9 @@ class CMSListController extends BaseController
 
   public function getParams(Request $request, array $params = []){
 
-    $obj = [];
+    $obj = [
+      'module_id'=>$this->module_id
+    ];
 
     if(env('APP_DEBUG')) $obj['faker'] = Factory::create();
 
