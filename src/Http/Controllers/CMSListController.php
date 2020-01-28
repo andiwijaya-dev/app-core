@@ -2,6 +2,7 @@
 
 namespace Andiwijaya\AppCore\Http\Controllers;
 
+use Andiwijaya\AppCore\Models\User;
 use App\Models\Category;
 use Faker\Factory;
 use Illuminate\Foundation\Bus\DispatchesJobs;
@@ -350,7 +351,8 @@ class CMSListController extends BaseController
     $faker = Factory::create();
 
     $obj = [
-      'faker'=>$faker
+      'faker'=>$faker,
+      'user'=>User::where('id', '=', Session::get('user_id'))->first()
     ];
 
     $obj = array_merge($obj, $params);
