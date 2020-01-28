@@ -56,6 +56,7 @@ class User extends Model
 
   }
 
+
   public function getPrivilege($module_id, $key){
 
     foreach($this->privileges as $privilege)

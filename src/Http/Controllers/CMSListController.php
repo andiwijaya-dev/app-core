@@ -348,12 +348,11 @@ class CMSListController extends BaseController
 
   public function getParams(Request $request, array $params = []){
 
-    $faker = Factory::create();
+    $obj = [];
 
-    $obj = [
-      'faker'=>$faker,
-      'user'=>User::where('id', '=', Session::get('user_id'))->first()
-    ];
+    if(env('APP_DEBUG')) $obj['faker'] = Factory::create();
+
+    if(Session::has('user')) $obj['user'] = Session::get('user');
 
     $obj = array_merge($obj, $params);
 
