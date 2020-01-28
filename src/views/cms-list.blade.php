@@ -117,7 +117,7 @@
 
 @section('header-row')
 
-  @if(!$module_id || !isset($user) || (isset($user) && $user instanceof \Andiwijaya\AppCore\Models\User && $module_id > 0 && $user->getPrivilege($module_id, 'create') > 0))
+  @if(!isset($module_id) || !$module_id || !isset($user) || (isset($user) && $user instanceof \Andiwijaya\AppCore\Models\User && $module_id > 0 && $user->getPrivilege($module_id, 'create') > 0))
   <button type="button" class="more" onclick="$.fetch('/{{ $module }}/create')"><label><span class="fa fa-plus"></span>&nbsp;Tambah</label></button>
   @endif
 
