@@ -20,8 +20,6 @@ class Log extends Model{
     'data'=>'array'
   ];
 
-  public $timestamps = false;
-
   const TYPE_CREATE = 1;
   const TYPE_UPDATE = 2;
   const TYPE_REMOVE = -1;

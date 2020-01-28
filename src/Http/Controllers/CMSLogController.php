@@ -8,7 +8,7 @@ class CMSLogController extends CMSListController
 {
   protected $default_columns = [
     [ 'name'=>'_options', 'text'=>'Pilihan', 'active'=>1, 'width'=>100 ],
-    [ 'name'=>'timestamp', 'text'=>'Waktu', 'active'=>1, 'width'=>150 ],
+    [ 'name'=>'created_at', 'text'=>'Waktu', 'active'=>1, 'width'=>150 ],
     [ 'name'=>'type', 'text'=>'Tipe', 'active'=>1, 'width'=>100 ],
     [ 'name'=>'data', 'text'=>'Data', 'active'=>1, 'width'=>150 ],
     [ 'name'=>'user_agent', 'text'=>'Browser', 'active'=>1, 'width'=>150 ],
