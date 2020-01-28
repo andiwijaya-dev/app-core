@@ -13,7 +13,7 @@ class Log extends Model{
   protected $table = 'log';
 
   protected $fillable = [
-    'loggable_type', 'loggable_id', 'type', 'data', 'user_agent', 'remote_ip', 'timestamp', 'user_id'
+    'loggable_type', 'loggable_id', 'type', 'data', 'user_agent', 'remote_ip', 'user_id'
   ];
 
   protected $casts = [
@@ -26,8 +26,6 @@ class Log extends Model{
 
 
   public function __construct(array $attributes = []){
-
-    $attributes['timestamp'] = Carbon::now();
 
     if(!app()->runningInConsole()){
       if(!isset($attributes['user_agent'])) $attributes['user_agent'] = $_SERVER['HTTP_USER_AGENT'];
