@@ -1,5 +1,5 @@
 @section('type-create')
-  @if($item->type == \App\Models\Log::TYPE_CREATE)
+  @if($item->type == \Andiwijaya\AppCore\Models\Log::TYPE_CREATE)
   <table class="table vmart-2">
     <tr>
       <th style="width:150px"><label>Nama</label></th>
@@ -27,7 +27,7 @@
 @endsection
 
 @section('type-update')
-  @if($item->type == \App\Models\Log::TYPE_UPDATE)
+  @if($item->type == \Andiwijaya\AppCore\Models\Log::TYPE_UPDATE)
   <table class="table vmart-2">
     <tr>
       <th style="width:150px"><label>Nama</label></th>
@@ -58,7 +58,7 @@
 @endsection
 
 @section('type-remove')
-  @if($item->type == \App\Models\Log::TYPE_REMOVE)
+  @if($item->type == \Andiwijaya\AppCore\Models\Log::TYPE_REMOVE)
     <h3>Remove</h3>
   @endif
 @endsection
@@ -97,13 +97,13 @@
       </div>
       <div class="col-12">
         @switch($item->type)
-          @case(\App\Models\Log::TYPE_CREATE)
+          @case(\Andiwijaya\AppCore\Models\Log::TYPE_CREATE)
             @yield('type-create')
           @break
-          @case(\App\Models\Log::TYPE_UPDATE)
+          @case(\Andiwijaya\AppCore\Models\Log::TYPE_UPDATE)
             @yield('type-update')
           @break
-          @case(\App\Models\Log::TYPE_REMOVE)
+          @case(\Andiwijaya\AppCore\Models\Log::TYPE_REMOVE)
             @yield('type-remove')
           @break
         @endswitch
