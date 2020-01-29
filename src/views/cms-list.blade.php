@@ -90,11 +90,11 @@
         @switch($column['name'])
 
           @case('_options')
-          <th style="width:{{ isset($column['width']) ? $column['width'] : 50 }}px" data-column-idx="{{ $idx }}"><label></label><span class="options"><span class="fa fa-ellipsis-h"></span></span><span class="resizer"></span></th>
+          <th style="width:{{ isset($column['width']) ? $column['width'] : 50 }}px" data-column-idx="{{ $idx }}"><label></label><span class="options hidden"><span class="fa fa-ellipsis-h"></span></span><span class="resizer"></span></th>
           @break
 
           @case('images')
-          <th style="width:{{ isset($column['width']) ? $column['width'] : 100 }}px" data-column-idx="{{ $idx }}"><label></label><span class="options"><span class="fa fa-ellipsis-h"></span></span><span class="resizer"></span></th>
+          <th style="width:{{ isset($column['width']) ? $column['width'] : 100 }}px" data-column-idx="{{ $idx }}"><label></label><span class="options hidden"><span class="fa fa-ellipsis-h"></span></span><span class="resizer"></span></th>
           @break
 
           @default
@@ -102,7 +102,7 @@
             <label>
               {{ $column['text'] ? $column['text'] : collect(explode('_', $column['name']))->map(function($t){ return ucwords($t); })->implode(' ') }}
             </label>
-            <span class="options"><span class="fa fa-ellipsis-h"></span></span>
+            <span class="options hidden"><span class="fa fa-ellipsis-h"></span></span>
             <span class="resizer"></span>
           </th>
           @break
