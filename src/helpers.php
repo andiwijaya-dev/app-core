@@ -271,8 +271,8 @@ if(!function_exists('array_diff_assoc2')){
    */
   function array_diff_assoc2($arr1, $arr2, $key = 'id'){
 
-    $arr1 = json_decode(json_encode($arr1), 1);
-    $arr2 = json_decode(json_encode($arr2), 1);
+    if(!is_array($arr1)) $arr1 = json_decode(json_encode($arr1), 1);
+    if(!is_array($arr2)) $arr2 = json_decode(json_encode($arr2), 1);
 
     $has_update = false;
 

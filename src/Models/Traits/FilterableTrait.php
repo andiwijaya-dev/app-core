@@ -54,6 +54,8 @@ trait FilterableTrait{
 
           foreach($filter['values'] as $idx=>$item){
 
+            if(!isset($item['operand'])) $item['operand'] = 'and';
+
             switch($item['operator']){
 
               case '=':
@@ -62,8 +64,10 @@ trait FilterableTrait{
                 break;
 
               case 'contains':
-                $item['operand'] == 'or' ? $query->orWhere($name, 'like', "%{$item['value']}%") :
-                  $query->where($name, 'like', "%{$item['value']}%");
+                if(is_array($item['value']) && count($item['value']) > 0){
+                  $item['operand'] == 'or' ? $query->orWhereIn($name, $item['value']) :
+                    $query->whereIn($name, $item['value']);
+                }
                 break;
 
               case 'begins_with':

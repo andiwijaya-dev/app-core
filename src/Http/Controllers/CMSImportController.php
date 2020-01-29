@@ -180,7 +180,7 @@ class CMSImportController extends BaseController{
 
       Session::put(str_replace('/', '.',  $this->path), [
         'columns'=>$this->default_columns,
-        'file_path'=>str_replace($dir_name, '', $file),
+        'file_path'=>$id . str_replace($dir_name, '', $file),
         'zip_dir'=>Storage::disk('local')->path($id),
         'header_row_index'=>$header_row_index,
         'headers'=>$rows[0][$header_row_index],

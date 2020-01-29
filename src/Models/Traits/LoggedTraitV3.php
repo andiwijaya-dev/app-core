@@ -44,7 +44,7 @@ trait LoggedTraitV3{
       if(!isset($options['log']) || $options['log']){
 
         $this->logs()->create([
-          'type'=>Log::TYPE_REMOVE,
+          'type'=>isset($options['log_type']) ? $options['log_type'] : Log::TYPE_REMOVE,
           'data'=>$this->attributes,
           'user_id'=>Session::get('user_id')
         ]);
@@ -118,7 +118,7 @@ trait LoggedTraitV3{
         (!isset($options['log']) || $options['log']))){
 
         $this->logs()->create([
-          'type'=>$exists ? Log::TYPE_UPDATE : Log::TYPE_CREATE,
+          'type'=>isset($options['log_type']) ? $options['log_type'] : ($exists ? Log::TYPE_UPDATE : Log::TYPE_CREATE),
           'data'=>$this->updates,
           'user_id'=>Session::get('user_id')
         ]);

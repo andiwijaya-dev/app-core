@@ -10,6 +10,7 @@ use Illuminate\Http\Request;
 use Illuminate\Routing\Controller as BaseController;
 use Illuminate\Foundation\Validation\ValidatesRequests;
 use Illuminate\Foundation\Auth\Access\AuthorizesRequests;
+use Illuminate\Support\Facades\Log;
 use Illuminate\Support\Facades\Redis;
 use Illuminate\Support\Facades\Session;
 use Illuminate\Support\Str;
@@ -70,6 +71,10 @@ class CMSListController extends BaseController
         Session::put("states.{$this->module}.columns", $this->columns);
         break;
 
+      case 'apply-options':
+        $this->applyOptions($request);
+        break;
+
       case 'apply-filters':
         Session::put("states.{$this->module}.filters", $request->get('filters', []));
         break;
@@ -127,11 +132,21 @@ class CMSListController extends BaseController
       $return = [];
       switch($action) {
 
+        case 'column-menu':
+          $return['_'] = view('andiwijaya::components.columns-menu', $params)->render();
+          $return['script'] = "$('#columns-modal').open()";
+          break;
+
         case 'select-column':
           $return['_'] = view('andiwijaya::components.columns-select', $params)->render();
           $return['script'] = "$('#columns-modal').open()";
           break;
 
+        case 'get-filter-values':
+          $this->getFilterValues($request, $return);
+          break;
+
+        case 'apply-options':
         case 'apply-columns':
           $sections = view($this->list_view, $params)->renderSections();
 
@@ -168,6 +183,7 @@ class CMSListController extends BaseController
           $return['script'] = "$('{$grid_id}').grid_update()";
           break;
       }
+
       return $return;
 
     }
@@ -367,8 +383,6 @@ class CMSListController extends BaseController
   }
 
 
-
-
   public function getParams(Request $request, array $params = []){
 
     $obj = [
@@ -382,6 +396,130 @@ class CMSListController extends BaseController
     $obj = array_merge($obj, $params);
 
     return $obj;
+
+  }
+
+
+  private function applyOptions(Request $request){
+
+    $requestColumns = $request->get('columns');
+    $requestName = $request->get('name');
+
+    $columns_changed = false;
+    $columns = Session::get("states.{$this->module}.columns", $this->default_columns);
+
+    foreach($columns as $idx=>$column){
+      if(isset($requestColumns[$column['name']]) && boolval($column['active']) != boolval($requestColumns[$column['name']])){
+        $columns[$idx]['active'] = $requestColumns[$column['name']] ? 1 : 0;
+        $columns_changed = true;
+      }
+    }
+
+    $filters = Session::get("states.{$this->module}.filters", []);
+
+    if($request->has('filter')){
+
+      $requestFilter = $request->get('filter');
+      foreach($requestFilter as $name=>$values){
+
+        $index = -1;
+        foreach($filters as $idx=>$filter)
+          if($filter['name'] == $name){
+            $index = $idx;
+            break;
+          }
+
+        if($index === -1 && count($values) > 0)
+          $filters[] = [
+            'name'=>$name,
+            'values'=>[
+              [
+                'operator'=>'contains',
+                'value'=>$values
+              ]
+            ]
+          ];
+        else{
+          if(count($values) == 0){
+            array_splice($filters, $idx, 1);
+          }
+          else{
+            $filters[$idx] = [
+              'name'=>$name,
+              'values'=>[
+                [
+                  'operator'=>'contains',
+                  'value'=>$values
+                ]
+              ]
+            ];
+          }
+        }
+
+
+      }
+
+    }
+    else{
+
+      $index = -1;
+      foreach($filters as $idx=>$filter)
+        if($filter['name'] == $requestName){
+          $index = $idx;
+          break;
+        }
+
+      if($index != -1)
+        array_splice($filters, $index, 1);
+
+    }
+
+    Session::put("states.{$this->module}.filters", $filters);
+
+    if($columns_changed){
+      Session::put("states.{$this->module}.columns", $columns);
+      $this->columns = $columns;
+    }
+
+  }
+
+  private function getFilterValues(Request $request, &$return){
+
+    $column = $this->columns[$request->get('idx')];
+
+
+    $values = $this->model::distinct($column['name'])
+      ->where($column['name'], '<>', '')
+      ->limit(10)
+      ->select([ $column['name'] ])
+      ->get();
+
+    $column_name = $column['name'];
+
+    $filters = Session::get("states.{$this->module}.filters");
+    $existing_filter_values = [];
+    if(is_array($filters))
+      foreach($filters as $filter)
+        if($filter['name'] == $column_name && $filter['values'][0]['operator'] == 'contains' && isset($filter['values'][0]['value'])){
+          $existing_filter_values = $filter['values'][0]['value'];
+          break;
+        }
+
+    $html = [];
+    foreach($values as $idx=>$obj){
+
+      $value = $obj[$column_name];
+      $checked = in_array($value, $existing_filter_values);
+
+      $html[] = "<div>
+        <input type='checkbox' id='filter-{$column_name}-{$idx}' name='filter[{$column_name}][]' value=\"{$value}\"/" . ($checked ? ' checked' : '') . ">
+        <label for='filter-{$column_name}-{$idx}'>{$value}</label>
+        </div>";
+
+    }
+
+    $return['.grid-popup .filter-tab'] = implode('', $html);
+    $return['script'] = "$('.grid-popup *[name=name]').val('{$column_name}')";
 
   }
 

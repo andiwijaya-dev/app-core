@@ -90,11 +90,11 @@
         @switch($column['name'])
 
           @case('_options')
-          <th style="width:{{ isset($column['width']) ? $column['width'] : 50 }}px" data-column-idx="{{ $idx }}"><label></label><span class="resizer"></span></th>
+          <th style="width:{{ isset($column['width']) ? $column['width'] : 50 }}px" data-column-idx="{{ $idx }}"><label></label><span class="options"><span class="fa fa-ellipsis-h"></span></span><span class="resizer"></span></th>
           @break
 
           @case('images')
-          <th style="width:{{ isset($column['width']) ? $column['width'] : 100 }}px" data-column-idx="{{ $idx }}"><label></label><span class="resizer"></span></th>
+          <th style="width:{{ isset($column['width']) ? $column['width'] : 100 }}px" data-column-idx="{{ $idx }}"><label></label><span class="options"><span class="fa fa-ellipsis-h"></span></span><span class="resizer"></span></th>
           @break
 
           @default
@@ -102,6 +102,7 @@
             <label>
               {{ $column['text'] ? $column['text'] : collect(explode('_', $column['name']))->map(function($t){ return ucwords($t); })->implode(' ') }}
             </label>
+            <span class="options"><span class="fa fa-ellipsis-h"></span></span>
             <span class="resizer"></span>
           </th>
           @break
@@ -243,7 +244,8 @@
 
     <div class="pad-1">
 
-      <form class="async">
+      <form method="get" class="async" data-onsuccess="$('.grid-popup').popup_close()">
+
         <div class="row valign-middle">
 
           <div class="col-6">
@@ -253,13 +255,17 @@
           </div>
 
           <div class="col-6 align-right">
-            <span class="textbox">
-              <span class="fa fa-search icon"></span>
-              <input type="text" name="search" placeholder="Cari..." value="{{ $search }}"/>
-            </span>
-            <button name="action" value="select-column"><label>Columns <span class="fa fa-caret-down"></span></label></button>
-            <button name="action" value="open-filter"><label><span class="fa fa-filter"></span> Filters</label></button>
+          <span class="textbox" style="width:100%;max-width:360px">
+            <span class="fa fa-search icon"></span>
+            <input type="text" name="search" placeholder="Cari..." value="{{ $search }}"/>
+          </span>
+            <button class="hidden" name="action" value="select-column"><label>Columns <span class="fa fa-caret-down"></span></label></button>
+            <button class="hidden" name="action" value="open-filter"><label><span class="fa fa-filter"></span> Filters</label></button>
           </div>
+
+        </div>
+
+        <div class="row valign-middle vpadt-0">
 
           <div class="col-12">
             <div class="panel vmart-1">
@@ -280,6 +286,7 @@
           </div>
 
         </div>
+
       </form>
 
     </div>
@@ -317,5 +324,52 @@
     socket.emit('join', '{{ $channel }}');
   </script>
   @endif
+
+@endsection
+
+@section('popup')
+
+  <div class="grid-popup popup w-200">
+    <form method="get" class="async" data-onsuccess="$('.grid-popup').popup_close()">
+      <div class="popup-head">
+        <div class="row">
+          <div class="col-12">
+            <input type="hidden" name="name" value="" />
+            <span class="tabs min" data-cont=".grid-tab-cont">
+              <span class="item active">Kolom</span>
+              <span class="item">Filter</span>
+            </span>
+          </div>
+        </div>
+      </div>
+      <div class="popup-body">
+        <div class="row">
+          <div class="col-12">
+            <div class="grid-tab-cont">
+              <div>
+                <div class="row">
+                  @foreach($columns as $idx=>$column)
+                    <div class="col-12">
+                      <input type="hidden" name="columns[{{ $column['name'] }}]" value="0" />
+                      <input type="checkbox" id="grid-options-{{$idx}}" name="columns[{{ $column['name'] }}]"{{ $column['active'] ? ' checked' : '' }} value="1"/>
+                      <label for="grid-options-{{$idx}}">{{ $column['name'] }}</label>
+                    </div>
+                  @endforeach
+                </div>
+              </div>
+              <div class="filter-tab hidden"></div>
+            </div>
+          </div>
+        </div>
+      </div>
+      <div class="popup-foot">
+        <div class="row">
+          <div class="col-12">
+            <button class="block more" name="action" value="apply-options"><label>OK</label></button>
+          </div>
+        </div>
+      </div>
+    </form>
+  </div>
 
 @endsection
