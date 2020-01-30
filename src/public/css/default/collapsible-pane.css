@@ -1,7 +1,0 @@
-@media screen{
-
-  .collapsible-pane .head.collapsed + .body{
-    display: none;
-  }
-
-}
