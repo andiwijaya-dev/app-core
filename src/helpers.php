@@ -5,8 +5,6 @@
  * Check if variable is assosiative array
  */
 
-use Illuminate\Support\Facades\Request;
-
 if(!function_exists('is_assoc')){
   function is_assoc($array) {
     if(gettype($array) == "array")
@@ -28,7 +26,7 @@ if(! function_exists('is_zip')){
 
   function is_zip($mime_type){
 
-    return in_array($mime_type, [ 'application/zip' ]);
+    return in_array($mime_type, [ 'application/zip', 'application/x-zip-compressed', 'multipart/x-zip' ]);
 
   }
 
@@ -68,8 +66,8 @@ if(!function_exists('paging_url_replace')){
     $html = [];
     $html[] = "<div class='paging'>";
 
-    if($page > 1) $html[] = "<a class='small' href=\"" . paging_url_replace(Request::fullUrl(), 1) . "\">First</a>";
-    if($page - 1 >= 1) $html[] = "<a class='small' href=\"" . paging_url_replace(Request::fullUrl(), $page - 1) . "\">Prev</a>";
+    if($page > 1) $html[] = "<a class='small' href=\"" . paging_url_replace(\Illuminate\Http\Request::fullUrl(), 1) . "\">First</a>";
+    if($page - 1 >= 1) $html[] = "<a class='small' href=\"" . paging_url_replace(\Illuminate\Http\Request::fullUrl(), $page - 1) . "\">Prev</a>";
 
     $start_index = $page - 3 < 1 ? 1 : $page - 3;
     $end_index = $page + 3 > $last_page ? $last_page : $page + 3;
@@ -91,8 +89,8 @@ if(!function_exists('paging_url_replace')){
       $html[] = "<a class='small" . ($i == $page ? " active" : '') . "' href=\"" . paging_url_replace(Request::fullUrl(), $i) . "\">{$i}</a>";
     }
 
-    if($page + 1 <= $last_page) $html[] = "<a class='small' href=\"" . paging_url_replace(Request::fullUrl(), $page + 1) . "\">Next</a>";
-    if($page < $last_page) $html[] = "<a class='small' href=\"" . paging_url_replace(Request::fullUrl(), $last_page) . "\">Last</a>";
+    if($page + 1 <= $last_page) $html[] = "<a class='small' href=\"" . paging_url_replace(\Illuminate\Http\Request::fullUrl(), $page + 1) . "\">Next</a>";
+    if($page < $last_page) $html[] = "<a class='small' href=\"" . paging_url_replace(\Illuminate\Http\Request::fullUrl(), $last_page) . "\">Last</a>";
 
     $html[] = "</div>";
     return implode('', $html);
@@ -269,7 +267,7 @@ if(!function_exists('array_diff_assoc2')){
    * @param string $key
    * @return array
    */
-  function array_diff_assoc2($arr1, $arr2, $key = 'id'){
+  function array_diff_assoc2($arr1, $arr2, $key = 'id', $debug = false){
 
     if(!is_array($arr1)) $arr1 = json_decode(json_encode($arr1), 1);
     if(!is_array($arr2)) $arr2 = json_decode(json_encode($arr2), 1);
@@ -647,6 +645,24 @@ if(!function_exists('in_array_all')){
 
   function in_array_all($needles, $haystack) {
     return empty(array_diff($needles, $haystack));
+  }
+
+}
+
+if(!function_exists('save_image')){
+
+  function save_image($image, $disk = 'images'){
+
+    if(!is_file($image)) exc('Invalid file');
+
+    $file_md5 = md5_file($image);
+    list($width, $height) = getimagesize($image);
+
+    if(!\Illuminate\Support\Facades\Storage::disk($disk)->exists($file_md5))
+      \Illuminate\Support\Facades\Storage::disk($disk)->put($file_md5, file_get_contents($image));
+
+    return $file_md5;
+
   }
 
 }

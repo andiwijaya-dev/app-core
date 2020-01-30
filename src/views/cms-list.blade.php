@@ -255,10 +255,10 @@
           </div>
 
           <div class="col-6 align-right">
-          <span class="textbox" style="width:100%;max-width:360px">
-            <span class="fa fa-search icon"></span>
-            <input type="text" name="search" placeholder="Cari..." value="{{ $search }}"/>
-          </span>
+            <span class="textbox" style="width:100%;max-width:360px">
+              <span class="fa fa-search icon"></span>
+              <input type="text" name="search" placeholder="Cari..." value="{{ $search }}"/>
+            </span>
             <button class="hidden" name="action" value="select-column"><label>Columns <span class="fa fa-caret-down"></span></label></button>
             <button class="hidden" name="action" value="open-filter"><label><span class="fa fa-filter"></span> Filters</label></button>
           </div>
@@ -282,6 +282,19 @@
                   </tfoot>
                 </table>
               </div>
+              <script>
+
+                function grid_add_load_more(idx, next_page){
+
+                  $('.grid-popup .filter-tab .load-more').remove();
+                  $('.grid-popup .filter-tab').append("<div class='load-more'>Load More</div>");
+                  $('.grid-popup .load-more').click(function(){
+                    $.fetch('?action=get-filter-values&idx=' + idx + '&page=' + next_page);
+                  })
+
+                }
+
+              </script>
             </div>
           </div>
 
@@ -297,8 +310,9 @@
 
 @section('script')
 
-  @if(isset($channel))
   <script>
+
+    @if(isset($channel))
     /*if (typeof Notification == 'function' && Notification.permission !== "granted")
       Notification.requestPermission();*/
 
@@ -322,8 +336,10 @@
 
     });
     socket.emit('join', '{{ $channel }}');
+    @endif
+
   </script>
-  @endif
+
 
 @endsection
 

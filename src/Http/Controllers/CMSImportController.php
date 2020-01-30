@@ -137,6 +137,10 @@ class CMSImportController extends BaseController{
 
       $file = $files[0];
       $readerType = ucwords(mime2ext(mime_content_type($file)));
+
+      if(!in_array($readerType, [ 'Csv', 'Xlsx', 'Xls' ]))
+        exc('File excel atau csv tidak ditemukan.');
+
       $rows = Excel::toArray(new GenericImport, $file,null, $readerType);
 
       $defined_column_names = [];

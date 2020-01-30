@@ -485,41 +485,86 @@ class CMSListController extends BaseController
 
   private function getFilterValues(Request $request, &$return){
 
-    $column = $this->columns[$request->get('idx')];
-
-
-    $values = $this->model::distinct($column['name'])
-      ->where($column['name'], '<>', '')
-      ->limit(10)
-      ->select([ $column['name'] ])
-      ->get();
-
+    $column_idx = $request->get('idx');
+    $column = $this->columns[$column_idx];
     $column_name = $column['name'];
 
-    $filters = Session::get("states.{$this->module}.filters");
-    $existing_filter_values = [];
-    if(is_array($filters))
-      foreach($filters as $filter)
-        if($filter['name'] == $column_name && $filter['values'][0]['operator'] == 'contains' && isset($filter['values'][0]['value'])){
-          $existing_filter_values = $filter['values'][0]['value'];
-          break;
-        }
+    try{
 
+      $limit = 10;
+      $page = $request->get('page', 1);
+
+      $model = $this->model::distinct($column['name'])
+        ->where($column['name'], '<>', '');
+
+      $count = $model->count();
+      $max_page = ceil($count / $limit);
+
+      // Retrieve available values
+      $values = $model
+        ->limit($limit)
+        ->offset(($page - 1) * $limit)
+        ->select([ $column['name'] ])
+        ->get();
+
+    }
+    catch(\Exception $ex){
+
+      // On error, eg: column not found because the column is derivative
+      $values = [];
+
+    }
+
+    // Render
     $html = [];
-    foreach($values as $idx=>$obj){
+    $scripts = [];
 
-      $value = $obj[$column_name];
-      $checked = in_array($value, $existing_filter_values);
+    // No result
+    if(!$values || count($values) <= 0){
 
-      $html[] = "<div>
+      $html[] = "<label>Tidak ada filter</label>";
+
+    }
+
+    // With result
+    else{
+
+      $filters = Session::get("states.{$this->module}.filters");
+      $existing_filter_values = [];
+      if(is_array($filters))
+        foreach($filters as $filter)
+          if($filter['name'] == $column_name && $filter['values'][0]['operator'] == 'contains' && isset($filter['values'][0]['value'])){
+            $existing_filter_values = $filter['values'][0]['value'];
+            break;
+          }
+
+      foreach($values as $idx=>$obj){
+
+        $value = $obj[$column_name];
+        $checked = in_array($value, $existing_filter_values);
+
+        $html[] = "<div>
         <input type='checkbox' id='filter-{$column_name}-{$idx}' name='filter[{$column_name}][]' value=\"{$value}\"/" . ($checked ? ' checked' : '') . ">
         <label for='filter-{$column_name}-{$idx}'>{$value}</label>
         </div>";
 
+      }
+
+      // Render load more, if any
+      if($max_page > $page){
+        $next_page = $page + 1;
+        $scripts[] = "grid_add_load_more({$column_idx}, {$next_page})";
+      }
+
     }
 
-    $return['.grid-popup .filter-tab'] = implode('', $html);
-    $return['script'] = "$('.grid-popup *[name=name]').val('{$column_name}')";
+    $return['.grid-popup .filter-tab'] = ($page > 1 ? '>>' : '') . implode('', $html);
+    $return['script'] = implode(';', array_merge(
+      [
+        "$('.grid-popup *[name=name]').val('{$column_name}')",
+      ],
+      $scripts
+    ));
 
   }
 
