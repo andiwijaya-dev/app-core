@@ -3,7 +3,7 @@
 namespace Andiwijaya\AppCore\Models;
 
 use Andiwijaya\AppCore\Models\Traits\LoggedTraitV3;
-use App\Events\ChatEvent;
+use Andiwijaya\AppCore\Events\ChatEvent;
 use Illuminate\Database\Eloquent\Model;
 
 class Chat extends Model
@@ -28,7 +28,7 @@ class Chat extends Model
 
   public function messages()
   {
-    return $this->hasMany('App\Models\ChatMessage', 'chat_id', 'id');
+    return $this->hasMany('Andiwijaya\AppCore\Models\ChatMessage', 'chat_id', 'id');
   }
 
 

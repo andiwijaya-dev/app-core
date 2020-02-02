@@ -3,7 +3,7 @@
 namespace Andiwijaya\AppCore\Models;
 
 use Andiwijaya\AppCore\Models\Traits\LoggedTraitV3;
-use App\Events\ChatEvent;
+use Andiwijaya\AppCore\Events\ChatEvent;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Support\Facades\Validator;
 
@@ -29,7 +29,7 @@ class ChatMessage extends Model
 
   public function chat()
   {
-    return $this->belongsTo('App\Models\Chat', 'chat_id', 'id');
+    return $this->belongsTo('Andiwijaya\AppCore\Models\Chat', 'chat_id', 'id');
   }
 
   public function preSave()

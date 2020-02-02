@@ -1,4 +1,4 @@
-<div class="message-item message-{{$item->id}} direction-{{ $item->direction == \App\Models\ChatMessage::DIRECTION_IN ? 'in' : 'out' }}">
+<div class="message-item message-{{$item->id}} direction-{{ $item->direction == \Andiwijaya\AppCore\Models\ChatMessage::DIRECTION_IN ? 'in' : 'out' }}">
   <p>{{ $item->message }}</p>
   @if(isset($item->extra['images'][0]))
   <div class="pad-1">
