@@ -26,6 +26,8 @@ class ChatController extends BaseController
   
   public $view = 'andiwijaya::chat';
 
+  public $extends = 'website.minimal';
+
   public function index(Request $request){
 
     $model = Chat::orderBy('updated_at', 'desc');
@@ -163,7 +165,8 @@ class ChatController extends BaseController
     $obj = [
       'module_id'=>$this->module_id,
       'name'=>$this->name,
-      'path'=>$this->path
+      'path'=>$this->path,
+      'extends'=>$this->extends
     ];
 
     if(env('APP_DEBUG')) $obj['faker'] = Factory::create();

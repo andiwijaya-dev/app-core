@@ -1,4 +1,4 @@
-@extends('website.minimal')
+@extends($extends)
 
 @section('message-list')
 
