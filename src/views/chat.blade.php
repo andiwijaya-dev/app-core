@@ -15,7 +15,7 @@
       </div>
     </div>
 
-    <div class="message-list-body v-scrollable pad-2">
+    <div class="message-list-body v-scrollable pad-2 chat-{{ $chat->id }}">
       @if(count($chat->latest_messages) > 0)
         @foreach($chat->latest_messages as $message)
           @component('andiwijaya::components.chat-message-item', [ 'item'=>$message ])@endcomponent
