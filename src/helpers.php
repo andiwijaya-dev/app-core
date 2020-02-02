@@ -653,7 +653,7 @@ if(!function_exists('save_image')){
 
   function save_image($image, $disk = 'images'){
 
-    if(!is_file($image)) exc('Invalid file');
+    if(!is_file($image) && !filter_var($image, FILTER_VALIDATE_URL)) exc('Invalid file');
 
     $file_md5 = md5_file($image);
     list($width, $height) = getimagesize($image);
