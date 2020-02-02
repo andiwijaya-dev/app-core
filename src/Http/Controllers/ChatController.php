@@ -23,6 +23,8 @@ class ChatController extends BaseController
   public $name = 'chat';
 
   public $path = '/chat';
+  
+  public $view = 'andiwijaya::chat';
 
   public function index(Request $request){
 
@@ -47,7 +49,7 @@ class ChatController extends BaseController
     if($request->ajax()){
 
       return [
-        '.chat .chat-list-body'=>view('andiwijaya::chat', $params)->renderSections()['chat-list']
+        '.chat .chat-list-body'=>view($this->view, $params)->renderSections()['chat-list']
       ];
 
     }
@@ -60,7 +62,7 @@ class ChatController extends BaseController
           return $this->download($request);
 
         default:
-          return view('andiwijaya::chat', $params);
+          return view($this->view, $params);
 
       }
 
@@ -77,7 +79,7 @@ class ChatController extends BaseController
     if($request->ajax()){
 
       return [
-        '.message-list'=>view('andiwijaya::chat', $params)->renderSections()['message-list'],
+        '.message-list'=>view($this->view, $params)->renderSections()['message-list'],
         'rewrite'=>[
           'title'=>'',
           'url'=>'/chat/' . $id
