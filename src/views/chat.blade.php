@@ -65,7 +65,7 @@
         @if($idx < count($chats) - 1)<div style="height:1px;background:#eee"></div>@endif
       @endforeach
     @else
-      <label>Tidak ada chat</label>
+      <div class="pad-1"><label>Tidak ada chat</label></div>
     @endif
   @endif
 
