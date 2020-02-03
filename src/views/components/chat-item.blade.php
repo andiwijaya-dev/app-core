@@ -1,5 +1,5 @@
 <div class="chat-item chat-item-{{ $item->id }}{{ isset($highlight) && $highlight ? ' highlight' : '' }}"
-     onclick="$.fetch('/chat/{{ $item->id }}')">
+     onclick="$.fetch('{{ $path }}/{{ $item->id }}')">
   <table cellspacing="3">
     <tr>
       <td valign="top">
