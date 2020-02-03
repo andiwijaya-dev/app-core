@@ -110,7 +110,7 @@
 
   @if(isset($chats))
 
-    <div class="chat" style="height:88vh">
+    <div class="chat" style="height:{{ $height }}">
 
       <div class="row chat-head">
         <div class="col-12">
