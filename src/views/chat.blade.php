@@ -61,7 +61,7 @@
   @if(isset($chats))
     @if(count($chats) > 0)
       @foreach($chats as $idx=>$item)
-        @component('andiwijaya::components.chat-item', [ 'idx'=>$idx, 'item'=>$item ])@endcomponent
+        @component('andiwijaya::components.chat-item', [ 'idx'=>$idx, 'item'=>$item, 'path'=>$path ])@endcomponent
         @if($idx < count($chats) - 1)<div style="height:1px;background:#eee"></div>@endif
       @endforeach
     @else
