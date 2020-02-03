@@ -47,9 +47,7 @@ class AppCoreServiceProvider extends ServiceProvider
       $this->loadRoutesFrom(__DIR__.'/routes.php');
 
       $this->publishes([
-        __DIR__.'/public' => public_path('vendor/andiwijaya'),
-        __DIR__.'/views/app.blade.php' => resource_path('views/admin/app.blade.php'),
-        __DIR__.'/views/sidebar.blade.php' => resource_path('views/admin/sidebar.blade.php')
+        __DIR__.'/public' => public_path('vendor/andiwijaya')
       ], 'public');
 
     }
