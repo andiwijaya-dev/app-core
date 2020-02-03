@@ -3,7 +3,7 @@
   @if(isset($item->extra['images'][0]))
   <div class="pad-1">
     @foreach($item->extra['images'] as $image)
-      <span class="img unloaded" data-src="/images/{{ $image }}" style="width:2.5em;height:2.5em"></span>
+      <span class="img unloaded can-preview" data-src="/images/{{ $image }}" style="width:2.5em;height:2.5em"></span>
     @endforeach
   </div>
   @endif

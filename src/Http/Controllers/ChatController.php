@@ -23,14 +23,14 @@ class ChatController extends BaseController
   public $name = 'chat';
 
   public $path = '/chat';
-  
+
   public $view = 'andiwijaya::chat';
 
   public $extends = 'website.minimal';
 
   public $height = '100vh';
 
-  public function index(Request $request){
+  public function index(Request $request, array $extra = []){
 
     $model = Chat::orderBy('updated_at', 'desc');
 
@@ -44,7 +44,7 @@ class ChatController extends BaseController
 
     $action = isset(($actions = explode('|', $request->get('action')))[0]) ? $actions[0] : '';
 
-    $params = $this->getParams($request);
+    $params = $this->getParams($request, $extra);
 
     $params['chats'] = $model->get();
 
@@ -82,21 +82,27 @@ class ChatController extends BaseController
 
     if($request->ajax()){
 
+      $sections = view($this->view, $params)->renderSections();
+
       return [
-        '.message-list'=>view($this->view, $params)->renderSections()['message-list'],
+        '.message-list'=>$sections['message-list'],
+        '.info-card'=>$sections['info'],
         'rewrite'=>[
           'title'=>'',
-          'url'=>'/chat/' . $id
+          'url'=>$this->path . '/' . $id
         ],
-        'script'=>"$('.chat').chat_resize()"
+        'script'=>implode(';', [
+          "$('.chat').chat_resize()",
+          "socket.emit('join', '{$this->name}-{$params['chat']->id}');"
+        ])
       ];
 
     }
     else{
 
-      $request->merge([ 'chat'=>$params['chat'] ]);
+      $request->merge($params);
 
-      return $this->index($request);
+      return $this->index($request, $extra);
 
     }
 

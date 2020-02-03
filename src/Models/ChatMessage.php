@@ -34,17 +34,6 @@ class ChatMessage extends Model
 
   public function preSave()
   {
-    $validator = Validator::make($this->attributes,
-      [
-        'message'=>'required:min:1'
-      ],
-      [
-        'message.required'=>'Pesan harus diisi'
-      ]
-    );
-    if($validator->fails()) throw new \Exception($validator->errors()->first());
-
-
     if(isset($this->fill_attributes['images'])){
 
       $images = [];
@@ -56,7 +45,6 @@ class ChatMessage extends Model
       $this->extra = $extra;
 
     }
-
   }
 
   public function postSave()
