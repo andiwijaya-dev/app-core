@@ -12,7 +12,7 @@ class Chat extends Model
 
   protected $table = 'chat';
 
-  protected $fillable = [ 'image_url', 'title', 'extra', 'status', 'unread_count', 'last_message_at' ];
+  protected $fillable = [ 'image_url', 'key', 'title', 'extra', 'status', 'unread_count', 'last_message_at' ];
 
   protected $attributes = [
     'status'=>self::STATUS_OPEN,

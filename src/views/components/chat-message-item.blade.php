@@ -7,5 +7,5 @@
     @endforeach
   </div>
   @endif
-  <small class="less hmarl-1">{{ $item->created_at }} {{ $item->direction }}</small>
+  <small class="less hmarl-1">{{ $item->created_at }}</small>
 </div>

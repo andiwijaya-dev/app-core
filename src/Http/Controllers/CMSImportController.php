@@ -218,6 +218,8 @@ class CMSImportController extends BaseController{
 
     if($request->has('file')){
 
+      ini_set('memory_limit', '1G');
+
       $readerType = ucwords($request->file('file')->getClientOriginalExtension());
       $rows = Excel::toArray(new GenericImport, $request->file('file')->getRealPath(), null, $readerType);
 
