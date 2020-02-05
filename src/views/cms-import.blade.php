@@ -6,12 +6,21 @@
     <h4>Masukkan file untuk import (csv, xls atau xlsx)</h4>
   </p>
   <div class="fileupload">
-    <button>
+    <button class="hpad-2">
       <label>Pilih File</label>
       <span class="icon-remove fa fa-times"></span>
     </button>
     <input class="hidden" type="file" name="file" />
   </div>
+
+  @if(isset($samples) && is_array($samples) && count($samples) > 0)
+  <br /><br /><br />
+  <strong>Sample</strong>
+  <br />
+  @foreach($samples as $sample)
+    <a class="more hmarr-2 vpad-1 inline-block" download href="{{ $sample }}">{{ basename($sample) }}</a>
+  @endforeach
+  @endif
 
 @endsection
 
@@ -35,7 +44,7 @@
 
     @foreach($columns as $column)
       <div class="col-lg-4">
-        <strong class="less">{{ $column['text'] ?? 'No Text' }}</strong>
+        <strong class="less">{{ $column['text'] ?? 'No Text' }}{{ array_key_exists('value', $column) ? '(optional)' : '' }}</strong>
         <div class="dropdown vmart-1"{{ !array_key_exists('value', $column) ? 'data-validation=required' : '' }}>
           <select name="columns[{{ $column['name'] ?? '' }}]">
             <option value="" disabled selected>Pilih</option>
@@ -53,6 +62,8 @@
     @endforeach
 
   </div>
+
+  @yield('detail-2-ext')
 
 @endsection
 
@@ -106,7 +117,9 @@
 
 @section('detail')
 
-  <div id="import-modal" class="modal w-640" style="height:600px; max-height:80%">
+  <div id="import-modal" class="modal w-640"
+       data-onopen="socket.emit('join', '{{ $channel }}');"
+       data-onclose="socket.emit('leave', '{{ $channel }}')" style="height:600px; max-height:80%">
 
     <form method="post" class="async" action="/{{ $path }}"
           data-progress-cont="#import-modal .progressbar" data-progress-max-percentage="20"
@@ -187,26 +200,29 @@
 
   <script>
 
-    var socket = io('{{ env('UPDATER_HOST') }}');
-    socket.on('connected', function(message){
+    if(typeof socket == 'undefined'){
 
-      @if(env('APP_DEBUG')) console.log([ 'connected', message ]); @endif
+      var socket = io('{{ env('UPDATER_HOST') }}');
+      socket.on('connected', function(message){
 
-    });
-    socket.on('notify', function(channel, message){
+        @if(env('APP_DEBUG')) console.log([ 'connected', message ]); @endif
 
-      @if(env('APP_DEBUG')) console.log([ 'notify', channel, message ]); @endif
+      });
+      socket.on('notify', function(channel, message){
 
-      try{
-        var result = eval('(' + message + ')');
-        $.process_xhr_response(result);
-      }
-      catch(e){
-        @if(env('APP_DEBUG')) console.log(e); @endif
-      }
+        @if(env('APP_DEBUG')) console.log([ 'notify', channel, message ]); @endif
 
-    });
-    socket.emit('join', '{{ $channel }}');
+          try{
+          var result = eval('(' + message + ')');
+          $.process_xhr_response(result);
+        }
+        catch(e){
+          @if(env('APP_DEBUG')) console.log(e); @endif
+        }
+
+      });
+
+    }
   </script>
 
 @endsection

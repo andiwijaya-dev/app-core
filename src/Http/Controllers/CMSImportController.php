@@ -27,7 +27,7 @@ class CMSImportController extends BaseController{
 
   protected $view = 'andiwijaya::cms-import';
 
-
+  protected $samples = [];
 
   //protected function preProcessImport($session_data){}
 
@@ -40,7 +40,8 @@ class CMSImportController extends BaseController{
     $params = [
       'columns'=>$this->default_columns,
       'path'=>$this->path,
-      'channel'=>$this->getChannel()
+      'channel'=>$this->getChannel(),
+      'samples'=>$this->samples,
     ];
 
     $sections = view($this->view, $params)->renderSections();
@@ -63,7 +64,9 @@ class CMSImportController extends BaseController{
         if($step == 1) return $this->analyse($request);
         if($step == 2) return $this->process($request);
         if($step == 3) return [
-          'script'=>"$('#import-modal').close()"
+          'script'=>implode(';', [
+            "$('#import-modal').close()"
+          ])
         ];
 
       case 'back':
@@ -303,6 +306,8 @@ class CMSImportController extends BaseController{
 
     $t1 = microtime(1);
 
+    ini_set('memory_limit', '1G');
+
     $percentage = 20;
 
     $session_data = Session::get(str_replace('/', '.',  $this->path));
@@ -456,7 +461,6 @@ class CMSImportController extends BaseController{
       'path'=>$this->path,
       'channel'=>$this->getChannel()
     ];
-
   }
 
   protected function getChannel(){

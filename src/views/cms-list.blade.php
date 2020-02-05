@@ -119,7 +119,7 @@
 @section('header-row')
 
   @if(!isset($module_id) || !$module_id || !isset($user) || (isset($user) && $user instanceof \Andiwijaya\AppCore\Models\User && $module_id > 0 && $user->getPrivilege($module_id, 'create') > 0))
-  <button type="button" class="more" onclick="$.fetch('/{{ $module }}/create')"><label><span class="fa fa-plus"></span>&nbsp;Tambah</label></button>
+    <button type="button" class="more" onclick="$.fetch('/{{ $module }}/create')"><label><span class="fa fa-plus"></span>&nbsp;Tambah</label></button>
   @endif
 
 @endsection
@@ -175,30 +175,20 @@
                 @break
 
                 @default
-                  @if(isset($column['data_type']))
-                    @switch($column['data_type'])
+                @if(isset($column['data_type']))
+                  @switch($column['data_type'])
 
-                      @case('boolean')
-                      <td class="align-center">
-                        @if($item->{$column['name']})
-                          <span class="fa fa-check"></span>
-                        @else
-                          <span class="fa fa-minus"></span>
-                        @endif
-                      </td>
-                      @break
+                    @case('boolean')
+                    <td class="align-center">
+                      @if($item->{$column['name']})
+                        <span class="fa fa-check-circle cl-green"></span>
+                      @else
+                        <span class="fa fa-minus-circle"></span>
+                      @endif
+                    </td>
+                    @break
 
-                      @default
-                      <td>
-                        @if(strpos($column['name'], '_html') !== false)
-                          {!! is_scalar($item->{$column['name']}) ?  $item->{$column['name']} : gettype($item->{$column['name']}) !!}
-                        @else
-                          <label>{!! is_scalar($item->{$column['name']}) ?  $item->{$column['name']} : gettype($item->{$column['name']}) !!}</label>
-                        @endif
-                      </td>
-                      @break
-                    @endswitch
-                  @else
+                    @default
                     <td>
                       @if(strpos($column['name'], '_html') !== false)
                         {!! is_scalar($item->{$column['name']}) ?  $item->{$column['name']} : gettype($item->{$column['name']}) !!}
@@ -206,7 +196,17 @@
                         <label>{!! is_scalar($item->{$column['name']}) ?  $item->{$column['name']} : gettype($item->{$column['name']}) !!}</label>
                       @endif
                     </td>
-                  @endif
+                    @break
+                  @endswitch
+                @else
+                  <td>
+                    @if(strpos($column['name'], '_html') !== false)
+                      {!! is_scalar($item->{$column['name']}) ?  $item->{$column['name']} : gettype($item->{$column['name']}) !!}
+                    @else
+                      <label>{!! is_scalar($item->{$column['name']}) ?  $item->{$column['name']} : gettype($item->{$column['name']}) !!}</label>
+                    @endif
+                  </td>
+                @endif
                 @break
 
               @endswitch
@@ -316,26 +316,32 @@
     /*if (typeof Notification == 'function' && Notification.permission !== "granted")
       Notification.requestPermission();*/
 
-    var socket = io('{{ env('UPDATER_HOST') }}');
-    socket.on('connected', function(message){
+    if(typeof socket == 'undefined'){
 
-      @if(env('APP_DEBUG')) console.log([ 'connected', message ]); @endif
+      var socket = io('{{ env('UPDATER_HOST') }}');
+      socket.on('connected', function(message){
 
-    });
-    socket.on('notify', function(channel, message){
+        @if(env('APP_DEBUG')) console.log([ 'connected', message ]); @endif
 
-      @if(env('APP_DEBUG')) console.log([ 'notify', channel, message ]); @endif
+      });
+      socket.on('notify', function(channel, message){
 
-      try{
-        var result = eval('(' + message + ')');
-        $.process_xhr_response(result);
-      }
-      catch(e){
-        @if(env('APP_DEBUG')) console.log(e); @endif
-      }
+        @if(env('APP_DEBUG')) console.log([ 'notify', channel, message ]); @endif
 
-    });
+          try{
+          var result = eval('(' + message + ')');
+          $.process_xhr_response(result);
+        }
+        catch(e){
+          @if(env('APP_DEBUG')) console.log(e); @endif
+        }
+
+      });
+
+    }
+
     socket.emit('join', '{{ $channel }}');
+
     @endif
 
   </script>
