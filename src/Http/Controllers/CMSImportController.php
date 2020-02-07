@@ -142,7 +142,7 @@ class CMSImportController extends BaseController{
       $readerType = ucwords(mime2ext(mime_content_type($file)));
 
       if(!in_array($readerType, [ 'Csv', 'Xlsx', 'Xls' ]))
-        exc('File excel atau csv tidak ditemukan.');
+        exc('Unsupported file format, please provide csv, xls or xlsx.');
 
       $rows = Excel::toArray(new GenericImport, $file,null, $readerType);
 
@@ -163,6 +163,7 @@ class CMSImportController extends BaseController{
               break;
             }
           }
+          if($header_row_index != -1) break;
         }
 
         foreach($this->default_columns as $idx=>$column){
@@ -224,7 +225,14 @@ class CMSImportController extends BaseController{
       ini_set('memory_limit', '1G');
 
       $readerType = ucwords($request->file('file')->getClientOriginalExtension());
-      $rows = Excel::toArray(new GenericImport, $request->file('file')->getRealPath(), null, $readerType);
+      try{
+        $rows = Excel::toArray(new GenericImport, $request->file('file')->getRealPath(), null, $readerType);
+      }
+      catch(\Exception $ex){
+        if(strpos($ex->getMessage(), 'No reader found for') !== false)
+          exc('Unable to process the file, please supply valid csv, xls, xlsx or zip file');
+        throw $ex;
+      }
 
       $defined_column_names = [];
       foreach($this->default_columns as $column){
@@ -359,7 +367,14 @@ class CMSImportController extends BaseController{
         $obj = null;
       else
         foreach($session_data['columns'] as $column){
-          $obj[$column['name']] = $column['index'] >= 0 ? $rows[0][$i][$column['index']] : $column['value'];
+
+          if(!is_null($column['index']) && $column['index'] >= 0 && $column['index'] < count($rows[0][$i]))
+            $obj[$column['name']] = $rows[0][$i][$column['index']];
+          else if(isset($column['value']))
+            $obj[$column['name']] = $column['value'];
+          else if(!isset($column['optional']) || !$column['optional'])
+            exc('Column ' . $column['text'] . ' is required');
+
         }
       $arr[] = $obj;
     }

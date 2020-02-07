@@ -2,10 +2,8 @@
 
 @section('step-1-text')
 
-  <p>
-    <h4>Masukkan file untuk import (csv, xls atau xlsx)</h4>
-  </p>
-  <div class="fileupload">
+  <h4>Masukkan file untuk import (csv, xls atau xlsx)</h4>
+  <div class="fileupload vmart-1">
     <button class="hpad-2">
       <label>Pilih File</label>
       <span class="icon-remove fa fa-times"></span>
@@ -14,12 +12,12 @@
   </div>
 
   @if(isset($samples) && is_array($samples) && count($samples) > 0)
-  <br /><br /><br />
-  <strong>Sample</strong>
-  <br />
-  @foreach($samples as $sample)
-    <a class="more hmarr-2 vpad-1 inline-block" download href="{{ $sample }}">{{ basename($sample) }}</a>
-  @endforeach
+    <br /><br /><br />
+    <strong>Sample</strong>
+    <br />
+    @foreach($samples as $sample)
+      <a class="more hmarr-2 vpad-1 inline-block" download href="{{ $sample }}">{{ basename($sample) }}</a>
+    @endforeach
   @endif
 
 @endsection
@@ -40,18 +38,22 @@
 
   <div class="detail-tooltip"></div>
 
-  <div class="row">
+  <div class="row2">
 
     @foreach($columns as $column)
       <div class="col-lg-4">
-        <strong class="less">{{ $column['text'] ?? 'No Text' }}{{ array_key_exists('value', $column) ? '(optional)' : '' }}</strong>
-        <div class="dropdown vmart-1"{{ !array_key_exists('value', $column) ? 'data-validation=required' : '' }}>
+        <label class="less">{{ $column['text'] ?? 'No Text' }}{{ isset($column['optional']) && $column['optional'] ? '(optional)' : '' }}</label>
+        <div class="dropdown vmart-1"{{ isset($column['optional']) && $column['optional'] ? '' : 'data-validation=required' }}>
           <select name="columns[{{ $column['name'] ?? '' }}]">
-            <option value="" disabled selected>Pilih</option>
+            @if(isset($column['optional']) && $column['optional'])
+              <option value="" selected>Tidak dipakai</option>
+            @else
+              <option value="" disabled selected>Pilih</option>
+            @endif
             @if(isset($headers))
               @foreach($headers as $index=>$header)
                 @if($header)
-                  <option value="{{ $index }}"{{ $column['index'] == $index ? ' selected' : '' }}>{{ $header }}</option>
+                  <option value="{{ $index }}"{{ !is_null($column['index']) && $column['index'] == $index ? ' selected' : '' }}>{{ $header }}</option>
                 @endif
               @endforeach
             @endif
@@ -121,7 +123,7 @@
        data-onopen="socket.emit('join', '{{ $channel }}');"
        data-onclose="socket.emit('leave', '{{ $channel }}')" style="height:600px; max-height:80%">
 
-    <form method="post" class="async" action="/{{ $path }}"
+    <form method="post" class="async" action="/{{ $path }}" enctype="multipart/form-data"
           data-progress-cont="#import-modal .progressbar" data-progress-max-percentage="20"
           data-skip-validation-on-action="back">
       @csrf

@@ -86,11 +86,11 @@ if(!function_exists('paging_url_replace')){
     }
 
     for($i = $start_index ; $i <= $end_index ; $i++){
-      $html[] = "<a class='small" . ($i == $page ? " active" : '') . "' href=\"" . paging_url_replace(Request::fullUrl(), $i) . "\">{$i}</a>";
+      $html[] = "<a class='small" . ($i == $page ? " active" : '') . "' href=\"" . paging_url_replace(\Illuminate\Support\Facades\Request::fullUrl(), $i) . "\">{$i}</a>";
     }
 
-    if($page + 1 <= $last_page) $html[] = "<a class='small' href=\"" . paging_url_replace(\Illuminate\Http\Request::fullUrl(), $page + 1) . "\">Next</a>";
-    if($page < $last_page) $html[] = "<a class='small' href=\"" . paging_url_replace(\Illuminate\Http\Request::fullUrl(), $last_page) . "\">Last</a>";
+    if($page + 1 <= $last_page) $html[] = "<a class='small' href=\"" . paging_url_replace(\Illuminate\Support\Facades\Request::fullUrl(), $page + 1) . "\">Next</a>";
+    if($page < $last_page) $html[] = "<a class='small' href=\"" . paging_url_replace(\Illuminate\Support\Facades\Request::fullUrl(), $last_page) . "\">Last</a>";
 
     $html[] = "</div>";
     return implode('', $html);
