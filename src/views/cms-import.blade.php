@@ -125,7 +125,7 @@
 
     <form method="post" class="async" action="/{{ $path }}" enctype="multipart/form-data"
           data-progress-cont="#import-modal .progressbar" data-progress-max-percentage="20"
-          data-skip-validation-on-action="back">
+          data-skip-validation-on-action="back" data-timeout="0">
       @csrf
 
       <div class="modal-head pad-2">
@@ -225,6 +225,7 @@
       });
 
     }
+
   </script>
 
 @endsection

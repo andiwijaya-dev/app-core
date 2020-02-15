@@ -7,6 +7,7 @@ use Andiwijaya\WebCache\Console\Commands\WebCacheClear;
 use Andiwijaya\WebCache\Facades\WebCache;
 use Andiwijaya\WebCache\Http\Middleware\WebCacheMiddleware;
 use Andiwijaya\WebCache\Http\Middleware\WebCacheMiddlewareDisabled;
+use Illuminate\Contracts\Debug\ExceptionHandler;
 use Illuminate\Http\Response;
 use Illuminate\Support\Facades\Cache;
 use Illuminate\Support\Facades\Log;
@@ -25,7 +26,6 @@ class AppCoreServiceProvider extends ServiceProvider
     {
 
 
-
     }
 
     public function provides()
@@ -42,13 +42,23 @@ class AppCoreServiceProvider extends ServiceProvider
 
       $this->loadViewsFrom(__DIR__ . '/views', 'andiwijaya');
 
-      $this->loadMigrationsFrom(__DIR__.'/database/migrations');
+      //$this->loadMigrationsFrom(__DIR__.'/database/migrations');
 
       $this->loadRoutesFrom(__DIR__.'/routes.php');
 
-      $this->publishes([
-        __DIR__.'/public' => public_path('vendor/andiwijaya')
-      ], 'public');
+      $this->publishes(
+        [
+          __DIR__.'/public' => public_path('vendor/andiwijaya')
+        ],
+        'assets'
+      );
+
+      $this->publishes(
+        [
+          __DIR__.'/database/migrations' => app_path('database/migrations')
+        ],
+        'migrations'
+      );
 
     }
 

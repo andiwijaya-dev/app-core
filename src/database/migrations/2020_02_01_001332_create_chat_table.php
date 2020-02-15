@@ -18,7 +18,7 @@ class CreateChatTable extends Migration
       $table->bigIncrements('id');
       $table->timestamps();
 
-      $table->string('key', 30)->unique();
+      $table->string('key', 200)->unique();
       $table->string('title', 100);
       $table->string('image_url');
       $table->text('extra')->nullable();

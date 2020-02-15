@@ -28,7 +28,7 @@ class ChatController extends BaseController
 
   public $extends = 'website.minimal';
 
-  public $height = '100vh';
+  public $height = '90vh';
 
   public function index(Request $request, array $extra = []){
 
@@ -168,7 +168,7 @@ class ChatController extends BaseController
   }
 
 
-  public function getParams(Request $request, array $params = []){
+  protected function getParams(Request $request, array $params = []){
 
     $obj = [
       'module_id'=>$this->module_id,

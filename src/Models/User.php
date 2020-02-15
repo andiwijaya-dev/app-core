@@ -66,6 +66,22 @@ class User extends Model
 
   }
 
+  public function anyPrivilege($modules, $key){
+
+    $value = 0;
+    foreach($this->privileges as $privilege){
+      foreach($modules as $module_id){
+        if($privilege->module_id == $module_id && isset($privilege->{$key}) && $privilege->{$key} > 0){
+          $value = 1;
+          break;
+        }
+      }
+      if($value > 0) break;
+    }
+    return $value;
+
+  }
+
 
   public function preSave(){
 

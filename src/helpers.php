@@ -666,3 +666,44 @@ if(!function_exists('save_image')){
   }
 
 }
+
+if( !function_exists('ceiling') )
+{
+  function ceiling($number, $significance = 1)
+  {
+    return ( is_numeric($number) && is_numeric($significance) ) ? (ceil($number/$significance)*$significance) : false;
+  }
+}
+
+if(!function_exists('rand_image')){
+
+  function rand_image($count = 1){
+
+    $image_urls = [
+      'https://files.vlad.studio/sequoia/joy/sketchy_unfocused/thumbs/1024x1024.jpg',
+      'https://files.vlad.studio/sequoia/joy/i_feel_good/thumbs/1024x1024.jpg',
+      'https://files.vlad.studio/sequoia/joy/man_with_very_long_hand/thumbs/1024x1024.jpg',
+      'https://files.vlad.studio/sequoia/joy/bookworm/thumbs/1024x1024.jpg',
+      'https://files.vlad.studio/sequoia/joy/perfect_boobs/thumbs/1024x1024.jpg',
+      'https://files.vlad.studio/sequoia/joy/sleeping_whales/thumbs/1024x1024.jpg',
+      'https://files.vlad.studio/sequoia/joy/axolotl/thumbs/1024x1024.jpg',
+      'https://files.vlad.studio/sequoia/joy/hug/thumbs/1024x1024.jpg',
+      'https://files.vlad.studio/sequoia/joy/bird_bird_bird_bird_bird/thumbs/1024x1024.jpg',
+      'https://files.vlad.studio/sequoia/joy/still/thumbs/1024x1024.jpg',
+      'https://files.vlad.studio/sequoia/joy/blank_canvas/thumbs/1024x1024.jpg',
+      'https://files.vlad.studio/sequoia/joy/xmas_windows/thumbs/1024x1024.jpg',
+      'https://files.vlad.studio/sequoia/joy/early_morning/thumbs/1024x1024.jpg',
+      'https://files.vlad.studio/sequoia/joy/coffee_station/thumbs/1024x1024.jpg',
+      'https://files.vlad.studio/sequoia/joy/lower_antelope_2/thumbs/1024x1024.jpg',
+      'https://files.vlad.studio/sequoia/joy/tinyliving/thumbs/1024x1024.jpg',
+      'https://files.vlad.studio/sequoia/joy/starry_night/thumbs/1024x1024.jpg',
+      'https://files.vlad.studio/sequoia/joy/bat_and_her_pet/thumbs/1024x1024.jpg',
+      'https://files.vlad.studio/sequoia/joy/cats/thumbs/1024x1024.jpg'
+    ];
+
+    if($count == 1) return $image_urls[rand(0, count($image_urls) - 1)];
+    return array_splice($image_urls, 0, $count);
+
+  }
+
+}

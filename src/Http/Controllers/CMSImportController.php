@@ -8,6 +8,7 @@ use Illuminate\Foundation\Bus\DispatchesJobs;
 use Illuminate\Foundation\Validation\ValidatesRequests;
 use Illuminate\Http\Request;
 use Illuminate\Routing\Controller as BaseController;
+use Illuminate\Support\Facades\Config;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Log;
 use Illuminate\Support\Facades\Redis;
@@ -100,7 +101,7 @@ class CMSImportController extends BaseController{
 
     if($request->has('file')){
 
-      if (is_zip($request->file('file')->getClientMimeType())) {
+      if (is_zip($request->file('file')->getClientMimeType())){
 
         return $this->analyseZip($request);
 
@@ -126,6 +127,7 @@ class CMSImportController extends BaseController{
     $za->open($request->file('file')->getRealPath());
 
     $id = Session::getId();
+    Storage::disk('local')->deleteDirectory($id);
     Storage::disk('local')->makeDirectory($id);
     $dir_name = Storage::disk('local')->path($id);
     $za->extractTo($dir_name);
@@ -139,7 +141,10 @@ class CMSImportController extends BaseController{
     if(count($files) > 0){
 
       $file = $files[0];
-      $readerType = ucwords(mime2ext(mime_content_type($file)));
+      //$readerType = ucwords(mime2ext(mime_content_type($file)));
+
+      $path_info = pathinfo($file);
+      $readerType = ucwords($path_info['extension']);
 
       if(!in_array($readerType, [ 'Csv', 'Xlsx', 'Xls' ]))
         exc('Unsupported file format, please provide csv, xls or xlsx.');
@@ -152,19 +157,23 @@ class CMSImportController extends BaseController{
         if(isset($column['default_mapping']) && is_array($column['default_mapping']))
           $defined_column_names = array_merge($defined_column_names, $column['default_mapping']);
       }
+      foreach($defined_column_names as $idx=>$column)
+        $defined_column_names[$idx] = strtoupper($defined_column_names[$idx]);
 
       if(isset($rows[0]) && is_array($rows[0])){
 
         $header_row_index = -1;
         foreach($rows[0] as $index=>$row){
           foreach($row as $column){
-            if(in_array($column, $defined_column_names)){
+            if(in_array(strtoupper($column), $defined_column_names)){
               $header_row_index = $index;
               break;
             }
           }
           if($header_row_index != -1) break;
         }
+
+        if($header_row_index === -1) exc('Header row not found.');
 
         foreach($this->default_columns as $idx=>$column){
 
@@ -225,6 +234,7 @@ class CMSImportController extends BaseController{
       ini_set('memory_limit', '1G');
 
       $readerType = ucwords($request->file('file')->getClientOriginalExtension());
+
       try{
         $rows = Excel::toArray(new GenericImport, $request->file('file')->getRealPath(), null, $readerType);
       }
@@ -315,6 +325,9 @@ class CMSImportController extends BaseController{
     $t1 = microtime(1);
 
     ini_set('memory_limit', '1G');
+    ini_set('max_execution_time', 1200);
+    ini_set('set_time_limit', 1200);
+    set_time_limit(1200);
 
     $percentage = 20;
 
@@ -336,7 +349,7 @@ class CMSImportController extends BaseController{
 
       $files = rglob($session_data['zip_dir'] . '/*');
       foreach($files as $file)
-        $zip_files[strtolower(basename($file))] = $file;
+        $zip_files[basename($file)] = $file;
 
       $session_data['zip_files'] = $zip_files;
 
@@ -345,6 +358,7 @@ class CMSImportController extends BaseController{
     $reader_type = $session_data['reader_type'];
     $header_row_index = $session_data['header_row_index'];
     $rows = Excel::toArray(new GenericImport, Storage::disk('local')->path($session_data['file_path']),null, $reader_type);
+    $headers = $rows[0][$header_row_index];
 
     if(redis_available() && microtime(1) - $t1 > 1){
       $percentage += 20;
@@ -365,7 +379,13 @@ class CMSImportController extends BaseController{
       $obj = [];
       if($is_empty)
         $obj = null;
-      else
+      else{
+        foreach($headers as $idx=>$header){
+          if(empty(trim($header))) continue;
+          $obj[$header] = isset($rows[0][$i][$idx]) ? $rows[0][$i][$idx] : '';
+        }
+
+
         foreach($session_data['columns'] as $column){
 
           if(!is_null($column['index']) && $column['index'] >= 0 && $column['index'] < count($rows[0][$i]))
@@ -376,6 +396,9 @@ class CMSImportController extends BaseController{
             exc('Column ' . $column['text'] . ' is required');
 
         }
+
+      }
+
       $arr[] = $obj;
     }
 
@@ -418,13 +441,16 @@ class CMSImportController extends BaseController{
 
         $total++;
 
-        if(redis_available() && microtime(1) - $t1 > 1) {
+        if(redis_available() && microtime(1) - $t1 > 1){
           $current_percentage = $percentage + (60 * $index / count($arr));
           Redis::publish($this->getChannel(), json_encode(['script' => "$('#import-modal .progressbar').val({$current_percentage})"]));
           $t1 = microtime(1);
         }
 
       }
+
+      if(method_exists($this, 'postProcessImport'))
+        $this->postProcessImport($session_data);
 
       if(count($errors) > 0)
         throw new \Exception();
