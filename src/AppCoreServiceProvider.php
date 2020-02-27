@@ -3,17 +3,13 @@
 namespace Andiwijaya\AppCore;
 
 
-use Andiwijaya\WebCache\Console\Commands\WebCacheClear;
-use Andiwijaya\WebCache\Facades\WebCache;
-use Andiwijaya\WebCache\Http\Middleware\WebCacheMiddleware;
-use Andiwijaya\WebCache\Http\Middleware\WebCacheMiddlewareDisabled;
-use Illuminate\Contracts\Debug\ExceptionHandler;
+use Andiwijaya\AppCore\Console\Commands\WebCacheClear;
+use Andiwijaya\AppCore\Middleware\WebCacheMiddleware;
+use Andiwijaya\AppCore\Services\WebCacheService;
+use Andiwijaya\AppCore\Facades\WebCache;
 use Illuminate\Http\Response;
 use Illuminate\Support\Facades\Cache;
-use Illuminate\Support\Facades\Log;
-use Illuminate\Support\Facades\Schema;
 use Illuminate\Support\ServiceProvider;
-use Jenssegers\Agent\Agent;
 
 class AppCoreServiceProvider extends ServiceProvider
 {
@@ -24,8 +20,13 @@ class AppCoreServiceProvider extends ServiceProvider
      */
     public function register()
     {
+      $this->app->singleton('WebCache', function () {
+        return new WebCacheService();
+      });
 
-
+      $this->commands([
+        WebCacheClear::class
+      ]);
     }
 
     public function provides()
@@ -40,11 +41,23 @@ class AppCoreServiceProvider extends ServiceProvider
      */
     public function boot(){
 
+      if(!$this->app->runningInConsole() &&
+        $this->app->request->method() == 'GET' &&
+        Cache::has(WebCache::getKey($this->app->request))){
+        global $kernel, $request;
+        $response = Response::create(Cache::get(WebCache::getKey($this->app->request)));
+        $response->send();
+        $kernel->terminate($request, $response);
+        exit();
+      }
+
       $this->loadViewsFrom(__DIR__ . '/views', 'andiwijaya');
 
       //$this->loadMigrationsFrom(__DIR__.'/database/migrations');
 
       $this->loadRoutesFrom(__DIR__.'/routes.php');
+
+      $this->app['router']->aliasMiddleware('web-cache', WebCacheMiddleware::class);
 
       $this->publishes(
         [
