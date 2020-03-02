@@ -18,19 +18,16 @@ class CreateChatMessageTable extends Migration
           $table->bigIncrements('id');
           $table->timestamps();
 
-          $table->bigInteger('chat_id')->unsigned();
+          $table->bigInteger('discussion_id')->unsigned();
 
           $table->smallInteger('unread');
           $table->boolean('direction');
 
-          $table->bigInteger('from_id')->nullable();
-          $table->bigInteger('to_id')->nullable();
-
-          $table->text('topic')->nullable();
-          $table->string('message')->default('');
+          $table->string('text');
+          $table->text('images')->nullable();
           $table->text('extra')->nullable();
 
-          $table->foreign('chat_id')->references('id')->on('chat')
+          $table->foreign('discussion_id')->references('id')->on('chat_discussion')
             ->onDelete('cascade')->onUpdate('cascade');
 
         });

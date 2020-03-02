@@ -8,7 +8,7 @@
       <td valign="top" style="width:100%;text-overflow: ellipsis;overflow:hidden">
         <strong>{{ $item->title }}</strong>
         @if(isset($item->latest_message->id))
-          <p class="vmart-0 less">{{ substr($item->latest_message->message, 0, 30) }}</p>
+          <p class="vmart-0 less">{{ substr($item->latest_message->text, 0, 30) }}</p>
         @endif
       </td>
       <td valign="top" style="white-space: nowrap">

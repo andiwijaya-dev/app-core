@@ -41,7 +41,8 @@ class AppCoreServiceProvider extends ServiceProvider
      */
     public function boot(){
 
-      if(!$this->app->runningInConsole() &&
+      if(!env('WEB_CACHE_DISABLED') &&
+        !$this->app->runningInConsole() &&
         $this->app->request->method() == 'GET' &&
         Cache::has(WebCache::getKey($this->app->request))){
         global $kernel, $request;

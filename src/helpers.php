@@ -656,12 +656,51 @@ if(!function_exists('save_image')){
     if(!is_file($image) && !filter_var($image, FILTER_VALIDATE_URL)) exc('Invalid file');
 
     $file_md5 = md5_file($image);
-    list($width, $height) = getimagesize($image);
+    //list($width, $height) = getimagesize($image);
 
     if(!\Illuminate\Support\Facades\Storage::disk($disk)->exists($file_md5))
       \Illuminate\Support\Facades\Storage::disk($disk)->put($file_md5, file_get_contents($image));
 
     return $file_md5;
+
+  }
+
+}
+
+if(!function_exists('save_base64_image')){
+
+  function is_base64_image($data){
+
+    return preg_match('/^data:image\/(\w+);base64,/', $data, $type);
+
+  }
+
+  function save_base64_image($data, $disk = 'images'){
+
+    if(preg_match('/^data:image\/(\w+);base64,/', $data, $type)){
+
+      $data = substr($data, strpos($data, ',') + 1);
+      $type = strtolower($type[1]);
+
+      // Only handle image with extension below
+      if(!in_array($type, [ 'jpg', 'jpeg', 'gif', 'png' ]))
+        return $data;
+
+      $data = base64_decode($data);
+      if($data === false)
+        return $data; // base64_decode failed
+
+      $file_md5 = md5($data);
+      //list($width, $height) = getimagesize($data);
+
+      if(!\Illuminate\Support\Facades\Storage::disk($disk)->exists($file_md5))
+        \Illuminate\Support\Facades\Storage::disk($disk)->put($file_md5, $data);
+
+      return $file_md5;
+
+    }
+
+    return '';
 
   }
 

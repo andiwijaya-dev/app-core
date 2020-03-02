@@ -13,23 +13,23 @@ class ChatMessage extends Model
 
   protected $table = 'chat_message';
 
-  protected $fillable = [ 'chat_id', 'unread', 'direction', 'from_id', 'to_id', 'topic', 'message', 'extra' ];
+  protected $fillable = [ 'discussion_id', 'unread', 'direction', 'from_id', 'to_id', 'text', 'images', 'extra' ];
 
   protected $attributes = [
     'unread'=>1
   ];
 
   protected $casts = [
-    'topic'=>'array',
+    'images'=>'array',
     'extra'=>'array'
   ];
 
   const DIRECTION_IN = 1;
   const DIRECTION_OUT = 2;
 
-  public function chat()
+  public function discussion()
   {
-    return $this->belongsTo('Andiwijaya\AppCore\Models\Chat', 'chat_id', 'id');
+    return $this->belongsTo('Andiwijaya\AppCore\Models\ChatDiscussion', 'discussion_id', 'id');
   }
 
   public function preSave()
@@ -40,22 +40,20 @@ class ChatMessage extends Model
       foreach($this->fill_attributes['images'] as $image)
         $images[] = save_image($image);
 
-      $extra = $this->extra;
-      $extra['images'] = $images;
-      $this->extra = $extra;
+      $this->images = $images;
 
     }
   }
 
   public function postSave()
   {
-    event(new ChatEvent(ChatEvent::TYPE_NEW_CHAT_MESSAGE, $this->chat, $this));
-    event(new ChatEvent(ChatEvent::TYPE_UPDATE_CHAT, $this->chat));
+    event(new ChatEvent(ChatEvent::TYPE_NEW_CHAT_MESSAGE, $this->discussion, $this));
+    event(new ChatEvent(ChatEvent::TYPE_UPDATE_CHAT, $this->discussion));
   }
 
   public function calculate()
   {
-    $this->chat->calculate();
+    $this->discussion->calculate();
   }
 
 }

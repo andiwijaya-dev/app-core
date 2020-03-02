@@ -2,190 +2,151 @@
 
 namespace Andiwijaya\AppCore\Http\Controllers;
 
-use Andiwijaya\AppCore\Models\Chat;
+use Andiwijaya\AppCore\Models\ChatDiscussion;
 use Andiwijaya\AppCore\Models\ChatMessage;
-use Carbon\Carbon;
-use Faker\Factory;
-use Illuminate\Foundation\Auth\Access\AuthorizesRequests;
-use Illuminate\Foundation\Bus\DispatchesJobs;
-use Illuminate\Foundation\Validation\ValidatesRequests;
 use Illuminate\Http\Request;
-use Illuminate\Routing\Controller as BaseController;
 use Illuminate\Support\Facades\Session;
-use Symfony\Component\HttpFoundation\StreamedResponse;
 
-class ChatController extends BaseController
-{
-  use AuthorizesRequests, DispatchesJobs, ValidatesRequests;
+class ChatController{
 
-  public $module_id = 33;
+  protected $extends = 'website.no-header';
 
-  public $name = 'chat';
+  protected $view = 'andiwijaya::chat';
 
-  public $path = '/chat';
 
-  public $view = 'andiwijaya::chat';
+  public function index(Request $request){
 
-  public $extends = 'website.minimal';
-
-  public $height = '90vh';
-
-  public function index(Request $request, array $extra = []){
-
-    $model = Chat::orderBy('updated_at', 'desc');
-
-    switch($request->get('filter')){
-
-      case 'unread':
-        $model->where('unread_count', '>', 0);
-        break;
-
-    }
-
-    $action = isset(($actions = explode('|', $request->get('action')))[0]) ? $actions[0] : '';
-
-    $params = $this->getParams($request, $extra);
-
-    $params['chats'] = $model->get();
-
-    if($request->has('chat')) $params['chat'] = $request->get('chat');
-
-    if($request->ajax()){
-
-      return [
-        '.chat .chat-list-body'=>view($this->view, $params)->renderSections()['chat-list']
-      ];
-
-    }
-
-    else{
-
-      switch($action){
-
-        case 'download':
-          return $this->download($request);
-
-        default:
-          return view($this->view, $params);
-
-      }
-
-    }
-
-  }
-
-  public function show(Request $request, $id, array $extra = []){
-
-    $params = $this->getParams($request, $extra);
-
-    $params['chat'] = Chat::whereId($id)->first();
-
-    if($request->ajax()){
-
-      $sections = view($this->view, $params)->renderSections();
-
-      return [
-        '.message-list'=>$sections['message-list'],
-        '.info-card'=>$sections['info'],
-        'rewrite'=>[
-          'title'=>'',
-          'url'=>$this->path . '/' . $id
-        ],
-        'script'=>implode(';', [
-          "$('.chat').chat_resize()",
-          "socket.emit('join', '{$this->name}-{$params['chat']->id}');"
-        ])
-      ];
-
-    }
-    else{
-
-      $request->merge($params);
-
-      return $this->index($request, $extra);
-
-    }
+    return view($this->view,
+      array_merge([
+        'extends'=>$this->extends
+      ])
+    );
 
   }
 
   public function store(Request $request){
 
+    //sleep(1);
+
+    if(Session::has('chat.id') && !ChatDiscussion::whereId(Session::get('chat.id'))->first())
+      Session::forget('chat');
+
+    $action = $request->input('action');
+
+    switch($action){
+
+      case 'open-chat':
+        return $this->openChat($request);
+
+      case 'send-message':
+        return $this->sendMessage($request);
+
+      case 'auth':
+        return $this->auth($request);
+
+      default:
+        break;
+
+    }
+
+  }
+
+  private function auth($request){
+
+    // Validation
+
+    $discussion = ChatDiscussion::updateOrCreate([
+      'key'=>$request->get('key'),
+      'title'=>$request->get('topic')
+    ]);
+
+    Session::put('chat.id', $discussion->id);
+    Session::put('chat.key', $request->get('key'));
+    Session::put('chat.topic', $request->get('topic'));
+
+    $sections = view($this->view,
+      array_merge([
+        'extends'=>$this->extends,
+        'item'=>$discussion
+      ])
+    )
+      ->renderSections();
+
+    return [
+      '.chat-popup-head'=>$sections['chat-head'],
+      '.chat-popup-body'=>$sections['chat-body'],
+      '.chat-popup-foot'=>$sections['chat-foot'],
+      'script'=>implode(';', [
+        "$.chat_resize()"
+      ])
+    ];
+
+  }
+
+  private function sendMessage($request){
+
+    $text = $request->get('text');
+    $discussion_id = Session::get('chat.id');
+    $discussion = ChatDiscussion::whereId($discussion_id)->first();
+
+    if(!$discussion){
+
+      $sections = view($this->view,
+        array_merge([
+          'extends'=>$this->extends,
+          'item'=>$discussion
+        ])
+      )
+        ->renderSections();
+
+      return [
+        '.chat-popup-head'=>$sections['intro-head'],
+        '.chat-popup-body'=>$sections['intro'],
+        '.chat-popup-foot'=>'',
+        'script'=>implode(';', [
+          "$.chat_resize()"
+        ])
+      ];
+
+    }
+
     $message = new ChatMessage([
-      'chat_id'=>$request->get('id'),
-      'direction'=>ChatMessage::DIRECTION_OUT
+      'discussion_id'=>$discussion->id,
+      'direction'=>ChatMessage::DIRECTION_IN
     ]);
     $message->fill($request->all());
     $message->save();
 
     return [
-      ".chat .message-list-body"=>'>>' . view('andiwijaya::components.chat-message-item', [ 'item'=>$message, 'highlight'=>1 ])->render(),
-      'script'=>"$('.chat .message-list-body').scrollToBottom()"
+      //'.chat-popup-body'=>'>>' . view('andiwijaya::components.customer-chat-message', [ 'item'=>$message ])->render(),
+      'script'=>implode(';', [
+        "$.chat_resize()",
+        "$.chat_popup_clear()",
+        "$('.chat-popup-body').scrollToBottom()"
+      ])
     ];
 
   }
 
-  public function download(Request $request){
+  private function openChat($request){
 
-    return new StreamedResponse(
-      function(){
+    $discussion_id = Session::get('chat.id');
+    $discussion = ChatDiscussion::whereId($discussion_id)->first();
 
-        $handle = fopen('php://output', 'w');
+    $sections = view($this->view,
+      array_merge([
+        'extends'=>$this->extends,
+        'item'=>$discussion
+      ])
+    )
+      ->renderSections();
 
-        fputcsv($handle, [
-          'Nama',
-          'Tanggal',
-          'Tipe',
-          'Pesan',
-        ]);
-
-        ChatMessage::orderBy('chat_id', 'asc')
-          ->chunk(1000, function($messages) use($handle){
-
-            foreach($messages as $message){
-
-              $obj = [
-                $message->chat->title,
-                $message->created_at,
-                $message->direction == ChatMessage::DIRECTION_IN ? 'Masuk' : 'Keluar',
-                $message->message
-              ];
-
-              fputcsv($handle, $obj);
-
-            }
-
-          });
-
-        fclose($handle);
-
-      },
-      200,
-      [
-        'Content-Type' => 'text/csv',
-        'Content-Disposition' => 'attachment; filename="chat-' . Carbon::now()->format('Y-m-d-H-i-s') . '.csv"',
-      ]);
-
-  }
-
-
-  protected function getParams(Request $request, array $params = []){
-
-    $obj = [
-      'module_id'=>$this->module_id,
-      'name'=>$this->name,
-      'path'=>$this->path,
-      'extends'=>$this->extends,
-      'height'=>$this->height
+    return [
+      '!.chat-popup'=>$sections['chat-popup'],
+      'script'=>implode(';', [
+        "$.chat_popup_open()"
+      ])
     ];
-
-    if(env('APP_DEBUG')) $obj['faker'] = Factory::create();
-
-    if(Session::has('user')) $obj['user'] = Session::get('user');
-
-
-    $obj = array_merge($obj, $params);
-
-    return $obj;
 
   }
 

@@ -2,7 +2,7 @@
 
 namespace Andiwijaya\AppCore\Events;
 
-use Andiwijaya\AppCore\Models\Chat;
+use Andiwijaya\AppCore\Models\ChatDiscussion;
 use Andiwijaya\AppCore\Models\ChatMessage;
 use Illuminate\Broadcasting\Channel;
 use Illuminate\Queue\SerializesModels;
@@ -16,7 +16,7 @@ class ChatEvent
 {
     use Dispatchable, InteractsWithSockets, SerializesModels;
 
-    public $chat;
+    public $discussion;
     public $message;
     public $type;
 
@@ -29,10 +29,10 @@ class ChatEvent
      *
      * @return void
      */
-    public function __construct($type, Chat $chat, ChatMessage $message = null)
+    public function __construct($type, ChatDiscussion $discussion, ChatMessage $message = null)
     {
       $this->type = $type;
-      $this->chat = $chat;
+      $this->discussion = $discussion;
       $this->message = $message;
     }
 

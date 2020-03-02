@@ -14,7 +14,7 @@ class WebCacheClear extends Command
      *
      * @var string
      */
-    protected $signature = 'web-cache:clear {--key=} {param?} {--clear-db}';
+    protected $signature = 'web-cache:clear {--key=} {param?} {--clear-db} {--recache}';
 
     /**
      * The console command description.
@@ -45,19 +45,19 @@ class WebCacheClear extends Command
 
       if(strlen($key) > 0){
 
-        $count = WebCache::clearByKey($key, $this->option('clear-db'));
+        $count = WebCache::clearByKey($key, $this->option('clear-db'), $this->option('recache'));
 
       }
 
       else if(strlen($param) > 0){
 
-        $count = WebCache::clearByTag($param, $this->option('clear-db'));
+        $count = WebCache::clearByTag($param, $this->option('clear-db'), $this->option('recache'));
 
       }
 
       else{
 
-        $count = WebCache::clearAll($this->option('clear-db'));
+        $count = WebCache::clearAll($this->option('clear-db'), $this->option('recache'));
 
       }
 

@@ -3,6 +3,7 @@
 namespace Andiwijaya\AppCore\Services;
 
 
+use Andiwijaya\AppCore\Jobs\WebCacheLoad;
 use Andiwijaya\AppCore\Models\WebCache;
 use Carbon\Carbon;
 use Illuminate\Http\JsonResponse;
@@ -45,9 +46,11 @@ class WebCacheService{
 
   }
 
-  public function store(Request $request, Response $response){
+  public function store(Request $request, $response){
 
-    array_unshift($this->tags, $request->path());
+    if($request->method() !== 'GET') return;
+
+    array_unshift($this->tags, 'path:' . $request->path());
 
     if(($response instanceof Response || $response instanceof JsonResponse)){
 
@@ -82,7 +85,7 @@ class WebCacheService{
 
 
 
-  public function clearAll($clearDB = false){
+  public function clearAll($clearDB = false, $recache = false){
 
     $count = 0;
 
@@ -95,32 +98,23 @@ class WebCacheService{
       if($clearDB)
         WebCache::truncate();
 
+      else if($recache)
+        WebCacheLoad::dispatch(WebCacheLoad::TYPE_ALL);
+
     }
-
-    // Remove all caches
-
-    //$count = count($cleared_keys); // Get count of cache cleared for returning purpose
-
-    // Create jobs to reload cache url
-    /*file_put_contents(storage_path('logs/web-cache.log'), "[CLEAR ALL @" . Carbon::now()->toDateTimeString() . "]" . PHP_EOL);
-    do{
-      $keys = array_splice($cleared_keys, 0, 3);
-      WebCacheLoad::dispatch($keys);
-    }
-    while(count($cleared_keys) > 0);*/
 
     return $count;
 
   }
 
-  public function clearByTag($tag, $clearDB = false){
+  public function clearByTag($tag, $clearDB = false, $recache = false){
 
     $count = 0;
 
     if(Schema::hasTable('web_cache')){
 
       WebCache::search($tag)
-        ->chunkById(1000, function($items) use(&$count){
+        ->chunkById(1000, function($items) use(&$count, $clearDB, $recache){
 
           foreach($items as $item){
 
@@ -134,32 +128,37 @@ class WebCacheService{
       if($clearDB)
         WebCache::search($tag)->delete();
 
+      else if($recache)
+        WebCacheLoad::dispatch(WebCacheLoad::TYPE_TAG, $tag);
+
     }
 
     return $count;
 
   }
 
-  public function clearByKey($key, $clearDB = false){
+  public function clearByKey($key, $clearDB = false, $recache = false){
 
     $count = 0;
 
     if(Schema::hasTable('web_cache')){
 
       WebCache::where('key', $key)
-        ->chunkById(1000, function($items) use(&$count){
+        ->chunkById(1000, function($items) use(&$count, $clearDB, $recache){
 
+          // Forget keys from cache
           foreach($items as $item){
-
             Cache::forget($item->key);
             $count++;
-
           }
 
         });
 
       if($clearDB)
         WebCache::where('key', $key)->delete();
+
+      else if($recache)
+        WebCacheLoad::dispatch(WebCacheLoad::TYPE_KEY, $key);
 
     }
 

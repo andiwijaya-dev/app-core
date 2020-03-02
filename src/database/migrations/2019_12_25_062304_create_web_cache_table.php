@@ -15,13 +15,15 @@ class CreateWebCacheTable extends Migration
     {
       Schema::create('web_cache', function (Blueprint $table) {
 
-        $table->bigIncrements('id');
-        $table->timestamps();
-
-        $table->string('path', 1000);
+        $table->string('key', 1000);
         $table->text('tag')->nullable();
 
-        $table->unique([ 'path' ]);
+        $table->text('created_ua')->nullable();
+        $table->string('created_ip', 50)->nullable();
+
+        $table->timestamps();
+
+        $table->primary([ 'key' ]);
 
       });
 
