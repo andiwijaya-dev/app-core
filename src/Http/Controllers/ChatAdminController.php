@@ -95,7 +95,7 @@ class ChatAdminController extends BaseController
         ],
         'script'=>implode(';', [
           "$('.chat').chat_resize()",
-          "socket.emit('leave', last_discussion_channel)",
+          "if(typeof last_discussion_channel != 'undefined') socket.emit('leave', last_discussion_channel)",
           "socket.emit('join', last_discussion_channel = 'discussion-{$params['chat']->id}');"
         ])
       ];
@@ -112,6 +112,15 @@ class ChatAdminController extends BaseController
   }
 
   public function store(Request $request){
+
+    $discussion_id = $request->get('id');
+    $discussion = ChatDiscussion::where([
+      'id'=>$discussion_id,
+      'status'=>ChatDiscussion::STATUS_OPEN
+    ])
+      ->first();
+
+    if(!$discussion) exc(__('models.chat-message-unable-to-send-message'));
 
     $message = new ChatMessage([
       'discussion_id'=>$request->get('id'),

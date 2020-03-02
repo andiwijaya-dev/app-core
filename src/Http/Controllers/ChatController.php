@@ -44,7 +44,12 @@ class ChatController{
       case 'auth':
         return $this->auth($request);
 
+      case 'end-chat':
+        return $this->endChat($request);
+        break;
+
       default:
+        exc($action);
         break;
 
     }
@@ -58,6 +63,8 @@ class ChatController{
     $discussion = ChatDiscussion::updateOrCreate([
       'key'=>$request->get('key'),
       'title'=>$request->get('topic')
+    ], [
+      'status'=>ChatDiscussion::STATUS_OPEN
     ]);
 
     Session::put('chat.id', $discussion->id);
@@ -85,9 +92,10 @@ class ChatController{
 
   private function sendMessage($request){
 
-    $text = $request->get('text');
     $discussion_id = Session::get('chat.id');
-    $discussion = ChatDiscussion::whereId($discussion_id)->first();
+    $discussion = ChatDiscussion::whereId($discussion_id)
+      ->whereStatus(ChatDiscussion::STATUS_OPEN)
+      ->first();
 
     if(!$discussion){
 
@@ -104,7 +112,8 @@ class ChatController{
         '.chat-popup-body'=>$sections['intro'],
         '.chat-popup-foot'=>'',
         'script'=>implode(';', [
-          "$.chat_resize()"
+          "$.chat_resize()",
+          "$.alert('" . __('models.chat-message-unable-to-send-message') . "')"
         ])
       ];
 
@@ -128,10 +137,14 @@ class ChatController{
 
   }
 
-  private function openChat($request){
+  private function openChat(){
 
     $discussion_id = Session::get('chat.id');
-    $discussion = ChatDiscussion::whereId($discussion_id)->first();
+    $discussion = ChatDiscussion::whereId($discussion_id)
+      ->whereStatus(ChatDiscussion::STATUS_OPEN)
+      ->first();
+
+    if(!$discussion) Session::forget('chat.id');
 
     $sections = view($this->view,
       array_merge([
@@ -145,6 +158,34 @@ class ChatController{
       '!.chat-popup'=>$sections['chat-popup'],
       'script'=>implode(';', [
         "$.chat_popup_open()"
+      ])
+    ];
+
+  }
+
+  private function endChat($request){
+
+    $discussion_id = Session::get('chat.id');
+    $discussion = ChatDiscussion::whereId($discussion_id)->first();
+
+    if($discussion)
+      $discussion->end();
+
+    $sections = view($this->view,
+      array_merge([
+        'extends'=>$this->extends,
+        'item'=>$discussion
+      ])
+    )
+      ->renderSections();
+
+    return [
+      '.chat-popup-head'=>$sections['intro-head'],
+      '.chat-popup-body'=>$sections['intro'],
+      '.chat-popup-foot'=>'',
+      'script'=>implode(';', [
+        "$.chat_resize()",
+        "$.chat_popup_close()"
       ])
     ];
 

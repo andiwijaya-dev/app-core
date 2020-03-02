@@ -16,7 +16,7 @@ class ChatDiscussion extends Model
 
   protected $attributes = [
     'status'=>self::STATUS_OPEN,
-    'unread_count'=>0
+    'unreplied_count'=>0
   ];
 
   protected $casts = [
@@ -44,6 +44,21 @@ class ChatDiscussion extends Model
   }
 
 
+  public function end(){
+
+    if($this->status == self::STATUS_CLOSED)
+      exc(__('models.chat-discussion-already-closed'));
+
+    try{
+      $this->status = self::STATUS_CLOSED;
+
+      parent::save();
+    }
+    catch(\Exception $ex){
+      exc(__('models.chat-discussion-error', [ 'message'=>$ex->getMessage() ]));
+    }
+
+  }
 
   public function postSave()
   {

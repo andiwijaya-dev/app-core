@@ -4,7 +4,7 @@
 
 @section('intro')
 
-<form class="async" method="post">
+<form class="async" method="post" action="/chat">
   @csrf
 
   <div class="row2">
@@ -59,25 +59,28 @@
 
 @section('chat-head')
 
-  <div class="rowg valign-middle">
-    <div class="col-ft">
-      <span class="img unloaded" data-src="{{ rand_image(1) }}"></span>
+  @if(isset($item->id))
+    <div class="rowg valign-middle">
+      <div class="col-ft">
+        <span class="img unloaded" data-src="{{ rand_image(1) }}"></span>
+      </div>
+      <div class="col-st">
+        <strong>{{ $item->title }}</strong><br />
+        <small>{{ $item->created_at }}</small>
+      </div>
+      <div class="col-ft">
+        <button class="chat-close" onclick="$.chat_end()"><small>Selesai</small></button>
+        <span class="icon-close fa fa-minus pad-1" onclick="$.chat_popup_close()"></span>
+      </div>
     </div>
-    <div class="col-st">
-      <strong>{{ \Illuminate\Support\Facades\Session::get('chat.topic') }}</strong><br />
-      <small>12 Jan 2020 15:33</small>
-    </div>
-    <div class="col-ft">
-      <span class="icon-close fa fa-minus pad-1" onclick="$.chat_popup_close()"></span>
-    </div>
-  </div>
+  @endif
 
 @endsection
 
 @section('chat-body')
 
-  <div>
   @if(isset($item))
+  <div>
 
     @if($item->messages()->count() > 500)
     <div class="align-center">
@@ -94,8 +97,8 @@
       <label class="less">Typing...</label>
     </div>
 
-  @endif
   </div>
+  @endif
 
   @if(isset($item))
 
@@ -118,6 +121,7 @@
 
 @section('chat-foot')
 
+  @if(isset($item))
   <form method="post" class="async" action="/chat">
     @csrf
 
@@ -130,7 +134,7 @@
       </div>
 
       <div class="col-ft">
-        <button type="button" onclick="$.chat_popup_add_image()"><label><span class="fa fa-image"></span></label></button>
+        <button type="button" onclick="$.chat_popup_add_image()"><label>&nbsp;<span class="fa fa-image"></span>&nbsp;</label></button>
       </div>
 
       <div class="col-ft">
@@ -144,6 +148,7 @@
     </div>
 
   </form>
+  @endif
 
 @endsection
 
@@ -151,21 +156,21 @@
 
   <div class="chat-popup">
     <div class="chat-popup-head">
-      @if(\Illuminate\Support\Facades\Session::get('chat.key') !== null)
+      @if(isset($item->id))
         @yield('chat-head')
       @else
         @yield('intro-head')
       @endif
     </div>
     <div class="chat-popup-body">
-      @if(\Illuminate\Support\Facades\Session::get('chat.key') !== null)
+      @if(isset($item->id))
         @yield('chat-body')
       @else
         @yield('intro')
       @endif
     </div>
     <div class="chat-popup-foot">
-      @if(\Illuminate\Support\Facades\Session::get('chat.key') !== null)
+      @if(isset($item->id))
         @yield('chat-foot')
       @else
       @endif

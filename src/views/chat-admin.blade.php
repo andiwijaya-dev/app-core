@@ -10,7 +10,8 @@
           <span class="img unloaded message-chat-image-url rat-88" data-src="{{ $chat->image_url }}"></span>
         </div>
         <div class="col-11">
-          <h3>{{ $chat->title }}</h3>
+          <h3>{{ $chat->title }}</h3><br />
+          <label>{{ $chat->key }}</label>
         </div>
       </div>
     </div>
@@ -27,6 +28,7 @@
 
     <div class="message-list-foot pad-1">
 
+      @if($chat->status == \Andiwijaya\AppCore\Models\ChatDiscussion::STATUS_OPEN)
       <form method="post" class="async" action="{{ $path }}" data-onsuccess="$('input[name=message]', this).val('');$('.images-cont', this).html('')">
         @csrf
 
@@ -40,11 +42,16 @@
             </div>
           </div>
           <div class="col-ft">
+            <button type="button" onclick="$(this).closest('.chat').chat_attach_image()"><label>&nbsp;<span class="icon fa fa-image"></span>&nbsp;</label></button>
             <button class="hpad-1" name="action" value="send-message"><label>Kirim</label></button>
-            <button type="button" onclick="$(this).closest('.chat').chat_attach_image()"><label><span class="icon fa fa-image"></span></label></button>
           </div>
         </div>
       </form>
+      @else
+        <div class="align-center pad-1">
+          <h5 class="less">Pesan ini sudah ditutup.</h5>
+        </div>
+      @endif
 
     </div>
 
@@ -174,7 +181,7 @@
 
       @if(isset($chat->id))
 
-      last_discussion_channel = '';
+        last_discussion_channel = '';
 
       $.wsConnect(
         function(){
