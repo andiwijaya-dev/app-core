@@ -79,7 +79,7 @@
   <div>
   @if(isset($item))
 
-    @if($item->messages()->count() > 5)
+    @if($item->messages()->count() > 500)
     <div class="align-center">
       <span class="icon-more"><span class="fa fa-ellipsis-h pad-1" onclick="$.fetch('')"></span></span>
     </div>
@@ -118,7 +118,7 @@
 
 @section('chat-foot')
 
-  <form method="post" class="async">
+  <form method="post" class="async" action="/chat">
     @csrf
 
     <div class="rowg">
