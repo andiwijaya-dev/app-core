@@ -51,24 +51,10 @@ class Log extends Model{
 
   public function getTypeTextAttribute(){
 
-    if(method_exists(new $this->loggable, 'getLogTypeText'))
-      return ($this->loggable::where('id', '=', $this->loggable_id)->first())->getLogTypeText($this);
+    if(method_exists($this->loggable, 'getLogTypeText'))
+      return $this->loggable::getLogTypeText($this);
 
-    switch($this->type){
-
-      case self::TYPE_CREATE:
-        return 'Data baru';
-
-      case self::TYPE_UPDATE:
-        return 'Data diubah';
-
-      case self::TYPE_REMOVE:
-        return 'Data dihapus';
-
-      default:
-        return 'Unknown log type text: ' . $this->type;
-
-    }
+    return __('models.log-type-' . $this->type);
 
   }
 

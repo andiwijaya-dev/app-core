@@ -56,7 +56,7 @@ class ChatController{
 
   }
 
-  private function auth($request){
+  public function auth($request){
 
     // Validation
 
@@ -137,7 +137,10 @@ class ChatController{
 
   }
 
-  private function openChat(){
+  public function openChat($request){
+
+    if($request->has('key') && $request->has('topic'))
+      $this->auth($request);
 
     $discussion_id = Session::get('chat.id');
     $discussion = ChatDiscussion::whereId($discussion_id)
@@ -155,9 +158,13 @@ class ChatController{
       ->renderSections();
 
     return [
+      '.chat-popup-head'=>$sections['chat-head'],
+      '.chat-popup-body'=>$sections['chat-body'],
+      '.chat-popup-foot'=>$sections['chat-foot'],
       '!.chat-popup'=>$sections['chat-popup'],
       'script'=>implode(';', [
-        "$.chat_popup_open()"
+        "$.chat_popup_open()",
+        "$('.chat-popup-body').scrollToBottom()"
       ])
     ];
 

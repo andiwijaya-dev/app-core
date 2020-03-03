@@ -746,3 +746,14 @@ if(!function_exists('rand_image')){
   }
 
 }
+
+if(!function_exists('random_dark_color')){
+
+  function random_dark_color() {
+    $color = '';
+    for($i = 0 ; $i < 3 ; $i++)
+      $color .= str_pad( dechex( mt_rand( 0, 127 ) ), 2, '0', STR_PAD_LEFT);
+    return $color;
+  }
+
+}
