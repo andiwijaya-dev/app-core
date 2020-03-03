@@ -6,6 +6,7 @@ use Andiwijaya\AppCore\Models\ChatDiscussion;
 use Andiwijaya\AppCore\Models\ChatMessage;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Session;
+use Illuminate\Support\Facades\Validator;
 
 class ChatController{
 
@@ -59,6 +60,16 @@ class ChatController{
   public function auth($request){
 
     // Validation
+    $validator = Validator::make($request->all(), [
+      'key'=>'required|email',
+      'topic'=>'required|min:3'
+    ], [
+      'key.required'=>'Email harus diisi',
+      'key.email'=>'Masukkan email yang benar',
+      'topic.required'=>'Topik belum diisi',
+      'topic.min'=>'Topik harus diisi'
+    ]);
+    if($validator->fails()) exc($validator->errors()->first());
 
     $discussion = ChatDiscussion::updateOrCreate([
       'key'=>$request->get('key'),
@@ -139,6 +150,8 @@ class ChatController{
 
   public function openChat($request){
 
+    $request->has('key') ? Session::put('chat.key', $request->get('key')) : '';
+
     if($request->has('key') && $request->has('topic'))
       $this->auth($request);
 
@@ -149,10 +162,15 @@ class ChatController{
 
     if(!$discussion) Session::forget('chat.id');
 
+    $key = Session::get('chat.key');
+    $available_topics = ChatDiscussion::where('key', $key)->pluck('title')->unique();
+
     $sections = view($this->view,
       array_merge([
         'extends'=>$this->extends,
-        'item'=>$discussion
+        'item'=>$discussion,
+        'key'=>$key,
+        'available_topics'=>$available_topics
       ])
     )
       ->renderSections();
@@ -178,10 +196,15 @@ class ChatController{
     if($discussion)
       $discussion->end();
 
+    $key = Session::get('chat.key');
+    $available_topics = ChatDiscussion::where('key', $key)->pluck('title')->unique();
+
     $sections = view($this->view,
       array_merge([
         'extends'=>$this->extends,
-        'item'=>$discussion
+        'item'=>$discussion,
+        'key'=>$key,
+        'available_topics'=>$available_topics
       ])
     )
       ->renderSections();
