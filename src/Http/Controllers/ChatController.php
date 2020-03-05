@@ -163,7 +163,9 @@ class ChatController{
     if(!$discussion) Session::forget('chat.id');
 
     $key = Session::get('chat.key');
-    $available_topics = ChatDiscussion::where('key', $key)->pluck('title')->unique();
+    $available_topics = ChatDiscussion::where('key', $key)
+      ->where('title', '<>', '')
+      ->pluck('title')->unique();
 
     $sections = view($this->view,
       array_merge([
@@ -197,7 +199,10 @@ class ChatController{
       $discussion->end();
 
     $key = Session::get('chat.key');
-    $available_topics = ChatDiscussion::where('key', $key)->pluck('title')->unique();
+    $key = Session::get('chat.key');
+    $available_topics = ChatDiscussion::where('key', $key)
+      ->where('title', '<>', '')
+      ->pluck('title')->unique();
 
     $sections = view($this->view,
       array_merge([

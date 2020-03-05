@@ -442,6 +442,51 @@ if(!function_exists('array_index')){
     return $result;
   }
 
+  function array_index_obj($arr, $indexes, $objResult = false)
+  {
+
+    $result = [];
+
+    for ($i = 0; $i < count($arr); $i++) {
+      $obj = $arr[$i];
+
+      switch (count($indexes)) {
+        case 1 :
+          $idx0 = $indexes[0];
+          if (!isset($obj->{$idx0})) continue;
+          if (!isset($result[$obj->{$idx0}])) $result[$obj->{$idx0}] = array();
+          $result[$obj->{$idx0}][] = $obj;
+          break;
+        case 2 :
+          $idx0 = $indexes[0];
+          $idx1 = $indexes[1];
+          if (!isset($obj->{$idx0}) || !isset($obj->{$idx1})) continue;
+          $key0 = $obj->{$idx0};
+          $key1 = $obj->{$idx1};
+          if (!isset($result[$key0])) $result[$key0] = array();
+          if (!isset($result[$key0][$key1])) $result[$key0][$key1] = array();
+          $result[$key0][$key1][] = $obj;
+          break;
+        case 3 :
+          $idx0 = $indexes[0];
+          $idx1 = $indexes[1];
+          $idx2 = $indexes[2];
+          if (!isset($obj->{$idx0}) || !isset($obj->{$idx1}) || !isset($obj->{$idx2})) continue;
+          $key0 = $obj->{$idx0};
+          $key1 = $obj->{$idx1};
+          $key2 = $obj->{$idx2};
+
+          if (!isset($result[$key0])) $result[$key0] = array();
+          if (!isset($result[$key0][$key1])) $result[$key0][$key1] = array();
+          $result[$key0][$key1][$key2][] = $obj;
+          break;
+        default:
+          throw new Exception("Unsupported index level.");
+      }
+    }
+
+  }
+
 }
 
 if(!function_exists('mime2ext')){

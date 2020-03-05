@@ -222,6 +222,7 @@ class CMSListController extends BaseController
       $params['search'] = Session::get("states.{$this->module}.search", '');
       $params['item'] = [];
       $params['controller'] = $this;
+      $params['mode'] = 'write';
       $sections = view($this->list_view, $params)->renderSections();
 
       return [
@@ -248,6 +249,39 @@ class CMSListController extends BaseController
     $params['search'] = Session::get("states.{$this->module}.search", '');
     $params['item'] = $item;
     $params['controller'] = $this;
+    $params['mode'] = 'read';
+
+    $parent = $request->get('parent');
+
+    if($request->ajax()){
+
+      $sections = view($this->list_view, $params)->renderSections();
+
+      return [
+        '_'=>$sections['detail'],
+        'script'=>"$('#" . Str::slug($this->module) . "-detail').open({ parent:'{$parent}' })"
+      ];
+
+    }
+
+  }
+
+  public function edit(Request $request, $id){
+
+    // Fetch data
+    $model = $this->model;
+    $item = $model::where('id', '=', $id)->first();
+
+    // Render response
+    $params = $this->getParams($request);
+    $params['module'] = $this->module;
+    $params['title'] = $this->title;
+    $params['columns'] = $this->columns;
+    $params['filters'] = Session::get("states.{$this->module}.filters", []);
+    $params['search'] = Session::get("states.{$this->module}.search", '');
+    $params['item'] = $item;
+    $params['controller'] = $this;
+    $params['mode'] = 'write';
 
     $parent = $request->get('parent');
 
