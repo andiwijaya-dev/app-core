@@ -3,6 +3,7 @@
 namespace Andiwijaya\AppCore\Http\Controllers;
 
 use Andiwijaya\AppCore\Models\User;
+use Andiwijaya\AppCore\Models\UserPreset;
 use App\Models\Category;
 use Faker\Factory;
 use Illuminate\Foundation\Bus\DispatchesJobs;
@@ -12,6 +13,7 @@ use Illuminate\Foundation\Validation\ValidatesRequests;
 use Illuminate\Foundation\Auth\Access\AuthorizesRequests;
 use Illuminate\Support\Facades\Log;
 use Illuminate\Support\Facades\Redis;
+use Illuminate\Support\Facades\Schema;
 use Illuminate\Support\Facades\Session;
 use Illuminate\Support\Str;
 
@@ -36,13 +38,18 @@ class CMSListController extends BaseController
 
   public function __construct(){
 
-    $this->middleware(function($request, $next){
+    $this->middleware(function(Request $request, $next){
+
+      if(!Session::has("states.{$this->module}"))
+        $this->loadPreset();
+
       if(Session::has("states.{$this->module}.columns"))
         $this->columns = Session::get("states.{$this->module}.columns");
       else
         $this->columns = $this->default_columns;
 
       return $next($request);
+
     });
 
   }
@@ -83,6 +90,8 @@ class CMSListController extends BaseController
         $values = explode('=', $request->get('value'));
         $this->columns[$values[0]]['width'] = $values[1];
         Session::put("states.{$this->module}.columns", $this->columns);
+
+        $this->savePreset();
         break;
 
     }
@@ -430,6 +439,43 @@ class CMSListController extends BaseController
     $obj = array_merge($obj, $params);
 
     return $obj;
+
+  }
+
+
+  public function loadPreset(){
+
+    if(Schema::hasTable('user_preset')){
+
+      $preset = UserPreset::where([
+        'user_id'=>Session::get('user_id', 1),
+        'key'=>$this->module
+      ])
+        ->first();
+
+      if($preset){
+        Session::put("states.{$this->module}", $preset->value);
+        return $preset->value;
+      }
+
+    }
+
+    return null;
+
+  }
+
+  public function savePreset(){
+
+    if(Schema::hasTable('user_preset')){
+
+      UserPreset::updateOrCreate([
+        'user_id'=>Session::get('user_id', 1),
+        'key'=>$this->module
+      ], [
+        'value'=>Session::get("states.{$this->module}")
+      ]);
+
+    }
 
   }
 
