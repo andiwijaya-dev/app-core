@@ -85,6 +85,7 @@
 
     <tr>
       @foreach($columns as $idx=>$column)
+
         @php if(!isset($column['active']) || !$column['active']) continue; @endphp
 
         @switch($column['name'])
@@ -244,7 +245,7 @@
 
     <div class="pad-1">
 
-      <form method="get" class="async" data-onsuccess="$('.grid-popup').popup_close()">
+      <form method="get" class="async cms-list-form" data-onsuccess="$('.grid-popup').popup_close()">
 
         <div class="row valign-middle">
 
@@ -343,6 +344,13 @@
     socket.emit('join', '{{ $channel }}');
 
     @endif
+
+    function cmslist_reload(){
+
+      $('input[name=page]', '.cms-list-form').val(1);
+      $('.cms-list-form').submit();
+
+    }
 
   </script>
 

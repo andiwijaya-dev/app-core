@@ -75,8 +75,8 @@ class ChatDiscussion extends Model
       ->first();
 
     $this->unreplied_count = isset($last_replied->id) ?
-      ChatMessage::where('id', '>', $last_replied->id)->where('direction', ChatMessage::DIRECTION_IN)
-        ->count() : 0;
+      ChatMessage::whereDiscussionId($this->id)->where('id', '>', $last_replied->id)->where('direction', ChatMessage::DIRECTION_IN)->count() :
+      ChatMessage::whereDiscussionId($this->id)->where('direction', ChatMessage::DIRECTION_IN)->count();
 
     parent::save();
   }

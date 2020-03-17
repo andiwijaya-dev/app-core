@@ -93,7 +93,7 @@
     @else
       <h5>Import berhasil</h5>
       <br /><br />
-      <p>{{ $total }} data berhasil diimport</p>
+      <p>{{ $total }} data berhasil diimport (dalam {{ $ellapsed }} detik)</p>
       <input type="hidden" name="step" value="3" />
       @if(count($warnings) > 0)
         <br /><br />

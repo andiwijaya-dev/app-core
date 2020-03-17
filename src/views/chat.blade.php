@@ -4,40 +4,40 @@
 
 @section('intro')
 
-<form class="async" method="post" action="/chat">
-  @csrf
+  <form class="async" method="post" action="/chat">
+    @csrf
 
-  <div class="row2">
+    <div class="row2">
 
-    <div class="col-12">
-      <br />
-      <h3>Hello,</h3>
-      <p>Terima kasih atas kunjungannya. Silakan masukkan informasi dibawah ini untuk menghubungi kami:</p>
-      <br />
-      <br />
-    </div>
-
-    <div class="col-12">
-      <strong>Email</strong>
-      <div class="textbox" data-validation="required">
-        <input type="text" name="key"/>
+      <div class="col-12">
+        <br />
+        <h3>Hello,</h3>
+        <p>Terima kasih atas kunjungannya. Silakan masukkan informasi dibawah ini untuk menghubungi kami:</p>
+        <br />
+        <br />
       </div>
-    </div>
 
-    <div class="col-12">
-      <strong>Topic</strong>
-      <div class="textbox" data-validation="required">
-        <input type="text" name="topic"/>
+      <div class="col-12">
+        <strong>Email</strong>
+        <div class="textbox" data-validation="required">
+          <input type="text" name="key"/>
+        </div>
       </div>
+
+      <div class="col-12">
+        <strong>Topic</strong>
+        <div class="textbox" data-validation="required">
+          <input type="text" name="topic"/>
+        </div>
+      </div>
+
+      <div class="col-12">
+        <button class="hpad-1 more" name="action" value="auth"><label>Submit</label></button>
+      </div>
+
     </div>
 
-    <div class="col-12">
-      <button class="hpad-1 more" name="action" value="auth"><label>Submit</label></button>
-    </div>
-
-  </div>
-
-</form>
+  </form>
 
 @endsection
 
@@ -80,41 +80,41 @@
 @section('chat-body')
 
   @if(isset($item))
-  <div>
+    <div>
 
-    @if($item->messages()->count() > 500)
-    <div class="align-center">
-      <span class="icon-more"><span class="fa fa-ellipsis-h pad-1" onclick="$.fetch('')"></span></span>
+      @if($item->messages()->count() > 500)
+        <div class="align-center">
+          <span class="icon-more"><span class="fa fa-ellipsis-h pad-1" onclick="$.fetch('')"></span></span>
+        </div>
+      @endif
+
+      @foreach($item->latest_messages as $message)
+        @component('andiwijaya::components.customer-chat-message', [ 'item'=>$message ])@endcomponent
+      @endforeach
+
+      <div class="pad-1 hmar-1 status-typing hidden">
+        <span class="fa fa-comments"></span>
+        <label class="less">Typing...</label>
+      </div>
+
     </div>
-    @endif
-
-    @foreach($item->latest_messages as $message)
-      @component('andiwijaya::components.customer-chat-message', [ 'item'=>$message ])@endcomponent
-    @endforeach
-
-    <div class="pad-1 hmar-1 status-typing hidden">
-      <span class="fa fa-comments"></span>
-      <label class="less">Typing...</label>
-    </div>
-
-  </div>
   @endif
 
   @if(isset($item))
 
-  <script>
+    <script>
 
-    $.wsConnect(
-      function(){
-        if(typeof last_discussion_channel != 'undefined') socket.emit('leave', last_discussion_channel);
-        socket.emit('join', last_discussion_channel = 'customer-discussion-{{ $item->id }}');
-      },
-      {
-        host:'{{ env('UPDATER_HOST') }}'
-      }
-    );
+      $.wsConnect(
+        function(){
+          if(typeof last_discussion_channel != 'undefined') socket.emit('leave', last_discussion_channel);
+          socket.emit('join', last_discussion_channel = 'customer-discussion-{{ $item->id }}');
+        },
+        {
+          host:'{{ env('UPDATER_HOST') }}'
+        }
+      );
 
-  </script>
+    </script>
   @endif
 
 @endsection
@@ -122,32 +122,32 @@
 @section('chat-foot')
 
   @if(isset($item))
-  <form method="post" class="async" action="/chat">
-    @csrf
+    <form method="post" class="async" action="/chat">
+      @csrf
 
-    <div class="rowg">
+      <div class="rowg">
 
-      <div class="col-st">
-        <div class="textbox" data-validation="required">
-          <input type="text" name="text"/>
+        <div class="col-st">
+          <div class="textbox" data-validation="required">
+            <input type="text" name="text"/>
+          </div>
         </div>
+
+        <div class="col-ft">
+          <button type="button" onclick="$.chat_popup_add_image()"><label>&nbsp;<span class="fa fa-image"></span>&nbsp;</label></button>
+        </div>
+
+        <div class="col-ft">
+          <button class="hpad-2" name="action" value="send-message"><label>Send</label></button>
+        </div>
+
       </div>
 
-      <div class="col-ft">
-        <button type="button" onclick="$.chat_popup_add_image()"><label>&nbsp;<span class="fa fa-image"></span>&nbsp;</label></button>
+      <div class="row vpadt-0">
+        <div class="col-12 image-cont"></div>
       </div>
 
-      <div class="col-ft">
-        <button class="hpad-2" name="action" value="send-message"><label>Send</label></button>
-      </div>
-
-    </div>
-
-    <div class="row vpadt-0">
-      <div class="col-12 image-cont"></div>
-    </div>
-
-  </form>
+    </form>
   @endif
 
 @endsection

@@ -40,10 +40,10 @@ class CMSListController extends BaseController
 
     $this->middleware(function(Request $request, $next){
 
-      if(!Session::has("states.{$this->module}"))
+      if(!$request->has('reset') && !Session::has("states.{$this->module}"))
         $this->loadPreset();
 
-      if(Session::has("states.{$this->module}.columns"))
+      if(!$request->has('reset') && Session::has("states.{$this->module}.columns"))
         $this->columns = Session::get("states.{$this->module}.columns");
       else
         $this->columns = $this->default_columns;
@@ -61,12 +61,6 @@ class CMSListController extends BaseController
     // Find action
     $actions = explode('|', $request->get('action'));
     $action = isset($actions[0]) ? $actions[0] : '';
-
-    if($request->has('reset')){
-      Session::put("states.{$this->module}.columns", ($this->columns = $this->default_columns));
-      Session::put("states.{$this->module}.search", '');
-      Session::put("states.{$this->module}.filters", []);
-    }
 
     // Apply columns process
     switch($action){

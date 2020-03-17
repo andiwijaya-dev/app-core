@@ -75,7 +75,8 @@ class ChatController{
       'key'=>$request->get('key'),
       'title'=>$request->get('topic')
     ], [
-      'status'=>ChatDiscussion::STATUS_OPEN
+      'status'=>ChatDiscussion::STATUS_OPEN,
+      'avatar_image_url'=>$request->get('avatar_image_url')
     ]);
 
     Session::put('chat.id', $discussion->id);
@@ -190,15 +191,16 @@ class ChatController{
 
   }
 
-  private function endChat($request){
+  public function endChat($request){
 
     $discussion_id = Session::get('chat.id');
     $discussion = ChatDiscussion::whereId($discussion_id)->first();
 
-    if($discussion)
+    if($discussion){
+      Session::forget('chat.id');
       $discussion->end();
+    }
 
-    $key = Session::get('chat.key');
     $key = Session::get('chat.key');
     $available_topics = ChatDiscussion::where('key', $key)
       ->where('title', '<>', '')

@@ -15,7 +15,11 @@ trait FilterableTrait{
     // Handle search parameter
     if(isset($params['search']) && $params['search']){
 
-      if(isset($this->filter_searchable) && is_array($this->filter_searchable)){
+      if(isset($this->searchable) && is_array($this->searchable)){
+        $model->search($params['search']);
+      }
+
+      else if(isset($this->filter_searchable) && is_array($this->filter_searchable)){
 
         $model->where(function($query) use($params){
 
@@ -96,8 +100,12 @@ trait FilterableTrait{
 
       if(in_array($key, [ 'columns', 'filters', 'search' ])) continue;
 
-      if(in_array($key, $this->getFillable()))
-        $model->where($key, '=', $value);
+      if(in_array($key, $this->getFillable())){
+        if(is_array($value))
+          $model->whereIn($key, $value);
+        else
+          $model->where($key, '=', $value);
+      }
 
     }
 

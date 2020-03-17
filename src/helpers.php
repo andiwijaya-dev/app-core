@@ -485,6 +485,8 @@ if(!function_exists('array_index')){
       }
     }
 
+    return $result;
+
   }
 
 }

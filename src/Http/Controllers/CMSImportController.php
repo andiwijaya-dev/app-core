@@ -34,6 +34,11 @@ class CMSImportController extends BaseController{
 
   //protected function processImport($obj, &$error, $index = null, $session_data = null){}
 
+  //protected function processAllImport(array $arr, &$errors, $session_data = null){}
+
+  protected $percentage = 0;
+
+  private $last_progress_sent_at = null;
 
 
   public function index(Request $request){
@@ -66,7 +71,8 @@ class CMSImportController extends BaseController{
         if($step == 2) return $this->process($request);
         if($step == 3) return [
           'script'=>implode(';', [
-            "$('#import-modal').close()"
+            "$('#import-modal').close()",
+            "if(typeof cmslist_reload == 'function') cmslist_reload()"
           ])
         ];
 
@@ -322,23 +328,23 @@ class CMSImportController extends BaseController{
 
   public function process(Request $request){
 
-    $t1 = microtime(1);
+    $this->last_progress_sent_at = $t1 = microtime(1);
 
     ini_set('memory_limit', '1G');
     ini_set('max_execution_time', 1200);
     ini_set('set_time_limit', 1200);
     set_time_limit(1200);
 
-    $percentage = 20;
+    $this->percentage = 20;
 
     $session_data = Session::get(str_replace('/', '.',  $this->path));
     $session_data = array_merge($request->all(), $session_data);
 
     $custom_columns = $request->get('columns');
     foreach($custom_columns as $custom_column_name=>$custom_column_index){
-      foreach($session_data['columns'] as $index=>$column){
+      foreach($session_data['columns'] as $idx=>$column){
         if($custom_column_name == $column['name'] && $custom_column_index >= 0){
-          $session_data['columns'][$index]['index'] = $custom_column_index;
+          $session_data['columns'][$idx]['index'] = $custom_column_index;
         }
       }
     }
@@ -360,10 +366,10 @@ class CMSImportController extends BaseController{
     $rows = Excel::toArray(new GenericImport, Storage::disk('local')->path($session_data['file_path']),null, $reader_type);
     $headers = $rows[0][$header_row_index];
 
-    if(redis_available() && microtime(1) - $t1 > 1){
-      $percentage += 20;
-      Redis::publish($this->getChannel(), json_encode([  'script'=>"$('#import-modal .progressbar').val(" . ($percentage) . ")" ]));
-      $t1 = microtime(1);
+    if(redis_available() && microtime(1) - $this->last_progress_sent_at > 1){
+      $this->percentage += 20;
+      Redis::publish($this->getChannel(), json_encode([  'script'=>"$('#import-modal .progressbar').val(" . ($this->percentage) . ")" ]));
+      $this->last_progress_sent_at = microtime(1);
     }
 
     $arr = [];
@@ -406,66 +412,100 @@ class CMSImportController extends BaseController{
     $warnings = [];
     $total = 0;
 
-    try{
+    if(method_exists($this, 'processAllImport')) {
 
-      DB::beginTransaction();
+      try{
 
-      if(method_exists($this, 'preProcessImport'))
-        $this->preProcessImport($session_data);
+        DB::beginTransaction();
 
-      foreach($arr as $index=>$obj){
+        if(method_exists($this, 'preProcessImport'))
+          $this->preProcessImport($session_data);
 
-        if(!$obj) continue;
+        $total = $this->processAllImport($arr, $errors, $session_data);
 
-        $error = '';
+        if(method_exists($this, 'postProcessImport'))
+          $this->postProcessImport($session_data);
 
-        $this->processImport($obj, $error, $index + $header_row_index + 2, $session_data);
+        if(count($errors) > 0)
+          throw new \Exception();
 
-        if($error){
-          if(isset($error['type'])){
-            switch($error['type']){
+        DB::commit();
 
-              case 1:
-                $errors[] = [ 'row'=>$index + $header_row_index + 2, 'message'=>isset($error['message']) ? $error['message'] : 'Error not specified' ];
-                break;
+      }
+      catch(\Exception $ex){
 
-              case 2:
-                $warnings[] = [ 'row'=>$index + $header_row_index + 2, 'message'=>$error['message'] ];
-                break;
+        DB::rollBack();
 
-            }
-          }
-          else
-            $errors[] = [ 'row'=>$index + $header_row_index + 2, 'message'=>$error ];
-        }
-
-        $total++;
-
-        if(redis_available() && microtime(1) - $t1 > 1){
-          $current_percentage = $percentage + (60 * $index / count($arr));
-          Redis::publish($this->getChannel(), json_encode(['script' => "$('#import-modal .progressbar').val({$current_percentage})"]));
-          $t1 = microtime(1);
-        }
+        if($ex->getMessage() && isset($index))
+          $errors[] = [ 'row'=>$index + $header_row_index + 2, 'message'=>$ex->getMessage() . (env('APP_DEBUG') ? $ex->getFile() . ':' . $ex->getLine() : '') ];
+        else
+          $errors[] = [ 'row'=>'-', 'message'=>$ex->getMessage() . (env('APP_DEBUG') ? $ex->getFile() . ':' . $ex->getLine() : '') ];
 
       }
 
-      if(method_exists($this, 'postProcessImport'))
-        $this->postProcessImport($session_data);
+    }
 
-      if(count($errors) > 0)
-        throw new \Exception();
+    else {
 
-      DB::commit();
+      try{
+
+        DB::beginTransaction();
+
+        foreach($arr as $index=>$obj){
+
+          if(!$obj) continue;
+
+          $error = '';
+
+          $this->processImport($obj, $error, $index + $header_row_index + 2, $session_data);
+
+          if($error){
+            if(isset($error['type'])){
+              switch($error['type']){
+
+                case 1:
+                  $errors[] = [ 'row'=>$index + $header_row_index + 2, 'message'=>isset($error['message']) ? $error['message'] : 'Error not specified' ];
+                  break;
+
+                case 2:
+                  $warnings[] = [ 'row'=>$index + $header_row_index + 2, 'message'=>$error['message'] ];
+                  break;
+
+              }
+            }
+            else
+              $errors[] = [ 'row'=>$index + $header_row_index + 2, 'message'=>$error ];
+          }
+
+          $total++;
+
+          $this->sendProgressbar($index / count($arr) * 100);
+
+        }
+
+        if(method_exists($this, 'postProcessImport'))
+          $this->postProcessImport($session_data);
+
+        if(count($errors) > 0)
+          throw new \Exception();
+
+        DB::commit();
+
+      }
+      catch(\Exception $ex){
+
+        DB::rollBack();
+
+        if($ex->getMessage() && isset($index))
+          $errors[] = [ 'row'=>$index + $header_row_index + 2, 'message'=>$ex->getMessage() . (env('APP_DEBUG') ? $ex->getFile() . ':' . $ex->getLine() : '') ];
+        else
+          $errors[] = [ 'row'=>'-', 'message'=>$ex->getMessage() . (env('APP_DEBUG') ? $ex->getFile() . ':' . $ex->getLine() : '') ];
+
+      }
 
     }
-    catch(\Exception $ex){
 
-      DB::rollBack();
 
-      if($ex->getMessage())
-        $errors[] = [ 'row'=>$index + $header_row_index + 2, 'message'=>$ex->getMessage() . $ex->getFile() . ':' . $ex->getLine() ];
-
-    }
 
     if(redis_available())
       Redis::publish($this->getChannel(), json_encode([  'script'=>"$('#import-modal .progressbar').val(100)" ]));
@@ -476,6 +516,7 @@ class CMSImportController extends BaseController{
     $params['errors'] = $errors;
     $params['warnings'] = $warnings;
     $params['total'] = $total;
+    $params['ellapsed'] = round(microtime(1) - $t1, 2);
     $sections = view($this->view, $params)->renderSections();
 
     return [
@@ -493,7 +534,20 @@ class CMSImportController extends BaseController{
 
   }
 
+  protected function sendProgressbar($percentage){
 
+    if(microtime(1) - $this->last_progress_sent_at > 1 && redis_available()){
+
+      $max_percentage = 100 - $this->percentage;
+      $real_percentage = $this->percentage + ($percentage / 100 * $max_percentage);
+
+      Redis::publish($this->getChannel(), json_encode(['script' => "$('#import-modal .progressbar').val({$real_percentage})"]));
+
+      $this->last_progress_sent_at = microtime(1);
+
+    }
+
+  }
 
   public function getParams(Request $request, array $params = [])
   {
