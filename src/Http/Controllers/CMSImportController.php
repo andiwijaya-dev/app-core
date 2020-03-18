@@ -479,7 +479,7 @@ class CMSImportController extends BaseController{
 
           $total++;
 
-          $this->sendProgressbar($index / count($arr) * 100);
+          $this->addProgress(80 / count($arr));
 
         }
 
@@ -542,6 +542,22 @@ class CMSImportController extends BaseController{
       $real_percentage = $this->percentage + ($percentage / 100 * $max_percentage);
 
       Redis::publish($this->getChannel(), json_encode(['script' => "$('#import-modal .progressbar').val({$real_percentage})"]));
+
+      $this->last_progress_sent_at = microtime(1);
+
+    }
+
+  }
+
+  protected function addProgress($percentage){
+
+    $this->percentage += $percentage;
+
+    if($this->percentage > 100) $this->percentage = 100;
+
+    if(microtime(1) - $this->last_progress_sent_at > 1 && redis_available()){
+
+      Redis::publish($this->getChannel(), json_encode(['script' => "$('#import-modal .progressbar').val({$this->percentage})"]));
 
       $this->last_progress_sent_at = microtime(1);
 
