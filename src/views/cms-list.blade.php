@@ -230,7 +230,7 @@
     @if($items->hasMorePages())
       <tr>
         <td colspan="10" class="align-center">
-          ` `
+          <input type="hidden" name="page" value="{{ $items->currentPage() + 1 }}" />
           <button class="grid-load-more" name="action" value=""><label>Load More</label></button>
         </td>
       </tr>
