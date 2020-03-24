@@ -34,7 +34,7 @@ class CMSImportController extends BaseController{
 
   //protected function processImport($obj, &$error, $index = null, $session_data = null){}
 
-  //protected function processAllImport(array $arr, &$errors, $session_data = null){}
+  //protected function processAllImport(array $arr, &$errors, &$warnings, $session_data = null){}
 
   protected $percentage = 0;
 
@@ -386,11 +386,11 @@ class CMSImportController extends BaseController{
       if($is_empty)
         $obj = null;
       else{
+
         foreach($headers as $idx=>$header){
           if(empty(trim($header))) continue;
           $obj[$header] = isset($rows[0][$i][$idx]) ? $rows[0][$i][$idx] : '';
         }
-
 
         foreach($session_data['columns'] as $column){
 
@@ -421,10 +421,7 @@ class CMSImportController extends BaseController{
         if(method_exists($this, 'preProcessImport'))
           $this->preProcessImport($session_data);
 
-        $total = $this->processAllImport($arr, $errors, $session_data);
-
-        if(method_exists($this, 'postProcessImport'))
-          $this->postProcessImport($session_data);
+        $total = $this->processAllImport($arr, $errors, $warnings, $session_data);
 
         if(count($errors) > 0)
           throw new \Exception();
@@ -442,6 +439,9 @@ class CMSImportController extends BaseController{
           $errors[] = [ 'row'=>'-', 'message'=>$ex->getMessage() . (env('APP_DEBUG') ? $ex->getFile() . ':' . $ex->getLine() : '') ];
 
       }
+
+      if(method_exists($this, 'postProcessImport'))
+        $this->postProcessImport($session_data);
 
     }
 
