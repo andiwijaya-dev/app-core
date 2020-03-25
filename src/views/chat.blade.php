@@ -104,15 +104,17 @@
 
     <script>
 
-      $.wsConnect(
+      var current_channel = '';
+
+      $.wsConnect('{{ env('UPDATER_HOST') }}',
         function(){
-          if(typeof last_discussion_channel != 'undefined') socket.emit('leave', last_discussion_channel);
-          socket.emit('join', last_discussion_channel = 'customer-discussion-{{ $item->id }}');
+          if(current_channel != '') this.emit('leave', current_channel);
+          this.emit('join', (current_channel = 'customer-discussion-{{ $item->id }}'));
         },
-        {
-          host:'{{ env('UPDATER_HOST') }}'
+        function(channel, message){
+          $.process_xhr_response(eval('(' + message + ')'));
         }
-      );
+      )
 
     </script>
   @endif
