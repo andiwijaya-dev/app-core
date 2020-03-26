@@ -29,24 +29,24 @@
     <div class="message-list-foot pad-1">
 
       @if($chat->status == \Andiwijaya\AppCore\Models\ChatDiscussion::STATUS_OPEN)
-      <form method="post" class="async" action="{{ $path }}" data-onsuccess="$('input[name=message]', this).val('');$('.images-cont', this).html('')">
-        @csrf
+        <form method="post" class="async" action="{{ $path }}" data-onsuccess="$('input[name=message]', this).val('');$('.images-cont', this).html('')">
+          @csrf
 
-        <input type="hidden" name="id" value="{{ $chat->id }}" />
+          <input type="hidden" name="id" value="{{ $chat->id }}" />
 
-        <div class="row nowrap valign-middle">
-          <div class="col-ft images-cont"></div>
-          <div class="col-st">
-            <div class="textbox">
-              <input type="text" name="text" placeholder="Ketik pesan disini..."/>
+          <div class="row nowrap valign-middle">
+            <div class="col-ft images-cont"></div>
+            <div class="col-st">
+              <div class="textbox">
+                <input type="text" name="text" placeholder="Ketik pesan disini..."/>
+              </div>
+            </div>
+            <div class="col-ft">
+              <button type="button" onclick="$(this).closest('.chat').chat_attach_image()"><label>&nbsp;<span class="icon fa fa-image"></span>&nbsp;</label></button>
+              <button class="hpad-1" name="action" value="send-message"><label>Kirim</label></button>
             </div>
           </div>
-          <div class="col-ft">
-            <button type="button" onclick="$(this).closest('.chat').chat_attach_image()"><label>&nbsp;<span class="icon fa fa-image"></span>&nbsp;</label></button>
-            <button class="hpad-1" name="action" value="send-message"><label>Kirim</label></button>
-          </div>
-        </div>
-      </form>
+        </form>
       @else
         <div class="align-center pad-1">
           <h5 class="less">Pesan ini sudah ditutup.</h5>
@@ -170,31 +170,22 @@
     </div>
     <script>
 
-      $.wsConnect(function(){
-        socket.emit('join', 'chat-list');
-      }, {
-        host:'{{ env('UPDATER_HOST') }}',
-        on_reconnect:function(){
-          socket.emit('join', last_discussion_channel);
-        }
-      });
+      var channels = [
+        'chat-list'
+      ];
+      @if(isset($chat->id)) channels[1] = 'discussion-{{ $chat->id }}'; @endif
 
-      @if(isset($chat->id))
-
-        last_discussion_channel = '';
-
-      $.wsConnect(
-        function(){
-          socket.emit('join', 'discussion-{{ $chat->id }}');
-          last_discussion_channel = 'discussion-{{ $chat->id }}';
-        },
-        {
-          host:'{{ env('UPDATER_HOST') }}'
-        },
-        true
-      );
-
-      @endif
+      var socket = $.wsConnect('{{ env('UPDATER_HOST') }}',
+          function(){
+            var socket = this;
+            $(channels).each(function(){
+              socket.emit('join', this);
+            })
+          },
+          function(channel, message){
+            $.process_xhr_response(eval('(' + message + ')'));
+          }
+        );
 
     </script>
 

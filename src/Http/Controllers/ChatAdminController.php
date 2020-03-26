@@ -95,8 +95,8 @@ class ChatAdminController extends BaseController
         ],
         'script'=>implode(';', [
           "$('.chat').chat_resize()",
-          "if(typeof last_discussion_channel != 'undefined') socket.emit('leave', last_discussion_channel)",
-          "socket.emit('join', last_discussion_channel = 'discussion-{$params['chat']->id}');"
+          "if(typeof channels[1]) socket.emit('leave', channels[1])",
+          "socket.emit('join', (channels[1] = 'discussion-{$params['chat']->id}'));"
         ])
       ];
 

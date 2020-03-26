@@ -10,18 +10,27 @@ use Illuminate\Support\Facades\Validator;
 
 class ChatController{
 
-  protected $extends = 'website.no-header';
-
-  protected $view = 'andiwijaya::chat';
-
 
   public function index(Request $request){
 
-    return view($this->view,
-      array_merge([
-        'extends'=>$this->extends
-      ])
-    );
+    if($request->ajax()){
+
+      $action = $request->get('action');
+
+      switch($action){
+
+        case 'open-chat':
+
+          return [
+            '#chatpopup>*:nth-child(2)'=>'',
+            'script'=>""
+          ];
+
+      }
+
+    }
+
+    return view('website.chat', []);
 
   }
 
@@ -224,6 +233,14 @@ class ChatController{
         "$.chat_resize()",
         "$.chat_popup_close()"
       ])
+    ];
+
+  }
+
+  public function update(Request $request){
+
+    return [
+      '_'=>view('website.chat-popup')->render()
     ];
 
   }
