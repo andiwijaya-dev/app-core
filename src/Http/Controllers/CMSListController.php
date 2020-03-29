@@ -31,6 +31,10 @@ class CMSListController extends BaseController
 
   protected $title = '';
 
+  protected $extends = '';
+
+  protected $formless = false;
+
   protected $list_view = 'andiwijaya::cms-list';
 
   protected $model = null;
@@ -62,6 +66,8 @@ class CMSListController extends BaseController
     $actions = explode('|', $request->get('action'));
     $action = isset($actions[0]) ? $actions[0] : '';
 
+    $page = $request->get('page');
+
     // Apply columns process
     switch($action){
 
@@ -88,11 +94,14 @@ class CMSListController extends BaseController
         $this->savePreset();
         break;
 
+      case 'load-more':
+        $page = $actions[1];
+        break;
+
     }
 
     if($request->has('search')) Session::put("states.{$this->module}.search", $request->get('search'));
 
-    $page = $request->get('page');
     if(in_array($action, [ 'search' ])) $page = 1;
     $filters = Session::get("states.{$this->module}.filters", []);
     $search = Session::get("states.{$this->module}.search", '');
@@ -109,6 +118,13 @@ class CMSListController extends BaseController
       ), function($model){
       $model->orderBy('updated_at', 'desc');
     });
+
+    if($action == 'download'){
+      if(method_exists($this, 'download'))
+        return $this->download($request, $model);
+      exc('Download method not exists');
+    }
+
     $items = $model->paginate(18, ['*'], 'page', $page);
 
     // Render response
@@ -117,6 +133,8 @@ class CMSListController extends BaseController
     $params['module'] = $this->module;
     $params['title'] = $this->title;
     $params['columns'] = $this->columns;
+    $params['formless'] = $this->formless;
+    $params['extends'] = strlen($this->extends) > 0 ? $this->extends : 'admin.app';
     $params['filters'] = $filters;
     $params['search'] = $search;
     $params['items'] = $items;
@@ -191,8 +209,12 @@ class CMSListController extends BaseController
 
     }
 
-    else
+    else{
+
       return view($this->list_view)->with($params);
+
+    }
+
 
   }
 

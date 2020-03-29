@@ -25,6 +25,21 @@ class Log extends Model{
   const TYPE_REMOVE = -1;
 
 
+  const TYPE_INVALID = -4;
+  const TYPE_DECLINED = -3;
+  const TYPE_CANCELLED = -2;
+  const TYPE_IMPORT = 3;
+  const TYPE_PAYMENT = 8; // For m2w and motorcycle means "request submitted"
+  const TYPE_PROCESS = 9;
+  const TYPE_SURVEY = 10;
+  const TYPE_APPROVED = 11;
+  const TYPE_FUNDING = 12;
+  const TYPE_FUNDED = 13;
+
+  const TYPE_LOGIN_SUCCESS = 51;
+  const TYPE_LOGIN_ATTEMPT = 52;
+
+
   public function __construct(array $attributes = []){
 
     if(!app()->runningInConsole()){

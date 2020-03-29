@@ -98,6 +98,7 @@ trait FilterableTrait{
     // Handle generic filter parameter
     foreach($params as $key=>$value){
 
+      if(is_null($value)) continue;
       if(in_array($key, [ 'columns', 'filters', 'search' ])) continue;
 
       if(in_array($key, $this->getFillable())){

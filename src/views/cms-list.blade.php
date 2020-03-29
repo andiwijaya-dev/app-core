@@ -1,4 +1,4 @@
-@extends('admin.app')
+@extends($extends ?? 'admin.app')
 
 @section('detail')
 
@@ -8,10 +8,10 @@
 
       <div class="modal-head">
         <div class="row valign-middle">
-          <div class="col-6">
+          <div class="col-lg-6">
             <h3>{{ isset($item['id']) ? 'Update ' . ucwords($title) : ucwords($title) . ' Baru' }}</h3>
           </div>
-          <div class="col-6 align-right">
+          <div class="col-lg-6 align-right">
             <span class="fa fa-times selectable pad-1" onclick="$(this).closest('.modal').close()"></span>
           </div>
           <div class="col-12 vmart-2 align-center hidden">
@@ -230,8 +230,7 @@
     @if($items->hasMorePages())
       <tr>
         <td colspan="10" class="align-center">
-          <input type="hidden" name="page" value="{{ $items->currentPage() + 1 }}" />
-          <button class="grid-load-more" name="action" value=""><label>Load More</label></button>
+          <button class="grid-load-more block" name="action" value="load-more|{{ $items->currentPage() + 1 }}"><label>Load More</label></button>
         </td>
       </tr>
     @endif
@@ -245,63 +244,67 @@
 
     <div class="pad-1">
 
-      <form method="get" class="async cms-list-form" data-onsuccess="$('.grid-popup').popup_close()">
+      @if(isset($formless) && !$formless)
+        <form method="get" class="async cms-list-form" data-onsuccess="$('.grid-popup').popup_close()">
+          @endif
 
-        <div class="row valign-middle">
+          <div class="row valign-middle">
 
-          <div class="col-6">
-            <h3 class="hpad-1">{{ ucwords($title) }}</h3>
-            <button class="hidden" name="action" value="search"><label>Search</label></button>
-            @yield('header-row')
-          </div>
+            <div class="col-lg-6 col-sm-12">
+              <h3 class="hpad-1">{{ ucwords($title) }}</h3>
+              <button class="hidden" name="action" value="search"><label>Search</label></button>
+              @yield('header-row')
+            </div>
 
-          <div class="col-6 align-right">
-            <span class="textbox" style="width:100%;max-width:360px">
+            <div class="col-lg-6 col-sm-12 align-right vmart-sm-1">
+            <span class="textbox" style="width:100%;max-width:480px">
               <span class="fa fa-search icon"></span>
               <input type="text" name="search" placeholder="Cari..." value="{{ $search }}"/>
             </span>
-            <button class="hidden" name="action" value="select-column"><label>Columns <span class="fa fa-caret-down"></span></label></button>
-            <button class="hidden" name="action" value="open-filter"><label><span class="fa fa-filter"></span> Filters</label></button>
-          </div>
-
-        </div>
-
-        <div class="row valign-middle vpadt-0">
-
-          <div class="col-12">
-            <div class="panel vmart-1">
-              <div class="grid {{ \Illuminate\Support\Str::slug($module) }}-grid" id="{{ \Illuminate\Support\Str::slug($module) }}" data-onresize="$.fetch('/{{ $module }}?action=resize-column&value=' + arguments[0])">
-                <table>
-                  <thead>
-                  @yield('header')
-                  </thead>
-                  <tbody>
-                  @yield('items')
-                  </tbody>
-                  <tfoot>
-                  @yield('paging')
-                  </tfoot>
-                </table>
-              </div>
-              <script>
-
-                function grid_add_load_more(idx, next_page){
-
-                  $('.grid-popup .filter-tab .load-more').remove();
-                  $('.grid-popup .filter-tab').append("<div class='load-more'>Load More</div>");
-                  $('.grid-popup .load-more').click(function(){
-                    $.fetch('?action=get-filter-values&idx=' + idx + '&page=' + next_page);
-                  })
-
-                }
-
-              </script>
+              <button class="hidden" name="action" value="select-column"><label>Columns <span class="fa fa-caret-down"></span></label></button>
+              <button class="hidden" name="action" value="open-filter"><label><span class="fa fa-filter"></span> Filters</label></button>
             </div>
+
           </div>
 
-        </div>
+          <div class="row valign-middle vpadt-0">
 
-      </form>
+            <div class="col-12">
+              <div class="panel vmart-1">
+                <div class="grid {{ \Illuminate\Support\Str::slug($module) }}-grid" id="{{ \Illuminate\Support\Str::slug($module) }}" data-onresize="$.fetch('/{{ $module }}?action=resize-column&value=' + arguments[0])">
+                  <table>
+                    <thead>
+                    @yield('header')
+                    </thead>
+                    <tbody>
+                    @yield('items')
+                    </tbody>
+                    <tfoot>
+                    @yield('paging')
+                    </tfoot>
+                  </table>
+                </div>
+                <script>
+
+                  function grid_add_load_more(idx, next_page){
+
+                    $('.grid-popup .filter-tab .load-more').remove();
+                    $('.grid-popup .filter-tab').append("<div class='load-more'>Load More</div>");
+                    $('.grid-popup .load-more').click(function(){
+                      $.fetch('?action=get-filter-values&idx=' + idx + '&page=' + next_page);
+                    })
+
+                  }
+
+                </script>
+              </div>
+            </div>
+
+          </div>
+
+          @if(isset($formless) && !$formless)
+        </form>
+      @endif
 
     </div>
 
