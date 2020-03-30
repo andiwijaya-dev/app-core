@@ -39,6 +39,9 @@ class CMSListController extends BaseController
 
   protected $model = null;
 
+  protected $load_more_key = 'id';
+  protected $load_more_operator = '>';
+
 
   public function __construct(){
 
@@ -66,7 +69,7 @@ class CMSListController extends BaseController
     $actions = explode('|', $request->get('action'));
     $action = isset($actions[0]) ? $actions[0] : '';
 
-    $page = $request->get('page');
+    $page = $request->get('page', 1);
 
     // Apply columns process
     switch($action){
@@ -94,10 +97,6 @@ class CMSListController extends BaseController
         $this->savePreset();
         break;
 
-      case 'load-more':
-        $page = $actions[1];
-        break;
-
     }
 
     if($request->has('search')) Session::put("states.{$this->module}.search", $request->get('search'));
@@ -115,9 +114,12 @@ class CMSListController extends BaseController
           'filters'=>$filters,
           'search'=>$search
         ]
-      ), function($model){
+      ));
+
+    if(method_exists($this, 'customFilter'))
+      $this->customFilter($model);
+    else
       $model->orderBy('updated_at', 'desc');
-    });
 
     if($action == 'download'){
       if(method_exists($this, 'download'))
@@ -125,11 +127,28 @@ class CMSListController extends BaseController
       exc('Download method not exists');
     }
 
-    $items = $model->paginate(18, ['*'], 'page', $page);
+    $count = $model->count();
+
+    $row_per_page = 18;
+    $next_page = ceil($count / $row_per_page) > $page;
+
+    if($action == 'load-more'){
+
+      $last_id = $actions[1];
+      $model->where($this->load_more_key, $this->load_more_operator, $last_id);
+
+      $items = $model->limit($row_per_page)->get();
+    }
+    else{
+      $items = $model->limit($row_per_page)->get();
+    }
+
 
     // Render response
     $params = $this->getParams($request);
     $params['page'] = $page;
+    $params['next_page'] = $next_page;
+    $params['load_more_key'] = $this->load_more_key;
     $params['module'] = $this->module;
     $params['title'] = $this->title;
     $params['columns'] = $this->columns;
@@ -199,7 +218,7 @@ class CMSListController extends BaseController
         default:
           $sections = view($this->list_view, $params)->renderSections();
 
-          $return["{$grid_id} tbody"] = ($page > 1 ? '>>' : '') . ($params['items']->total() > 0 ? $sections['items'] : "");
+          $return["{$grid_id} tbody"] = ($action == 'load-more' ? '>>' : '') . $sections['items'];
           $return["{$grid_id} tfoot"] = $sections['paging'];
           $return['script'] = "$('{$grid_id}').grid_update()";
           break;

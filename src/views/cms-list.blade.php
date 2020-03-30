@@ -225,15 +225,12 @@
 @endsection
 
 @section('paging')
-
-  @if(isset($items) && $items instanceof \Illuminate\Pagination\LengthAwarePaginator)
-    @if($items->hasMorePages())
-      <tr>
-        <td colspan="10" class="align-center">
-          <button class="grid-load-more block" name="action" value="load-more|{{ $items->currentPage() + 1 }}"><label>Load More</label></button>
-        </td>
-      </tr>
-    @endif
+  @if($next_page)
+    <tr>
+      <td colspan="10" class="align-center">
+        <button class="grid-load-more block" name="action" value="load-more|{{ $items[count($items) - 1]->{$load_more_key} }}"><label>Load More</label></button>
+      </td>
+    </tr>
   @endif
 
 @endsection

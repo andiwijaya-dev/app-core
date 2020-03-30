@@ -24,7 +24,6 @@ class Log extends Model{
   const TYPE_UPDATE = 2;
   const TYPE_REMOVE = -1;
 
-
   const TYPE_INVALID = -4;
   const TYPE_DECLINED = -3;
   const TYPE_CANCELLED = -2;
@@ -35,6 +34,10 @@ class Log extends Model{
   const TYPE_APPROVED = 11;
   const TYPE_FUNDING = 12;
   const TYPE_FUNDED = 13;
+
+  const TYPE_DOWNLOAD = 31;
+  const TYPE_UPLOAD = 32;
+  const TYPE_EXPORT = 34;
 
   const TYPE_LOGIN_SUCCESS = 51;
   const TYPE_LOGIN_ATTEMPT = 52;
