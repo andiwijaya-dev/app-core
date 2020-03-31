@@ -225,10 +225,10 @@
 @endsection
 
 @section('paging')
-  @if($next_page)
+  @if($page + 1 <= $max_page)
     <tr>
       <td colspan="10" class="align-center">
-        <button class="grid-load-more block" name="action" value="load-more|{{ $items[count($items) - 1]->{$load_more_key} }}"><label>Load More</label></button>
+        <button class="grid-load-more block" name="action" value="load-more|{{ $page + 1 }}"><label>Load More</label></button>
       </td>
     </tr>
   @endif

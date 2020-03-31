@@ -130,14 +130,12 @@ class CMSListController extends BaseController
     $count = $model->count();
 
     $row_per_page = 18;
-    $next_page = ceil($count / $row_per_page) > $page;
+    $max_page = ceil($count / $row_per_page);
 
     if($action == 'load-more'){
-
-      $last_id = $actions[1];
-      $model->where($this->load_more_key, $this->load_more_operator, $last_id);
-
-      $items = $model->limit($row_per_page)->get();
+      $page = $actions[1];
+      $offset = ($page - 1) * $row_per_page;
+      $items = $model->limit($row_per_page)->offset($offset)->get();
     }
     else{
       $items = $model->limit($row_per_page)->get();
@@ -147,7 +145,7 @@ class CMSListController extends BaseController
     // Render response
     $params = $this->getParams($request);
     $params['page'] = $page;
-    $params['next_page'] = $next_page;
+    $params['max_page'] = $max_page;
     $params['load_more_key'] = $this->load_more_key;
     $params['module'] = $this->module;
     $params['title'] = $this->title;
@@ -218,7 +216,7 @@ class CMSListController extends BaseController
         default:
           $sections = view($this->list_view, $params)->renderSections();
 
-          $return["{$grid_id} tbody"] = ($action == 'load-more' ? '>>' : '') . $sections['items'];
+          $return["{$grid_id} tbody"] = ($page > 1 ? '>>' : '') . $sections['items'];
           $return["{$grid_id} tfoot"] = $sections['paging'];
           $return['script'] = "$('{$grid_id}').grid_update()";
           break;
