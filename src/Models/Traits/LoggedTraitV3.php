@@ -99,8 +99,9 @@ trait LoggedTraitV3{
         $dirty = array_merge($this->updates, $this->getDirty());
         if(count($dirty) > 0){
           $original = $this->getOriginal();
+
           foreach($dirty as $key=>$value)
-            if(isset($original[$key]))
+            if(array_key_exists($key, $original))
               $this->updates[$key] = [ '_type'=>2, '_value'=>$original[$key], '_updates'=>$value ];
         }
       }

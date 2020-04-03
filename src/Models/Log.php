@@ -38,6 +38,8 @@ class Log extends Model{
   const TYPE_DOWNLOAD = 31;
   const TYPE_UPLOAD = 32;
   const TYPE_EXPORT = 34;
+  const TYPE_RESET_PASSWORD = 35;
+  const TYPE_CHANGE_PASSWORD = 36;
 
   const TYPE_LOGIN_SUCCESS = 51;
   const TYPE_LOGIN_ATTEMPT = 52;

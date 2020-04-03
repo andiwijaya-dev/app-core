@@ -225,7 +225,7 @@
 @endsection
 
 @section('paging')
-  @if($page + 1 <= $max_page)
+  @if(isset($max_page) && $page + 1 <= $max_page)
     <tr>
       <td colspan="10" class="align-center">
         <button class="grid-load-more block" name="action" value="load-more|{{ $page + 1 }}"><label>Load More</label></button>
