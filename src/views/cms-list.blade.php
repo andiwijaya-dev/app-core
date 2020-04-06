@@ -235,6 +235,31 @@
 
 @endsection
 
+@section('upper')
+
+  @if(isset($columns))
+    <div class="row valign-middle">
+
+      <div class="col-lg-6 col-sm-12">
+        <h3 class="hpad-1">{{ ucwords($title) }}</h3>
+        <button class="hidden" name="action" value="search"><label>Search</label></button>
+        @yield('header-row')
+      </div>
+
+      <div class="col-lg-6 col-sm-12 align-right vmart-sm-1">
+          <span class="textbox" style="width:100%;max-width:480px">
+            <span class="fa fa-search icon"></span>
+            <input type="text" name="search" placeholder="Cari..." value="{{ $search }}"/>
+          </span>
+        <button class="hidden" name="action" value="select-column"><label>Columns <span class="fa fa-caret-down"></span></label></button>
+        <button class="hidden" name="action" value="open-filter"><label><span class="fa fa-filter"></span> Filters</label></button>
+      </div>
+
+    </div>
+  @endif
+
+@endsection
+
 @section('content')
 
   @if(isset($columns))
@@ -245,24 +270,7 @@
         <form method="get" class="async cms-list-form" data-onsuccess="$('.grid-popup').popup_close()">
           @endif
 
-          <div class="row valign-middle">
-
-            <div class="col-lg-6 col-sm-12">
-              <h3 class="hpad-1">{{ ucwords($title) }}</h3>
-              <button class="hidden" name="action" value="search"><label>Search</label></button>
-              @yield('header-row')
-            </div>
-
-            <div class="col-lg-6 col-sm-12 align-right vmart-sm-1">
-            <span class="textbox" style="width:100%;max-width:480px">
-              <span class="fa fa-search icon"></span>
-              <input type="text" name="search" placeholder="Cari..." value="{{ $search }}"/>
-            </span>
-              <button class="hidden" name="action" value="select-column"><label>Columns <span class="fa fa-caret-down"></span></label></button>
-              <button class="hidden" name="action" value="open-filter"><label><span class="fa fa-filter"></span> Filters</label></button>
-            </div>
-
-          </div>
+          @yield('upper')
 
           <div class="row valign-middle vpadt-0">
 

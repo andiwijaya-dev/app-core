@@ -5,18 +5,18 @@
   @if(isset($chat))
 
     <div class="message-list-head pad-1">
-      <div class="row">
-        <div class="col-1">
-          <span class="img unloaded message-chat-image-url rat-88" data-src="{{ $chat->image_url }}"></span>
+      <div class="rowg">
+        <div class="col-ft">
+          <span class="img unloaded message-chat-image-url" style="width:48px;height:48px" data-src="{{ $chat->avatar_image_url }}"></span>
         </div>
-        <div class="col-11">
-          <h3>{{ $chat->title }}</h3><br />
-          <label>{{ $chat->key }}</label>
+        <div class="col-st">
+          <h3>{{ $chat->name ?? $chat->key }}</h3><br />
+          <label>{{ $chat->name ? $chat->key : '' }}</label>
         </div>
       </div>
     </div>
 
-    <div class="message-list-body v-scrollable pad-2 chat-{{ $chat->id }}">
+    <div class="message-list-body v-scrollable pad-2 vpadt-0 chat-{{ $chat->id }}">
       @if(count($chat->latest_messages) > 0)
         @foreach($chat->latest_messages as $message)
           @component('andiwijaya::components.chat-message-item', [ 'item'=>$message ])@endcomponent
