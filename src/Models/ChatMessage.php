@@ -5,6 +5,7 @@ namespace Andiwijaya\AppCore\Models;
 use Andiwijaya\AppCore\Models\Traits\LoggedTraitV3;
 use Andiwijaya\AppCore\Events\ChatEvent;
 use Illuminate\Database\Eloquent\Model;
+use Illuminate\Support\Facades\Session;
 use Illuminate\Support\Facades\Validator;
 
 class ChatMessage extends Model
@@ -32,6 +33,25 @@ class ChatMessage extends Model
     return $this->belongsTo('Andiwijaya\AppCore\Models\ChatDiscussion', 'discussion_id', 'id');
   }
 
+
+  public function getHasPrevAttribute(){
+
+    return ChatMessage::whereDiscussionId($this->discussion_id)
+      ->where('created_at', '<', $this->created_at)
+      ->count() > 0 ? true : false;
+
+  }
+
+  public function getPreviousMessagesAttribute(){
+
+    return ChatMessage::whereDiscussionId($this->discussion_id)
+      ->where('created_at', '<', $this->created_at)
+      ->orderBy('created_at')
+      ->limit(10)
+      ->get();
+
+  }
+
   public function preSave()
   {
     if(isset($this->fill_attributes['images'])){
@@ -43,6 +63,10 @@ class ChatMessage extends Model
       $this->images = $images;
 
     }
+
+    $extra = [ 'user'=>User::find(Session::get('user_id'))->name ?? '', 'user_id'=>Session::get('user_id') ];
+    $this->extra = $extra;
+
   }
 
   public function postSave()

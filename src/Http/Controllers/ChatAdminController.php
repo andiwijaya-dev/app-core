@@ -50,7 +50,9 @@ class ChatAdminController extends BaseController
 
     $params['chats'] = $model->get();
 
-    if($request->has('chat')) $params['chat'] = $request->get('chat');
+    if($request->has('chat')){
+      $params['chat'] = $request->get('chat');
+    }
 
     if($request->ajax()){
 
@@ -78,9 +80,27 @@ class ChatAdminController extends BaseController
 
   public function show(Request $request, $id, array $extra = []){
 
+    $chat = ChatDiscussion::whereId($id)->first();
+
+    $action = isset(($actions = explode('|', $request->get('action')))[0]) ? $actions[0] : '';
+
+    switch($action){
+
+      case 'load-prev':
+        $message = ChatMessage::find($actions[1]);
+
+        return [
+          'pre-script'=>"$('.message-list-content .load-prev').remove()",
+          '.message-list-content'=>'<<' . view('andiwijaya::components.chat-admin-message-list', [ 'items'=>$message->previous_messages ])->render(),
+          'script'=>""
+        ];
+        break;
+
+    }
+
     $params = $this->getParams($request, $extra);
 
-    $params['chat'] = ChatDiscussion::whereId($id)->first();
+    $params['chat'] = $chat;
 
     if($request->ajax()){
 

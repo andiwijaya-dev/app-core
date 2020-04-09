@@ -4,6 +4,7 @@ namespace Andiwijaya\AppCore\Models;
 
 use Andiwijaya\AppCore\Models\Traits\LoggedTraitV3;
 use Andiwijaya\AppCore\Events\ChatEvent;
+use Carbon\Carbon;
 use Illuminate\Database\Eloquent\Model;
 
 class ChatDiscussion extends Model
@@ -12,7 +13,7 @@ class ChatDiscussion extends Model
 
   protected $table = 'chat_discussion';
 
-  protected $fillable = [ 'status', 'avatar_image_url', 'key', 'title', 'extra', 'unreplied_count', 'last_replied_at' ];
+  protected $fillable = [ 'status', 'avatar_image_url', 'key', 'name', 'title', 'extra', 'unreplied_count', 'last_replied_at' ];
 
   protected $attributes = [
     'status'=>self::STATUS_OPEN,
@@ -33,7 +34,9 @@ class ChatDiscussion extends Model
 
   public function getLatestMessagesAttribute(){
 
-    return ChatMessage::whereDiscussionId($this->id)->orderBy('created_at', 'desc')->take(5)->get()->reverse();
+    return ChatMessage::whereDiscussionId($this->id)
+      ->whereDate('created_at', Carbon::now()->format('Y-m-d'))
+      ->orderBy('created_at', 'desc')->get()->reverse();
 
   }
 

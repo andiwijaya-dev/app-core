@@ -17,13 +17,11 @@
     </div>
 
     <div class="message-list-body v-scrollable pad-2 vpadt-0 chat-{{ $chat->id }}">
-      @if(count($chat->latest_messages) > 0)
-        @foreach($chat->latest_messages as $message)
-          @component('andiwijaya::components.chat-message-item', [ 'item'=>$message ])@endcomponent
-        @endforeach
-      @else
-        <div class="pad-1"><label>Tidak ada pesan</label></div>
-      @endif
+      <form method="get" class="async">
+        <div class="message-list-content">
+          @component('andiwijaya::components.chat-admin-message-list', [ 'items'=>$chat->latest_messages ])@endcomponent
+        </div>
+      </form>
     </div>
 
     <div class="message-list-foot pad-1">
