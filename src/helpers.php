@@ -269,13 +269,13 @@ if(!function_exists('array_diff_assoc2')){
    */
   function array_diff_assoc2($arr1, $arr2, $key = 'id', $debug = false){
 
-    if(!is_array($arr1)) $arr1 = json_decode(json_encode($arr1), 1);
-    if(!is_array($arr2)) $arr2 = json_decode(json_encode($arr2), 1);
+    $arr1 = json_decode(json_encode($arr1), 1);
+    $arr2 = json_decode(json_encode($arr2), 1);
 
     $has_update = false;
 
-    foreach($arr1 as $idx1=>$obj1){
-
+    foreach($arr1 as $idx1=>$obj1)
+    {
       $exists = -1;
       foreach($arr2 as $idx2=>$obj2){
         if(isset($obj2[$key]) && $obj1[$key] == $obj2[$key]){
@@ -290,8 +290,8 @@ if(!function_exists('array_diff_assoc2')){
     }
 
     $created = [];
-    foreach($arr2 as $idx2=>$obj2){
-
+    foreach($arr2 as $idx2=>$obj2)
+    {
       $exists = -1;
       $updates = null;
       foreach($arr1 as $idx1=>$obj1){
@@ -315,9 +315,9 @@ if(!function_exists('array_diff_assoc2')){
 
     $arr1 = array_merge($arr1, $created);
 
-    return $has_update ? $arr1 : null;
+    return $arr1;
 
-
+    if($key == 'voucher_id') exc(gettype($arr1));
     /*$deleted = array_filter($arr1, function($obj1) use($arr2, $key){
       foreach($arr2 as $obj2)
         if(isset($obj2[$key]) && $obj1[$key] == $obj2[$key])

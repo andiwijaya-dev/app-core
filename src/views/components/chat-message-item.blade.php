@@ -8,5 +8,5 @@
     </div>
   @endif
   <small class="less">{{ $item->created_at->format('j M Y H:i') }}</small>
-  <small class="less hmarl-1">{{ $item->extra['user'] ?? '' }} {{ $item->id }}</small>
+  <small class="less hmarl-1">{{ $item->extra['user'] ?? '' }}</small>
 </div>

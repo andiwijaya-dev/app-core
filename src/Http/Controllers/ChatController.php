@@ -194,7 +194,7 @@ class ChatController{
       '!.chat-popup'=>$sections['chat-popup'],
       'script'=>implode(';', [
         "$.chat_popup_open()",
-        "$('.chat-popup-body').scrollToBottom()"
+        "$('.chat-popup-body').scrollToBottom()",
       ])
     ];
 
@@ -230,7 +230,6 @@ class ChatController{
       '.chat-popup-body'=>$sections['intro'],
       '.chat-popup-foot'=>'',
       'script'=>implode(';', [
-        "$.chat_resize()",
         "$.chat_popup_close()"
       ])
     ];

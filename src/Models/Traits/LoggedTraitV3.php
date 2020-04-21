@@ -106,7 +106,7 @@ trait LoggedTraitV3{
         }
       }
       else{
-        $this->updates = array_merge($this->updates, $this->attributes);
+        $this->updates = array_merge($this->attributes, $this->updates);
       }
 
       $return = parent::save($options);
@@ -150,9 +150,12 @@ trait LoggedTraitV3{
     if(!$skip && (!isset($options['calculate']) || $options['calculate']))
       $this->calculate();
 
-    if(!isset($options['notify']) || $options['notify']) {
-      if (method_exists($this, 'cmsListUpdate'))
-        $this->cmsListUpdate();
+    if((!isset($options['notify']) || $options['notify']) &&
+      method_exists($this, 'cmsListUpdate') &&
+      count($this->updates) > 0){
+
+      $this->cmsListUpdate();
+
     }
 
     return $return;
