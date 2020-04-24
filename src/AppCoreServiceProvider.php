@@ -3,6 +3,7 @@
 namespace Andiwijaya\AppCore;
 
 
+use Andiwijaya\AppCore\Console\Commands\ModelExecute;
 use Andiwijaya\AppCore\Console\Commands\WebCacheClear;
 use Andiwijaya\AppCore\Middleware\WebCacheMiddleware;
 use Andiwijaya\AppCore\Services\WebCacheService;
@@ -25,7 +26,8 @@ class AppCoreServiceProvider extends ServiceProvider
       });
 
       $this->commands([
-        WebCacheClear::class
+        WebCacheClear::class,
+        ModelExecute::class,
       ]);
     }
 

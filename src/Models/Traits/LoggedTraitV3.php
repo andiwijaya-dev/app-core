@@ -136,8 +136,6 @@ trait LoggedTraitV3{
 
       if($ex instanceof QueryException){
         switch($ex->getCode()){
-          case 23000:
-            throw new \Exception(__('validation.db-unique'));
           default:
             throw $ex;
         }
