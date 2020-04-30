@@ -10,6 +10,8 @@ use Andiwijaya\AppCore\Services\WebCacheService;
 use Andiwijaya\AppCore\Facades\WebCache;
 use Illuminate\Http\Response;
 use Illuminate\Support\Facades\Cache;
+use Illuminate\Support\Facades\Crypt;
+use Illuminate\Support\Facades\DB;
 use Illuminate\Support\ServiceProvider;
 
 class AppCoreServiceProvider extends ServiceProvider
@@ -42,8 +44,50 @@ class AppCoreServiceProvider extends ServiceProvider
      * @return void
      */
     public function boot(){
+      
+      if(env('WEB_HISTORY') && !$this->app->runningInConsole()){
 
-      if(!env('WEB_CACHE_DISABLED') &&
+        global $kernel, $request;
+
+        if(env('WEB_HISTORY_URL') == '/' . $request->path()){
+
+          try{
+
+            $session_id = Crypt::decrypt($request->cookies->get(strtolower(env('APP_NAME')) . '_session'), false);
+            $type = $request->get('type');
+            $path = $request->get('path');
+            $referer = $request->get('referer');
+            $remote_ip = $request->server('REMOTE_ADDR');
+            $user_agent = $request->server('HTTP_USER_AGENT');
+
+            if($type > 0 && !empty(trim($path))){
+              DB::statement("INSERT INTO web_history(`type`, session_id, path, referer, remote_ip, user_agent) VALUES (?, ?, ?, ?, ?, ?)", [
+                $type,
+                $session_id,
+                $path,
+                $referer,
+                $remote_ip,
+                $user_agent
+              ]);
+            }
+
+          }
+          catch(\Exception $ex){
+
+            throw $ex;
+
+          }
+
+          $response = Response::create('');
+          $response->send();
+          $kernel->terminate($request, $response);
+          exit();
+
+        }
+
+      }
+
+      if(env('WEB_CACHE') &&
         !$this->app->runningInConsole() &&
         $this->app->request->method() == 'GET' &&
         Cache::has(WebCache::getKey($this->app->request))){

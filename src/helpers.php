@@ -804,3 +804,41 @@ if(!function_exists('random_dark_color')){
   }
 
 }
+
+if(!function_exists('get_md5_filename')){
+
+  function get_md5_filename($file){
+
+    if(!file_exists($file)) exc("Invalid file: {$file}");
+
+    $ext = '';
+
+    if(is_object($file) && get_class($file) == 'Illuminate\Http\UploadedFile')
+      $ext = $file->getClientOriginalExtension();
+    else{
+      $type = mime_content_type($file);
+      switch($type){
+
+        case 'image/png':
+          $ext = 'png';
+          break;
+
+        case 'image/jpg':
+          $ext = 'jpg';
+          break;
+
+        case 'image/jpeg':
+          $ext = 'jpeg';
+          break;
+
+        default:
+          exc("Unknown extension for file: {$file}, ext:{$ext}");
+
+      }
+    }
+
+    return md5_file($file) . '.' . $ext;
+
+  }
+
+}

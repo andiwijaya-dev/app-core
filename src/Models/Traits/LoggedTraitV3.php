@@ -2,6 +2,7 @@
 
 namespace Andiwijaya\AppCore\Models\Traits;
 
+use Andiwijaya\AppCore\Events\ModelEvent;
 use Andiwijaya\AppCore\Models\Log;
 use Illuminate\Database\QueryException;
 use Illuminate\Support\Facades\DB;
@@ -33,21 +34,36 @@ trait LoggedTraitV3{
 
   }
 
+  /**
+   * @param array $options  { pre-delete:1|0, post-delete:1|0, log:1|0, notify:1|0, log-type:(int) }
+   * @return bool|null
+   * @throws \Exception
+   */
   public function delete($options = []){
+
+    if((debug_backtrace()[1]['class'] == self::class &&
+    in_array(debug_backtrace()[1]['function'], [ 'preDelete', 'postDelete' ]) ? true : false))
+      return parent::delete();
 
     try{
 
       DB::beginTransaction();
 
-      if(!isset($options['predelete']) || $options['predelete'])
+      if(!isset($options['pre-delete']) || $options['pre-delete'])
         $this->preDelete();
 
       if(!isset($options['log']) || $options['log']){
 
+        $type = Log::TYPE_REMOVE;
+        if(isset($options['log_type'])) $type = $options['log_type'];
+        if(isset($options['log-type'])) $type = $options['log-type'];
+
+        $user_id = isset($options['user-id']) ? $options['user-id'] : Session::get('user_id');
+
         $this->logs()->create([
-          'type'=>isset($options['log_type']) ? $options['log_type'] : Log::TYPE_REMOVE,
+          'type'=>$type,
           'data'=>$this->attributes,
-          'user_id'=>Session::get('user_id')
+          'user_id'=>$user_id
         ]);
 
       }
@@ -65,35 +81,41 @@ trait LoggedTraitV3{
 
     }
 
-    if(!isset($options['postdelete']) || $options['postdelete'])
+    if(!isset($options['post-delete']) || $options['post-delete'])
       $this->postDelete();
 
     if(!isset($options['notify']) || $options['notify']){
+
       if(method_exists($this, 'cmsListDelete'))
         $this->cmsListDelete();
+
+      event(new ModelEvent(ModelEvent::TYPE_REMOVE, $this));
+
     }
 
     return $return;
 
   }
 
+  /**
+   * @param array $options  { pre-save:1|0, post-save:1|0, calculate:1|0, log:1|0, notify:1:0, log-type:(int), user-id:(int) }
+   * @return bool
+   * @throws \Exception
+   */
   public function save(array $options = []){
 
-    //echo self::getShortName() . ":" . $this->id . " save: " . json_encode($options) . PHP_EOL;
-
-    $skip = !isset($options['skip']) ?
-      (debug_backtrace()[1]['class'] == self::class &&
-      in_array(debug_backtrace()[1]['function'], [ 'calculate', 'preSave', 'postSave' ]) ? true : false) :
-      $options['skip'];
+    if((debug_backtrace()[1]['class'] == self::class &&
+    in_array(debug_backtrace()[1]['function'], [ 'calculate', 'preSave', 'postSave' ]) ? true : false))
+      return parent::save($options);
 
     try{
 
       DB::beginTransaction();
 
-      $exists = $this->exists;
-
-      if(!$skip && (!isset($options['pre_save']) || $options['pre_save']))
+      if(!isset($options['pre-save']) || $options['pre-save'])
         $this->preSave();
+
+      $exists = $this->exists;
 
       if($exists){
         $dirty = array_merge($this->updates, $this->getDirty());
@@ -112,17 +134,23 @@ trait LoggedTraitV3{
       $return = parent::save($options);
 
       // Post save event, should return array containing updated data
-      if(!$skip && (!isset($options['post_save']) || $options['post_save']))
+      if(!isset($options['post-save']) || $options['post-save'])
         $this->postSave();
 
-      if((count($this->updates) > 0 && !app()->runningInConsole() &&
-        !$skip &&
+      if((count($this->updates) > 0 &&
+        !app()->runningInConsole() &&
         (!isset($options['log']) || $options['log']))){
 
+        $type = $exists ? Log::TYPE_UPDATE : Log::TYPE_CREATE;
+        if(isset($options['log_type'])) $type = $options['log_type'];
+        if(isset($options['log-type'])) $type = $options['log-type'];
+
+        $user_id = isset($options['user-id']) ? $options['user-id'] : Session::get('user_id');
+
         $this->logs()->create([
-          'type'=>isset($options['log_type']) ? $options['log_type'] : ($exists ? Log::TYPE_UPDATE : Log::TYPE_CREATE),
+          'type'=>$type,
           'data'=>$this->updates,
-          'user_id'=>Session::get('user_id')
+          'user_id'=>$user_id
         ]);
 
       }
@@ -145,14 +173,16 @@ trait LoggedTraitV3{
 
     }
 
-    if(!$skip && (!isset($options['calculate']) || $options['calculate']))
+    if(!isset($options['calculate']) || $options['calculate'])
       $this->calculate();
 
     if((!isset($options['notify']) || $options['notify']) &&
-      method_exists($this, 'cmsListUpdate') &&
       count($this->updates) > 0){
 
-      $this->cmsListUpdate();
+      if(method_exists($this, 'cmsListUpdate'))
+        $this->cmsListUpdate();
+
+      event(new ModelEvent($exists ? ModelEvent::TYPE_UPDATE : ModelEvent::TYPE_CREATE), $this);
 
     }
 

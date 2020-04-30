@@ -56,7 +56,9 @@ class ModelExecute extends Command
       return;
     }
 
-    $model = $namespace . "\\" . ucwords($model);
+    $model = $namespace . "\\" . collect(explode('-', $model))->map(function($value, $key){
+        return ucwords($value);
+      })->implode('');
     $methodName = collect(explode('-', $method))->map(function($item, $key){ return $key > 0 ? ucwords($item) : strtolower($item); })->implode('');
     $param = in_array(substr($param, 0, 1), [ '{', '[' ]) ? json_decode($param, 1) : $param;
 
