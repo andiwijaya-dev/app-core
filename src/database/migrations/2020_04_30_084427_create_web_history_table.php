@@ -21,7 +21,7 @@ class CreateWebHistoryTable extends Migration
           $table->string('session_id')->nullable();
 
           $table->string('path', 2000)->nullable();
-          $table->string('referer')->nullable();
+          $table->string('referrer')->nullable();
           $table->text('query')->nullable();
 
           $table->string('remote_ip')->nullable();

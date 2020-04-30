@@ -13,7 +13,7 @@ class WebHistory extends Model
     'session_id',
     'path',
     'query',
-    'referer',
+    'referrer',
     'remote_ip',
     'user_agent'
   ];

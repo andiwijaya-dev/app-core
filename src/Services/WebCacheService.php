@@ -18,6 +18,9 @@ use Jenssegers\Agent\Agent;
 class WebCacheService{
 
   protected $path;
+
+  protected $excluded;
+
   protected $tags = [];
 
   protected $agent;
@@ -25,16 +28,18 @@ class WebCacheService{
   public function __construct()
   {
     $this->agent = new Agent();
+
+    $this->excluded = false;
   }
 
   public function getKey(Request $request){
 
-    $device = $this->agent->isMobile() ? 'mobile' : ($this->agent->isTablet() ? 'tablet' : 'desktop');
+    $device = $this->agent->isMobile() ? 'm' : ($this->agent->isTablet() ? 't' : 'd');
 
     return implode(' ', [
       $request->method(),
       $request->fullUrl(),
-      $request->wantsJson() ? 'json' : ($request->ajax() ? 'xhr' : 'normal'),
+      $request->wantsJson() ? 'json' : ($request->ajax() ? 'x' : 'n'),
       $device
     ]);
 
@@ -50,27 +55,34 @@ class WebCacheService{
 
     if($request->method() !== 'GET') return;
 
+    if($this->excluded) return;
+
     array_unshift($this->tags, 'path:' . $request->path());
 
-    if(($response instanceof Response || $response instanceof JsonResponse)){
+    if(($response instanceof Response || $response instanceof JsonResponse) &&
+      !$request->has('_')){
 
       $key = $this->getKey($request);
 
-      Cache::forever($key, $response->content());
+      if(strlen($key) <= 1000){
 
-      if(Schema::hasTable('web_cache')){
+        Cache::forever($key, $response->content());
 
-        WebCache::updateOrCreate(
-          [ 'key'=>$key ],
-          [
-            'tag'=>implode(' ', $this->tags)
-          ]
-        );
+        if(Schema::hasTable('web_cache')){
 
-      }
-      else{
+          WebCache::updateOrCreate(
+            [ 'key'=>$key ],
+            [
+              'tag'=>implode(' ', $this->tags)
+            ]
+          );
 
-        Log::warning("Table 'web_cache' doesn't exists, clear by key featured is not available.");
+        }
+        else{
+
+          Log::warning("Table 'web_cache' doesn't exists, clear by key featured is not available.");
+
+        }
 
       }
 
@@ -83,6 +95,11 @@ class WebCacheService{
 
   }
 
+  public function setExcluded($excluded){
+
+    $this->excluded = $excluded;
+
+  }
 
 
   public function clearAll($clearDB = false, $recache = false){
