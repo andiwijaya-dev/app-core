@@ -14,6 +14,7 @@ use Illuminate\Support\Facades\Cache;
 use Illuminate\Support\Facades\Log;
 use Illuminate\Support\Facades\Schema;
 use Jenssegers\Agent\Agent;
+use Symfony\Component\Process\Process;
 
 class WebCacheService{
 
@@ -36,9 +37,23 @@ class WebCacheService{
 
     $device = $this->agent->isMobile() ? 'm' : ($this->agent->isTablet() ? 't' : 'd');
 
+    $query = $request->query();
+    unset($query['webcache-reload']);
+    $query = http_build_query($query);
+
+    $fullUrl = $request->url();
+    if(strlen($query) > 0){
+
+      if($request->path() == '/' && substr($fullUrl, strlen($fullUrl) - 1, 1) != '/')
+        $fullUrl .= '/';
+
+      $fullUrl .= '?' . $query;
+
+    }
+
     return implode(' ', [
       $request->method(),
-      $request->fullUrl(),
+      $fullUrl,
       $request->wantsJson() ? 'json' : ($request->ajax() ? 'x' : 'n'),
       $device
     ]);
@@ -102,84 +117,95 @@ class WebCacheService{
   }
 
 
-  public function clearAll($clearDB = false, $recache = false){
-
-    $count = 0;
+  public function clearAll($recache = false){
 
     if(Schema::hasTable('web_cache')){
 
-      $count = WebCache::count();
-
       Artisan::call('cache:clear');
 
-      if($clearDB)
-        WebCache::truncate();
+      if($recache)
+      {
+        WebCache::select('id')
+          ->orderBy('id')
+          ->chunk(1000, function($caches){
 
-      else if($recache)
-        WebCacheLoad::dispatch(WebCacheLoad::TYPE_ALL);
+            foreach($caches as $cache)
+            {
+              $process = new Process("php artisan web-cache:load --id={$cache->id} > /dev/null 2>&1 &", base_path());
+              $process->setTimeout(10);
+              $process->run();
+            }
+
+          });
+      }
 
     }
 
-    return $count;
+    Log::info("Web cache service clear all completed. (recache:{$recache})");
 
   }
 
-  public function clearByTag($tag, $clearDB = false, $recache = false){
+  public function clearByTag($tag, $recache = false){
 
     $count = 0;
 
     if(Schema::hasTable('web_cache')){
 
       WebCache::search($tag)
-        ->chunkById(1000, function($items) use(&$count, $clearDB, $recache){
+        ->chunkById(1000, function($caches) use(&$count, $recache){
 
-          foreach($items as $item){
+          foreach($caches as $cache){
 
-            Cache::forget($item->key);
+            Cache::forget($cache->key);
+
+            if($recache)
+            {
+              $process = new Process("php artisan web-cache:load --id={$cache->id} > /dev/null 2>&1 &", base_path());
+              $process->setTimeout(10);
+              $process->run();
+            }
+
             $count++;
 
           }
 
         });
 
-      if($clearDB)
-        WebCache::search($tag)->delete();
-
-      else if($recache)
-        WebCacheLoad::dispatch(WebCacheLoad::TYPE_TAG, $tag);
-
     }
 
-    return $count;
+    Log::info("Web cache service clear tag completed. (count:{$count}, tag:{$tag}, recache:{$recache})");
 
   }
 
-  public function clearByKey($key, $clearDB = false, $recache = false){
+  public function clearByKey($key, $recache = false){
 
     $count = 0;
 
     if(Schema::hasTable('web_cache')){
 
       WebCache::where('key', $key)
-        ->chunkById(1000, function($items) use(&$count, $clearDB, $recache){
+        ->chunkById(1000, function($caches) use(&$count, $recache){
 
-          // Forget keys from cache
-          foreach($items as $item){
+          foreach($caches as $cache){
+
             Cache::forget($item->key);
+
+            if($recache)
+            {
+              $process = new Process("php artisan web-cache:load --id={$cache->id} > /dev/null 2>&1 &", base_path());
+              $process->setTimeout(10);
+              $process->run();
+            }
+
             $count++;
+
           }
 
         });
 
-      if($clearDB)
-        WebCache::where('key', $key)->delete();
-
-      else if($recache)
-        WebCacheLoad::dispatch(WebCacheLoad::TYPE_KEY, $key);
-
     }
 
-    return $count;
+    Log::info("Web cache service clear key completed. (count:{$count}, key:{$key}, recache:{$recache})");
 
   }
 

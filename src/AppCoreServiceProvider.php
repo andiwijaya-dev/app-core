@@ -5,6 +5,7 @@ namespace Andiwijaya\AppCore;
 
 use Andiwijaya\AppCore\Console\Commands\ModelExecute;
 use Andiwijaya\AppCore\Console\Commands\WebCacheClear;
+use Andiwijaya\AppCore\Console\Commands\WebCacheLoad;
 use Andiwijaya\AppCore\Middleware\WebCacheExcludedMiddleware;
 use Andiwijaya\AppCore\Middleware\WebCacheMiddleware;
 use Andiwijaya\AppCore\Services\WebCacheService;
@@ -34,6 +35,7 @@ class AppCoreServiceProvider extends ServiceProvider
 
     $this->commands([
       WebCacheClear::class,
+      WebCacheLoad::class,
       ModelExecute::class,
     ]);
   }
@@ -98,7 +100,8 @@ class AppCoreServiceProvider extends ServiceProvider
     if(env('WEB_CACHE') &&
       env('WEB_CACHE_HOST') == $request->getHttpHost() &&
       !$this->app->runningInConsole() &&
-      $this->app->request->method() == 'GET')
+      $this->app->request->method() == 'GET' &&
+      !$request->has('webcache-reload'))
     {
 
       if(Cache::has(WebCache::getKey($request))){

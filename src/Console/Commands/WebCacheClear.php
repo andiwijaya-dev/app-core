@@ -10,60 +10,61 @@ use Illuminate\Support\Facades\Schema;
 
 class WebCacheClear extends Command
 {
-  /**
-   * The name and signature of the console command.
-   *
-   * @var string
-   */
-  protected $signature = 'web-cache:clear {--key=} {--clear-db} {--recache}';
+    /**
+     * The name and signature of the console command.
+     *
+     * @var string
+     */
+    protected $signature = 'web-cache:clear {--key=} {--tag=} {--recache} {--background=0}';
 
-  /**
-   * The console command description.
-   *
-   * @var string
-   */
-  protected $description = 'Command description';
+    /**
+     * The console command description.
+     *
+     * @var string
+     */
+    protected $description = 'Command description';
 
-  /**
-   * Create a new command instance.
-   *
-   * @return void
-   */
-  public function __construct()
-  {
-    parent::__construct();
-  }
-
-  /**
-   * Execute the console command.
-   *
-   * @return mixed
-   */
-  public function handle()
-  {
-    $key = $this->option('key');
-    $clearDb = $this->option('clear-db');
-    $recache = $this->option('recache');
-
-    Artisan::call('cache:clear');
-
-    /*if(strlen($key) > 0){
-
-      $count = WebCache::clearByKey($key, $this->option('clear-db'), $this->option('recache'));
-
+    /**
+     * Create a new command instance.
+     *
+     * @return void
+     */
+    public function __construct()
+    {
+        parent::__construct();
     }
 
-    else if(strlen($param) > 0){
+    /**
+     * Execute the console command.
+     *
+     * @return mixed
+     */
+    public function handle()
+    {
+      $key = $this->option('key');
+      $tag = $this->option('tag');
+      $recache = $this->option('recache');
+      $background = $this->option('background');
 
-      $count = WebCache::clearByTag($param, $this->option('clear-db'), $this->option('recache'));
+      if($background){
+
+        $process = new Process("php artisan web-cache:clear --key={$key} --tag={$tag}" . ($recache ? ' --recache' : '') . " > /dev/null 2>&1 &", base_path());
+        $process->setTimeout(3600);
+        $process->run();
+
+      }
+      else{
+
+        if(strlen($key) > 0)
+          WebCache::clearByKey($key, $recache);
+
+        else if(strlen($tag) > 0)
+          WebCache::clearByTag($tag, $recache);
+
+        else
+          WebCache::clearAll($this->option('recache'));
+
+      }
 
     }
-
-    else{
-
-      $count = WebCache::clearAll($this->option('clear-db'), $this->option('recache'));
-
-    }*/
-
-  }
 }

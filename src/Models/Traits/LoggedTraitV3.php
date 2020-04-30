@@ -182,7 +182,7 @@ trait LoggedTraitV3{
       if(method_exists($this, 'cmsListUpdate'))
         $this->cmsListUpdate();
 
-      event(new ModelEvent($exists ? ModelEvent::TYPE_UPDATE : ModelEvent::TYPE_CREATE), $this);
+      event(new ModelEvent($exists ? ModelEvent::TYPE_UPDATE : ModelEvent::TYPE_CREATE, $this));
 
     }
 
