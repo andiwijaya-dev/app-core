@@ -15,19 +15,15 @@ trait FilterableTrait{
     // Handle search parameter
     if(isset($params['search']) && $params['search']){
 
-      if(isset($this->searchable) && is_array($this->searchable)){
-        $model->search($params['search']);
-      }
+      if(isset($this->filter_searchable) && is_array($this->filter_searchable)) {
 
-      else if(isset($this->filter_searchable) && is_array($this->filter_searchable)){
+        $model->where(function ($query) use ($params) {
 
-        $model->where(function($query) use($params){
-
-          foreach($this->filter_searchable as $expr){
+          foreach ($this->filter_searchable as $expr) {
 
             list($key, $operator) = explode(':', $expr);
 
-            switch($operator){
+            switch ($operator) {
 
               case '=':
                 $query->orWhere($key, '=', "{$params['search']}");

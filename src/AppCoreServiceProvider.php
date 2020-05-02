@@ -6,8 +6,10 @@ namespace Andiwijaya\AppCore;
 use Andiwijaya\AppCore\Console\Commands\ModelExecute;
 use Andiwijaya\AppCore\Console\Commands\WebCacheClear;
 use Andiwijaya\AppCore\Console\Commands\WebCacheLoad;
+use Andiwijaya\AppCore\Middleware\AuthMiddleware;
 use Andiwijaya\AppCore\Middleware\WebCacheExcludedMiddleware;
 use Andiwijaya\AppCore\Middleware\WebCacheMiddleware;
+use Andiwijaya\AppCore\Services\AuthService;
 use Andiwijaya\AppCore\Services\WebCacheService;
 use Andiwijaya\AppCore\Facades\WebCache;
 use Carbon\Carbon;
@@ -33,6 +35,10 @@ class AppCoreServiceProvider extends ServiceProvider
       return new WebCacheService();
     });
 
+    $this->app->singleton('Auth', function () {
+      return new AuthService();
+    });
+
     $this->commands([
       WebCacheClear::class,
       WebCacheLoad::class,
@@ -42,7 +48,7 @@ class AppCoreServiceProvider extends ServiceProvider
 
   public function provides()
   {
-    return [ 'WebCache' ];
+    return [ 'WebCache', 'Auth' ];
   }
 
   /**
@@ -127,6 +133,7 @@ class AppCoreServiceProvider extends ServiceProvider
     $this->loadRoutesFrom(__DIR__.'/routes.php');
 
     $this->app['router']->aliasMiddleware('web-cache-excluded', WebCacheExcludedMiddleware::class);
+    $this->app['router']->aliasMiddleware('auth.web', AuthMiddleware::class);
 
     $this->app['router']->pushMiddlewareToGroup('web', WebCacheMiddleware::class);
 
