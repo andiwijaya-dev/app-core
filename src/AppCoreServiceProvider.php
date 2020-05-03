@@ -12,6 +12,7 @@ use Andiwijaya\AppCore\Middleware\WebCacheMiddleware;
 use Andiwijaya\AppCore\Services\AuthService;
 use Andiwijaya\AppCore\Services\WebCacheService;
 use Andiwijaya\AppCore\Facades\WebCache;
+use App\Console\Commands\TestEmail;
 use Carbon\Carbon;
 use Illuminate\Http\Request;
 use Illuminate\Http\Response;
@@ -43,6 +44,7 @@ class AppCoreServiceProvider extends ServiceProvider
       WebCacheClear::class,
       WebCacheLoad::class,
       ModelExecute::class,
+      TestEmail::class
     ]);
   }
 

@@ -96,13 +96,14 @@ trait FilterableTrait{
 
       if(is_null($value)) continue;
       if(in_array($key, [ 'columns', 'filters', 'search' ])) continue;
+      if(!in_array($key, array_merge($this->getFillable(), $this->getHidden(), $this->getGuarded()))) continue;
 
-      if(in_array($key, $this->getFillable())){
-        if(is_array($value))
-          $model->whereIn($key, $value);
-        else
-          $model->where($key, '=', $value);
-      }
+      if(isset($value['operator']) && strlen($value['operator']) > 0 && isset($value['value']))
+        $model->where($key, $value['operator'], $value['value']);
+      else if(is_array($value) && isset($value[0]))
+        $model->whereIn($key, $value);
+      else if(is_scalar($value))
+        $model->where($key, '=', $value);
 
     }
 

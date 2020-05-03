@@ -3,6 +3,7 @@
 namespace Andiwijaya\AppCore\Services;
 
 use App\Models\User;
+use Carbon\Carbon;
 use Illuminate\Support\Facades\Session;
 use Illuminate\Support\Facades\Validator;
 
@@ -30,6 +31,9 @@ class AuthService{
 
     if($user->password != md5($params['password'])) exc('Invalid password');
 
+    $user->last_login_at = Carbon::now()->toDateTimeString();
+    $user->save();
+
     $this->user = $user;
 
     Session::put('user_id', $user->id);
@@ -55,19 +59,15 @@ class AuthService{
 
       $model = config('auth.providers.user.model');
 
-      $user = $model::find($user_id)->first();
+      $user = $model::find($user_id);
 
       $this->user = $user;
     }
   }
 
-  public function __get($name)
+  public function user()
   {
-    switch($name){
-
-      case 'user': return $this->user;
-
-    }
+    return $this->user;
   }
 
 }

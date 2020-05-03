@@ -2,6 +2,19 @@
   @extends($extends)
 @endif
 
+@section('upper-options')
+  @if($exportable)
+    <button class="more has-right" type="button" onclick="$.fetch('{{ \Illuminate\Support\Facades\Request::url() }}/create')"><label>New...</label></button><button class="more has-left" type="button" data-click-popup=".action-popup">
+      <label>&nbsp;<span class="icon icon-circle-down" style="color:rgba(255, 255, 255, .6);position: relative;top:2px"></span>&nbsp;</label>
+    </button>
+    <div class="action-popup popup" data-ref=".has-right">
+      <a class="item block async" href="{{ \Illuminate\Support\Facades\Request::url() }}?action=export"><span class="icon icon-download"></span>Export...</a>
+    </div>
+  @else
+    <button class="more hpad-1" type="button" onclick="$.fetch('{{ \Illuminate\Support\Facades\Request::url() }}/create')"><label><span class="fa fa-plus hmarr-1"></span>New...</label></button>
+  @endif
+@endsection
+
 @section('upper')
 
   <div class="pad-2 hidden-sm">
@@ -11,12 +24,8 @@
       </div>
       <div class="col-lg-8 col-sm-9 align-right">
         <button class="hidden" name="action" value="search"></button>
-        <button class="more has-right" type="button" onclick="$.fetch('{{ \Illuminate\Support\Facades\Request::url() }}/create')"><label>New...</label></button><button class="more has-left" type="button" data-click-popup=".action-popup">
-          <label>&nbsp;<span class="icon icon-circle-down" style="color:rgba(255, 255, 255, .6);position: relative;top:2px"></span>&nbsp;</label>
-        </button>
-        <div class="action-popup popup" data-ref=".has-right">
-          <div class="item" onclick=""><span class="icon icon-download"></span>Export</div>
-        </div>
+
+        @yield('upper-options')
 
         <span class="textbox mw20v">
           <input type="text" class="list-search" name="search" value="{{ $search }}"/>
@@ -30,7 +39,7 @@
   <div class="header hidden-lg">
     <div class="row0 valign-middle">
       <div class="col-sm-2">
-        <span class="icon icon-menu pad-2" data-action="sidebar-open"></span>
+        <span class="fa fa-bars pad-2" data-action="sidebar-open"></span>
       </div>
       <div class="col-sm-8 align-center"><a href="{{ \Illuminate\Support\Facades\Request::url() }}"><h5>{{ $title }}</h5></a></div>
       <div class="col-sm-2 align-right">
@@ -147,6 +156,8 @@
       <div class="filter-cont">
         @yield('filter')
       </div>
+
+      <div class="content-board-popup-cont"></div>
 
     </div>
 

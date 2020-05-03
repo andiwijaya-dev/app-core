@@ -19,8 +19,14 @@ class ListPageController{
   public $view_grid_item = 'andiwijaya::components.list-page-grid-item';
   public $view_feed_item = 'andiwijaya::components.list-page-feed-item';
 
+  public $exportable = true;
 
   public function index(Request $request){
+
+    $action = isset(($actions = explode('|', $request->get('action')))[0]) ? $actions[0] : '';
+
+    if($action == 'export') return $this->export($request);
+
 
     if(!($builder = $this->datasource($request)) && class_exists($this->model)) {
 
@@ -29,13 +35,11 @@ class ListPageController{
       if(method_exists(new $this->model, 'scopeFilter'))
         $builder->filter($request->all());
 
-      if(method_exists(new $this->model, 'scopeSearch'))
-        $builder->search($request->all());
+      if(method_exists(new $this->model, 'scopeSearch') && strlen($request->get('search')) > 0)
+        $builder->search($request->get('search'));
     }
 
     $row_per_page = 15;
-
-    $action = isset(($actions = explode('|', $request->get('action')))[0]) ? $actions[0] : '';
 
     $items = [];
 
@@ -93,7 +97,8 @@ class ListPageController{
       'items'=>$items,
       'next_items_after'=>$next_items_after,
       'search'=>$request->get('search'),
-      'sorts'=>$request->get('sorts', [])
+      'sorts'=>$request->get('sorts', []),
+      'exportable'=>$this->exportable
     ];
 
     $params = array_merge($params, $this->getParams());
@@ -173,5 +178,7 @@ class ListPageController{
 
 
   function datasource(Request $request){ }
+
+  function export(Request $request){ }
 
 }
