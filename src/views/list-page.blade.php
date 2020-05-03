@@ -41,7 +41,7 @@
       <div class="col-sm-2">
         <span class="fa fa-bars pad-2" data-action="sidebar-open"></span>
       </div>
-      <div class="col-sm-8 align-center"><a href="{{ \Illuminate\Support\Facades\Request::url() }}"><h5>{{ $title }}</h5></a></div>
+      <div class="col-sm-8 align-center"><a href="//{{ \Illuminate\Support\Facades\Request::getHost() . '/' .  \Illuminate\Support\Facades\Request::path() }}"><h5>{{ $title }}</h5></a></div>
       <div class="col-sm-2 align-right">
         <div>
           <span class="icon icon-equalizer pad-2" data-action="filterbar-open"></span>
@@ -99,7 +99,7 @@
   </div>
 
   <div class="main-btn">
-    <div><span class="icon icon-plus" onclick="$.fetch('{{ \Illuminate\Support\Facades\Request::url() }}/create')"></span></div>
+    <div><span class="icon icon-plus" onclick="$.fetch('//{{ \Illuminate\Support\Facades\Request::getHost() . '/' .  \Illuminate\Support\Facades\Request::path() }}/create')"></span></div>
   </div>
 
 @endsection

@@ -4,6 +4,7 @@ namespace Andiwijaya\AppCore\Models\Traits;
 
 use Andiwijaya\AppCore\Events\ModelEvent;
 use Andiwijaya\AppCore\Models\Log;
+use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\QueryException;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Session;
@@ -41,9 +42,8 @@ trait LoggedTraitV3{
    */
   public function delete($options = []){
 
-    if((debug_backtrace()[1]['class'] == self::class &&
-    in_array(debug_backtrace()[1]['function'], [ 'preDelete', 'postDelete' ]) ? true : false))
-      return parent::delete();
+    if(in_array(debug_backtrace()[1]['function'], [ 'preDelete', 'postDelete' ]))
+      return Model::delete($options);
 
     try{
 
@@ -102,11 +102,10 @@ trait LoggedTraitV3{
    * @return bool
    * @throws \Exception
    */
-  public function save(array $options = []){
+  public function save(array $options = [], $debug = null){
 
-    if((debug_backtrace()[1]['class'] == self::class &&
-    in_array(debug_backtrace()[1]['function'], [ 'calculate', 'preSave', 'postSave' ]) ? true : false))
-      return parent::save($options);
+    if(in_array(debug_backtrace()[1]['function'], [ 'calculate', 'preSave', 'postSave' ]))
+      return Model::save($options);
 
     try{
 
