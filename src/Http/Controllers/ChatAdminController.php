@@ -11,6 +11,7 @@ use Illuminate\Foundation\Bus\DispatchesJobs;
 use Illuminate\Foundation\Validation\ValidatesRequests;
 use Illuminate\Http\Request;
 use Illuminate\Routing\Controller as BaseController;
+use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Session;
 use Symfony\Component\HttpFoundation\StreamedResponse;
 
@@ -34,7 +35,13 @@ class ChatAdminController extends BaseController
 
     $request->has('display') ? Session::put('chat.display', $request->get('display')) : '';
 
-    $model = ChatDiscussion::orderBy('updated_at', 'desc');
+    $model = ChatDiscussion::
+    whereExists(function($query){
+      $query->select(DB::raw(1))
+        ->from('chat_message')
+        ->whereRaw('chat_message.discussion_id = chat_discussion.id');
+    })
+      ->orderBy('updated_at', 'desc');
 
     switch(Session::get('chat.display')){
 

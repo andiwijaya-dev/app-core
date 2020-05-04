@@ -4,6 +4,7 @@ namespace Andiwijaya\AppCore\Middleware;
 
 use Andiwijaya\AppCore\Facades\Auth;
 use Andiwijaya\AppCore\Facades\WebCache;
+use Illuminate\Support\Facades\Session;
 
 class AuthMiddleware{
 
@@ -17,6 +18,8 @@ class AuthMiddleware{
         return redirect('set-password');
     }
     catch(\Exception $ex){
+
+      Session::put('after_login_redirect', $request->path());
 
       return redirect('/login');
     }

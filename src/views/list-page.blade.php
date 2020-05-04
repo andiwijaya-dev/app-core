@@ -4,14 +4,14 @@
 
 @section('upper-options')
   @if($exportable)
-    <button class="more has-right" type="button" onclick="$.fetch('{{ \Illuminate\Support\Facades\Request::url() }}/create')"><label>New...</label></button><button class="more has-left" type="button" data-click-popup=".action-popup">
+    <button class="more has-right" type="button" onclick="$.fetch('//{{ \Illuminate\Support\Facades\Request::getHost() . '/' .  \Illuminate\Support\Facades\Request::path() }}/create')"><label>New...</label></button><button class="more has-left" type="button" data-click-popup=".action-popup">
       <label>&nbsp;<span class="icon icon-circle-down" style="color:rgba(255, 255, 255, .6);position: relative;top:2px"></span>&nbsp;</label>
     </button>
     <div class="action-popup popup" data-ref=".has-right">
       <a class="item block async" href="{{ \Illuminate\Support\Facades\Request::url() }}?action=export"><span class="icon icon-download"></span>Export...</a>
     </div>
   @else
-    <button class="more hpad-1" type="button" onclick="$.fetch('{{ \Illuminate\Support\Facades\Request::url() }}/create')"><label><span class="fa fa-plus hmarr-1"></span>New...</label></button>
+    <button class="more hpad-1" type="button" onclick="$.fetch('//{{ \Illuminate\Support\Facades\Request::getHost() . '/' .  \Illuminate\Support\Facades\Request::path() }}/create')"><label><span class="fa fa-plus hmarr-1"></span>New...</label></button>
   @endif
 @endsection
 
