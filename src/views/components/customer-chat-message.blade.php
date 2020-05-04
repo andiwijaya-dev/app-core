@@ -1,7 +1,7 @@
 @switch($item->direction)
 
   @case(\Andiwijaya\AppCore\Models\ChatMessage::DIRECTION_OUT)
-  <div class="message direction-in">
+  <div class="message direction-in" data-id="{{ $item->id }}">
     <div class="text">
       {!! $item->text !!}
     </div>
@@ -19,7 +19,7 @@
   @break
 
   @case(\Andiwijaya\AppCore\Models\ChatMessage::DIRECTION_IN)
-  <div class="message direction-out">
+  <div class="message direction-out" data-id="{{ $item->id }}">
     <div class="text">
       {!! $item->text !!}
     </div>

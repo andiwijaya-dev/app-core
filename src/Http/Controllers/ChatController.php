@@ -5,6 +5,7 @@ namespace Andiwijaya\AppCore\Http\Controllers;
 use Andiwijaya\AppCore\Models\ChatDiscussion;
 use Andiwijaya\AppCore\Models\ChatMessage;
 use Illuminate\Http\Request;
+use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Session;
 use Illuminate\Support\Facades\Validator;
 
@@ -56,7 +57,12 @@ class ChatController{
 
       case 'end-chat':
         return $this->endChat($request);
-        break;
+
+      case 'check-message':
+        return  $this->checkForNewMessages($request);
+
+      case 'set-as-sent':
+        return  $this->setAsSent($request);
 
       default:
         exc($action);
@@ -177,10 +183,17 @@ class ChatController{
       ->where('title', '<>', '')
       ->pluck('title')->unique();
 
+    $latest_messages = $discussion->latest_messages ?? [];
+
+    DB::statement("UPDATE chat_message SET unsent = 0 WHERE discussion_id = ? and direction = ? and unsent = 1", [
+      $discussion_id, ChatMessage::DIRECTION_OUT
+    ]);
+
     $sections = view($this->view,
       array_merge([
         'extends'=>$this->extends,
         'item'=>$discussion,
+        'latest_messages'=>$latest_messages,
         'key'=>$key,
         'available_topics'=>$available_topics
       ])
@@ -233,6 +246,45 @@ class ChatController{
         "$.chat_popup_close()"
       ])
     ];
+
+  }
+
+  public function checkForNewMessages(Request $request){
+
+    $last_message_id = $request->get('last_message_id');
+
+    $discussion_id = Session::get('chat.id');
+
+    $messages = ChatMessage::where([
+      'discussion_id'=>$discussion_id
+    ])
+      ->where('id', '>', $last_message_id)
+      ->orderBy('id')
+      ->get();
+
+    if(count($messages) > 0){
+
+      $html = [];
+      foreach($messages as $message)
+        $html[] = view('andiwijaya::components.customer-chat-message', [ 'item'=>$message ])->render();
+
+      return [
+        '.chat-body-messages'=>'>>' . implode('', $html),
+        '.chat-badge .unread'=>"<span>" . count($messages) . "</span>",
+        'script'=>implode(';', [
+          "$.chat_resize()",
+          "$.chat_popup_clear()",
+          "$('.chat-popup-body').scrollToBottom()",
+          "!$('.chat-popup').hasClass('active') ? $('.chat-badge .unread').removeClass('hidden') : $('chat-unread').addClass('hidden')"
+        ])
+      ];
+    }
+  }
+
+  public function setAsSent(Request $request){
+
+    $message_id = $request->get('sent_id');
+    ChatMessage::whereId($message_id)->update([ 'unsent'=>0 ]);
 
   }
 

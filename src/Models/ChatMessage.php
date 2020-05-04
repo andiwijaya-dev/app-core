@@ -17,7 +17,8 @@ class ChatMessage extends Model
   protected $fillable = [ 'discussion_id', 'unread', 'direction', 'from_id', 'to_id', 'text', 'images', 'extra' ];
 
   protected $attributes = [
-    'unread'=>1
+    'unread'=>1,
+    'unsent'=>1
   ];
 
   protected $casts = [
@@ -71,8 +72,10 @@ class ChatMessage extends Model
 
   public function postSave()
   {
-    event(new ChatEvent(ChatEvent::TYPE_NEW_CHAT_MESSAGE, $this->discussion, $this));
-    event(new ChatEvent(ChatEvent::TYPE_UPDATE_CHAT, $this->discussion));
+    if($this->wasRecentlyCreated){
+      event(new ChatEvent(ChatEvent::TYPE_NEW_CHAT_MESSAGE, $this->discussion, $this));
+      event(new ChatEvent(ChatEvent::TYPE_UPDATE_CHAT, $this->discussion));
+    }
   }
 
   public function calculate()
