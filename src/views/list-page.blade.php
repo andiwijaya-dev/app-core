@@ -58,7 +58,7 @@
     <div class="grid">
       <table>
         <thead>
-        @component($view_grid_head, [ 'sorts'=>$sorts ?? [] ])@endcomponent
+        @component($view_grid_head, [ 'sorts'=>$sorts, 'sortable'=>$sortable ])@endcomponent
         </thead>
       </table>
       <div class="grid-content v-scrollable" style="max-height:80vh;" onscroll="if(this.scrollTop + this.clientHeight > this.scrollHeight - 10) $('.load-more-btn').click();">
@@ -118,10 +118,69 @@
         </div>
       </div>
 
+      @if(count($filterable) > 0)
+        <div class="vmart-1">
+          <div class="row">
+
+            <div class="col-12">
+              <div class="pad-1 vmarb-1 bordered-bottom">
+                <strong class="less">Filters</strong>
+              </div>
+            </div>
+
+            @foreach($filterable as $key=>$param)
+              {!!  list_page_filter_item($key, $param) !!}
+            @endforeach
+
+          </div>
+        </div>
+      @endif
+
+      @if(count($sortable) > 0)
+        <div class="row vmart-1 hidden-lg">
+          <div class="col-12">
+
+            <div class="pad-1 vmarb-2 bordered-bottom">
+              <strong class="less">Sorts</strong>
+            </div>
+
+            @foreach($sortable as $key=>$value)
+              @if(is_array($value))
+                <strong class="hpad-1">{{ $value['text'] ?? $key }}</strong>
+                <div class="vmarb-1">
+                <span class="choice">
+                  <input id="list-sc-{{ $key }}-asc" class="sort-control" type="radio" name="sorts[]" value="{{ $key }},asc" onchange="$(this).closest('form').submit();"/>
+                  <label for="list-sc-{{ $key }}-asc"><span class="checker"><span></span></span> Asc</label>
+                </span>
+                  <span class="choice">
+                  <input id="list-sc-{{ $key }}-desc" class="sort-control" type="radio" name="sorts[]" value="{{ $key }},desc" onchange="$(this).closest('form').submit();"/>
+                  <label for="list-sc-{{ $key }}-desc"><span class="checker"><span></span></span> Desc</label>
+                </span>
+                </div>
+              @elseif(is_scalar($value))
+                <strong class="hpad-1">{{ $value }}</strong>
+                <div class="vmarb-1">
+                <span class="choice">
+                  <input id="list-sc-{{ $value }}-asc" class="sort-control" type="radio" name="sorts[]" value="{{ $value }},asc" onchange="$(this).closest('form').submit();"/>
+                  <label for="list-sc-{{ $value }}-asc"><span class="checker"><span></span></span> Asc</label>
+                </span>
+                  <span class="choice">
+                  <input id="list-sc-{{ $value }}-desc" class="sort-control" type="radio" name="sorts[]" value="{{ $value }},desc" onchange="$(this).closest('form').submit();"/>
+                  <label for="list-sc-{{ $value }}-desc"><span class="checker"><span></span></span> Desc</label>
+                </span>
+                </div>
+              @endif
+            @endforeach
+
+          </div>
+        </div>
+      @endif
+
       <div class="row vmart-1">
 
         <div class="col-12">
           <div class="vmart-3">
+            <button class="hpad-1 more apply-filter" name="action" value=""><label>Apply</label></button>
             <button class="hpad-1" name="action" value="reset"><label>Reset</label></button>
           </div>
         </div>

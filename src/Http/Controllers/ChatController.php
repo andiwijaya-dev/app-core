@@ -239,7 +239,7 @@ class ChatController{
       ->renderSections();
 
     return [
-      '.chat-popup-head'=>$sections['intro-head'],
+      '.chatww-popup-head'=>$sections['intro-head'],
       '.chat-popup-body'=>$sections['intro'],
       '.chat-popup-foot'=>'',
       'script'=>implode(';', [

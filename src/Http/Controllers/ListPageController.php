@@ -6,8 +6,9 @@ use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Http\Request;
 use Illuminate\Support\Collection;
+use Illuminate\Routing\Controller as BaseController;
 
-class ListPageController{
+class ListPageController extends BaseController{
 
   public $model = null;
 
@@ -20,6 +21,16 @@ class ListPageController{
   public $view_feed_item = 'andiwijaya::components.list-page-feed-item';
 
   public $exportable = true;
+
+  public $sortable = [
+    //'name'=>[ 'text'=>'Project Name'],
+  ];
+
+  public $filterable = [
+    //'is_active'=>[ 'text'=>'Active', 'type'=>'array', 'items'=>[ 0=>'Inactive', 1=>'Active' ] ],
+    //'business_id'=>[ 'text'=>'Business Name', 'type'=>'builder', 'class'=>Business::class, 'item_text_key'=>'name' ],
+    //'date'=>'Date|date-range'
+  ];
 
   public function index(Request $request){
 
@@ -98,7 +109,9 @@ class ListPageController{
       'next_items_after'=>$next_items_after,
       'search'=>$request->get('search'),
       'sorts'=>$request->get('sorts', []),
-      'exportable'=>$this->exportable
+      'exportable'=>$this->exportable,
+      'sortable'=>$this->sortable,
+      'filterable'=>$this->filterable,
     ];
 
     $params = array_merge($params, $this->getParams());
@@ -155,7 +168,8 @@ class ListPageController{
       }
     }
     else{
-      return view($this->view, $params);
+
+      return viewed($this->view, $params);
     }
 
   }

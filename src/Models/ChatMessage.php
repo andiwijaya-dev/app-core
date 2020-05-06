@@ -4,83 +4,86 @@ namespace Andiwijaya\AppCore\Models;
 
 use Andiwijaya\AppCore\Models\Traits\LoggedTraitV3;
 use Andiwijaya\AppCore\Events\ChatEvent;
+use Carbon\Carbon;
 use Illuminate\Database\Eloquent\Model;
-use Illuminate\Support\Facades\Session;
-use Illuminate\Support\Facades\Validator;
 
-class ChatMessage extends Model
+class ChatDiscussion extends Model
 {
   use LoggedTraitV3;
 
-  protected $table = 'chat_message';
+  protected $table = 'chat_discussion';
 
-  protected $fillable = [ 'discussion_id', 'unread', 'direction', 'from_id', 'to_id', 'text', 'images', 'extra' ];
+  protected $fillable = [ 'status', 'avatar_image_url', 'key', 'name', 'title', 'extra', 'unreplied_count', 'last_replied_at' ];
 
   protected $attributes = [
-    'unread'=>1,
-    'unsent'=>1
+    'status'=>self::STATUS_OPEN,
+    'unreplied_count'=>0
   ];
 
   protected $casts = [
-    'images'=>'array',
     'extra'=>'array'
   ];
 
-  const DIRECTION_IN = 1;
-  const DIRECTION_OUT = 2;
+  const STATUS_OPEN = 1;
+  const STATUS_CLOSED = -1;
 
-  public function discussion()
+  public function messages()
   {
-    return $this->belongsTo('Andiwijaya\AppCore\Models\ChatDiscussion', 'discussion_id', 'id');
+    return $this->hasMany('Andiwijaya\AppCore\Models\ChatMessage', 'discussion_id', 'id');
   }
 
+  public function getLatestMessagesAttribute(){
 
-  public function getHasPrevAttribute(){
-
-    return ChatMessage::whereDiscussionId($this->discussion_id)
-      ->where('created_at', '<', $this->created_at)
-      ->count() > 0 ? true : false;
-
-  }
-
-  public function getPreviousMessagesAttribute(){
-
-    return ChatMessage::whereDiscussionId($this->discussion_id)
-      ->where('created_at', '<', $this->created_at)
-      ->orderBy('created_at')
-      ->limit(10)
-      ->get();
+    return ChatMessage::whereDiscussionId($this->id)
+      ->orderBy('created_at', 'desc')
+      ->limit(5)
+      ->get()
+      ->reverse();
 
   }
 
-  public function preSave()
-  {
-    if(isset($this->fill_attributes['images'])){
+  public function getLatestMessageAttribute(){
 
-      $images = [];
-      foreach($this->fill_attributes['images'] as $image)
-        $images[] = save_image($image);
+    return ChatMessage::whereDiscussionId($this->id)->orderBy('created_at', 'desc')->first();
 
-      $this->images = $images;
+  }
 
+
+  public function end(){
+
+    if($this->status == self::STATUS_CLOSED)
+      exc(__('models.chat-discussion-already-closed'));
+
+    try{
+      $this->status = self::STATUS_CLOSED;
+
+      parent::save();
     }
-
-    $extra = [ 'user'=>User::find(Session::get('user_id'))->name ?? '', 'user_id'=>Session::get('user_id') ];
-    $this->extra = $extra;
+    catch(\Exception $ex){
+      exc(__('models.chat-discussion-error', [ 'message'=>$ex->getMessage() ]));
+    }
 
   }
 
   public function postSave()
   {
-    if($this->wasRecentlyCreated){
-      event(new ChatEvent(ChatEvent::TYPE_NEW_CHAT_MESSAGE, $this->discussion, $this));
-      event(new ChatEvent(ChatEvent::TYPE_UPDATE_CHAT, $this->discussion));
-    }
+    event(new ChatEvent($this->wasRecentlyCreated ? ChatEvent::TYPE_NEW_CHAT : ChatEvent::TYPE_UPDATE_CHAT, $this));
   }
 
   public function calculate()
   {
-    $this->discussion->calculate();
+    $last_replied = ChatMessage::where([
+      'discussion_id'=>$this->id,
+      'direction'=>ChatMessage::DIRECTION_OUT
+    ])
+      ->orderBy('created_at', 'desc')
+      ->first();
+
+    $this->unreplied_count = isset($last_replied->id) ?
+      ChatMessage::whereDiscussionId($this->id)->where('id', '>', $last_replied->id)->where('direction', ChatMessage::DIRECTION_IN)->count() :
+      ChatMessage::whereDiscussionId($this->id)->where('direction', ChatMessage::DIRECTION_IN)->count();
+
+    parent::save();
   }
 
 }

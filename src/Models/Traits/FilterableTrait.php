@@ -3,6 +3,8 @@
 namespace Andiwijaya\AppCore\Models\Traits;
 
 
+use Carbon\Carbon;
+
 trait FilterableTrait{
 
   /*protected $filter_searchable = [
@@ -96,8 +98,87 @@ trait FilterableTrait{
 
       if(is_null($value)) continue;
       if(in_array($key, [ 'columns', 'filters', 'search' ])) continue;
-      if(!in_array($key, array_merge($this->getFillable(), $this->getHidden(), $this->getGuarded()))) continue;
+      if(!in_array($key, array_merge($this->getFillable(), $this->getHidden(), $this->getGuarded(), [ 'created_at', 'updated_at' ]))) continue;
 
+      if(isset($value['date_range'])){
+
+        switch($value['date_range']){
+
+          case 'today': $model->where($key, '=', Carbon::now()->format('Y-m-d')); break;
+          case 'yesterday': $model->where($key, '=', Carbon::now()->addDays(-1)->format('Y-m-d')); break;
+          case 'tomorrow': $model->where($key, '=', Carbon::now()->addDays(1)->format('Y-m-d')); break;
+
+          case 'this-week':
+            $model->whereBetween($key, [
+              Carbon::now()->startOfWeek()->format('Y-m-d'),
+              Carbon::now()->endOfWeek()->format('Y-m-d'),
+            ]);
+            break;
+
+          case 'this-month':
+            $model->whereBetween($key, [
+              Carbon::now()->startOfMonth()->format('Y-m-d'),
+              Carbon::now()->endOfMonth()->format('Y-m-d'),
+            ]);
+            break;
+
+          case 'this-quarter':
+            $model->whereBetween($key, [
+              Carbon::now()->startOfQuarter()->format('Y-m-d'),
+              Carbon::now()->endOfQuarter()->format('Y-m-d'),
+            ]);
+            break;
+
+          case 'this-year':
+            $model->whereBetween($key, [
+              Carbon::now()->startOfYear()->format('Y-m-d'),
+              Carbon::now()->endOfYear()->format('Y-m-d'),
+            ]);
+            break;
+
+          case 'this-decade':
+            $model->whereBetween($key, [
+              Carbon::now()->startOfDecade()->format('Y-m-d'),
+              Carbon::now()->endOfDecade()->format('Y-m-d'),
+            ]);
+            break;
+
+          case 'custom':
+            $custom_from = date('Y-m-d', strtotime($value['date_range_from']));
+            $custom_to = date('Y-m-d', strtotime($value['date_range_to']));
+
+            $model->whereBetween($key, [
+              $custom_from,
+              $custom_to,
+            ]);
+            break;
+
+        }
+
+      }
+      elseif(isset($value['number_range'])){
+
+        $number_from = str_replace(',', '', $value['number_range_from']);
+        $number_to = str_replace(',', '', $value['number_range_to']);
+
+        switch($value['number_range']){
+
+          case '=':
+          case '>=':
+          case '>':
+          case '<=':
+          case '<':
+          case '<>':
+            $model->where($key, $value['number_range'], $number_from);
+            break;
+
+          case 'between':
+            $model->whereBetween($key, [ $number_from, $number_to ]);
+            break;
+
+        }
+
+      }
       if(isset($value['operator']) && strlen($value['operator']) > 0 && isset($value['value']))
         $model->where($key, $value['operator'], $value['value']);
       else if(is_array($value) && isset($value[0]))

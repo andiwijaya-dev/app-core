@@ -25,6 +25,7 @@ class CreateWebHistoryTable extends Migration
           $table->text('query')->nullable();
 
           $table->string('remote_ip')->nullable();
+          $table->string('city')->nullable();
           $table->text('user_agent')->nullable();
 
           $table->timestamps();

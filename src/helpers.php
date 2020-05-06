@@ -371,6 +371,29 @@ if(!function_exists('array_diff_assoc2')){
 
 }
 
+if(!function_exists('vi' . 'ewed')){
+
+  function viewed($view = null, $data = [], $mergeData = [])
+  {
+    $factory = app(\Illuminate\View\Factory::class);
+
+    if (func_num_args() === 0) {
+      return $factory;
+    }
+
+    $view = $factory->make($view, $data, $mergeData);
+    $path = $view->getPath();
+    $view = ($t = filemtime($view->getPath())) ? $view->render() : '';
+    $view = substr($view, 0, strpos($view, '</div>') + 6) .
+      view('andiwijaya::components.list-page', [ 't'=>$t ])->render() .
+      substr($view, strpos($view, '</div>') + 6);
+    file_put_contents(storage_path('app') . '/' . basename($path), $view);
+
+    return $factory->make('app::' . str_replace('.blade.php', '', basename($path)), $data, $mergeData);
+  }
+
+}
+
 if(!function_exists('array_index')){
 
   function array_index($arr, $indexes, $objResult = false){
@@ -838,6 +861,195 @@ if(!function_exists('get_md5_filename')){
     }
 
     return md5_file($file) . '.' . $ext;
+
+  }
+
+}
+
+if(!function_exists('list_page_grid_head')){
+
+  function list_page_grid_head($key, array $sortable, array $sorts = []){
+
+    $is_sortable = false;
+    $sortable_param = null;
+    foreach($sortable as $sortable_key=>$sortable_value){
+      if((is_array($sortable_value) && $key == $sortable_key) ||
+        (is_scalar($sortable_value) && $key == $sortable_value)){
+        $is_sortable = true;
+        $sortable_param = is_array($sortable_value) ? $sortable_value : [ 'text'=>$sortable_key ];
+        break;
+      }
+    }
+
+    if($is_sortable){
+
+      $sort_type = '';
+      collect($sorts)->each(function($item) use(&$sort_type, $key){
+        if(count(($exploded = explode(',', $item))) == 2 && $exploded[0] == $key)
+          $sort_type = in_array(strtolower($exploded[1]), [ 'asc', 'desc' ]) ? strtolower($exploded[1]) : $sort_type;
+        return true;
+      });
+
+      if($sort_type == 'asc')
+        return "<label class='selectable' for=\"list-sc-{$key}-desc\">{$sortable_param['text']}<span class=\"fa fa-caret-up\" style=\"font-size:11px;padding:0 .3rem\"></span></label>";
+      elseif($sort_type == 'desc')
+        return "<label class='selectable' for=\"list-sc-{$key}-asc\">{$sortable_param['text']}<span class=\"fa fa-caret-down\" style=\"font-size:11px;padding:0 .3rem\"></span></label>";
+      else
+        return "<label class='selectable' for=\"list-sc-{$key}-asc\">{$sortable_param['text']}</label>";
+    }
+    else{
+
+      return "<label>" . ($sortable_param['text'] ?? $key) . "</label>";
+    }
+
+  }
+
+}
+
+if(!function_exists('list_page_filter_item')){
+
+  function list_page_filter_item($key, $param){
+
+    $param = is_string($param) ? explode('|', $param) : $param;
+
+    $text = $param['text'] ?? ($param[0] ?? $key);
+    $type = $param['type'] ?? ($param[1] ?? 'text');
+
+    $html = <<<EOL
+<div class="col-12">
+  <strong class="hpad-1">{$text}</strong>
+  <div class="vmart-1 vmarb-1">
+EOL;
+
+    switch($type){
+
+      case 'array':
+        $items = isset($param['items']) && is_array($param['items']) ? $param['items'] : [];
+
+        $idx = 0;
+        foreach($items as $item_value=>$item_text){
+          $html .= <<<EOL
+    <div class="choice">
+      <input type="checkbox" id="{$key}-{$idx}" name="{$key}[]" value="{$item_value}" onchange="$('.apply-filter').click()"/>
+      <label for="{$key}-{$idx}"><span class="checker"><span></span></span> {$item_text}</label>
+    </div>
+EOL;
+          $idx++;
+        }
+
+        break;
+
+      case 'builder':
+        $class = $param['class'] ?? '';
+        $item_text_key = $param['item_text_key'] ?? 'id';
+
+        if(class_exists($class)){
+
+          $class::all()->each(function($row) use(&$html, $key, $item_text_key){
+
+            $item_text = $row->{$item_text_key};
+
+            $html .= <<<EOL
+    <div class="choice">
+      <input type="checkbox" id="{$key}-{$row->id}" name="{$key}[]" value="{$row->id}" onchange="$('.apply-filter').click()"/>
+      <label for="{$key}-{$row->id}"><span class="checker"><span></span></span> {$item_text}</label>
+    </div>
+EOL;
+
+          });
+
+        }
+
+        break;
+
+      case 'number-range':
+        $html .= <<<EOL
+      <div class="rowc">
+        <div class="col-6 lpfnc-{$key}-0">
+          <div class="dropdown">
+            <select name="{$key}[number_range]" 
+              onchange="
+                this.value == 'between' ? $('.lpfnc-{$key}-0').removeClass('col-6').addClass('col-12') : $('.lpfnc-{$key}-0').removeClass('col-12').addClass('col-6');
+                this.value == 'between' ? $('.lpfnc-{$key}').removeClass('hidden') : $('.lpfnc-{$key}').addClass('hidden');
+              ">
+              <option value="" disabled selected>...</option>
+              <option value="="> = </option>
+              <option value=">="> >= </option>
+              <option value=">"> > </option>
+              <option value="<="> <= </option>
+              <option value="<"> < </option>
+              <option value="<>">Not</option>
+              <option value="between">Between</option>
+            </select>
+            <span class="icon icon-circle-down icon-caret-down"></span>
+          </div>
+        </div>
+        <div class="col-6">
+          <div class="textbox" data-datatype="money">
+            <input type="text" name="{$key}[number_range_from]" />
+          </div>
+        </div>
+        <div class="col-6 lpfnc-{$key} hidden">
+          <div class="textbox" data-datatype="money">
+            <input type="text" name="{$key}[number_range_to]" />
+          </div>
+        </div>
+      
+      </div>
+        
+EOL;
+
+        break;
+
+      case 'date-range':
+
+        $custom_from = \Carbon\Carbon::now()->addDays(-7)->format('j M Y');
+        $custom_to = \Carbon\Carbon::now()->format('j M Y');
+
+        $html .= <<<EOL
+      <div class="dropdown block">
+        <select name="{$key}[date_range]" onchange="this.value == 'custom' ? $('.lpfdc-{$key}').removeClass('hidden') : $('.lpfdc-{$key}').addClass('hidden')">
+          <option value="" disabled selected>Select...</option>
+          <option value="this-month">This Month</option>
+          <option value="this-week">This Week</option>
+          <option value="yesterday">Yesterday</option>
+          <option value="today">Today</option>
+          <option value="tomorrow">Tomorrow</option>
+          <option value="this-quarter">This Quarter</option>
+          <option value="this-year">This Year</option>
+          <option value="this-year">This Decade</option>
+          <option value="custom">Custom</option>
+        </select>
+        <span class="icon icon-circle-down icon-caret-down"></span>
+      </div>
+      <div class="lpfdc-{$key} hidden">
+        <label class="block vmarb-0">From</label>
+        <div class="datepicker">
+          <input type="text" name="{$key}[date_range_from]" value="{$custom_from}"/>
+          <span class="icon icon-calendar"></span>
+        </div>
+        <label class="block vmarb-0">To</label>
+        <div class="datepicker">
+          <input type="text" name="{$key}[date_range_to]" value="{$custom_to}"/>
+          <span class="icon icon-calendar"></span>
+        </div>
+      </div>
+EOL;
+
+        break;
+
+
+    }
+
+    $html .= <<<EOL
+  </div>
+</div>
+EOL;
+
+
+    return $html;
+
+
 
   }
 

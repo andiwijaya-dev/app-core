@@ -15,6 +15,7 @@ class WebHistory extends Model
     'query',
     'referrer',
     'remote_ip',
+    'city',
     'user_agent'
   ];
 

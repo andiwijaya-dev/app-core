@@ -8,6 +8,7 @@ use Andiwijaya\AppCore\Console\Commands\TestEmail;
 use Andiwijaya\AppCore\Console\Commands\WebCacheClear;
 use Andiwijaya\AppCore\Console\Commands\WebCacheLoad;
 use Andiwijaya\AppCore\Middleware\AuthMiddleware;
+use Andiwijaya\AppCore\Middleware\WebCacheExcludedMiddleware;
 use Andiwijaya\AppCore\Middleware\WebCacheMiddleware;
 use Andiwijaya\AppCore\Services\AuthService;
 use Andiwijaya\AppCore\Services\WebCacheService;
@@ -69,7 +70,7 @@ class AppCoreServiceProvider extends ServiceProvider
           $session_id = Crypt::decrypt($request->cookies->get(strtolower(env('APP_NAME')) . '_session'), false);
           $type = $request->input('type');
           $path = $request->input('path');
-          $referrer = $request->input('referrer');
+          $referrer = $request->input('referrer', $request->input('referer'));
           $remote_ip = $request->server('REMOTE_ADDR');
           $user_agent = $request->server('HTTP_USER_AGENT');
           $created_at = Carbon::now()->format('Y-m-d H:i:s');
@@ -126,6 +127,8 @@ class AppCoreServiceProvider extends ServiceProvider
     }
 
     $this->loadViewsFrom(__DIR__ . '/views', 'andiwijaya');
+
+    $this->loadViewsFrom(storage_path('app'), 'app');
 
     //$this->loadMigrationsFrom(__DIR__.'/database/migrations');
 
