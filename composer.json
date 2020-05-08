@@ -21,7 +21,6 @@
         "laravel": {
             "providers": [
                 "Andiwijaya\\AppCore\\AppCoreServiceProvider"
-                //"Andiwijaya\\AppCore\\CustomMailServiceProvider"
             ]
         }
     },
