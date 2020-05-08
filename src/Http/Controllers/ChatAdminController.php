@@ -12,6 +12,7 @@ use Illuminate\Foundation\Validation\ValidatesRequests;
 use Illuminate\Http\Request;
 use Illuminate\Routing\Controller as BaseController;
 use Illuminate\Support\Facades\DB;
+use Illuminate\Support\Facades\Redis;
 use Illuminate\Support\Facades\Session;
 use Symfony\Component\HttpFoundation\StreamedResponse;
 
@@ -39,7 +40,7 @@ class ChatAdminController extends BaseController
     whereExists(function($query){
       $query->select(DB::raw(1))
         ->from('chat_message')
-        ->whereRaw('chat_message.discussion_id = chat_discussion.id');
+        ->whereRaw('chat_message.discussion_id =   chat_discussion.id');
     })
       ->orderBy('updated_at', 'desc');
 
@@ -155,6 +156,10 @@ class ChatAdminController extends BaseController
     ]);
     $message->fill($request->all());
     $message->save();
+
+    $offline = count(Redis::pubsub('channels', "customer-discussion-{$discussion_id}")) <= 0;
+    if($offline)
+      $discussion->sendEmailNotification();
 
     return [
       //".chat .message-list-body"=>'>>' . view('andiwijaya::components.chat-message-item', [ 'item'=>$message, 'highlight'=>1 ])->render(),

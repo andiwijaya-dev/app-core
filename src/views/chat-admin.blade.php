@@ -11,7 +11,7 @@
         </div>
         <div class="col-st">
           <h3>{{ $chat->name ?? $chat->key }}</h3><br />
-          <label>{{ $chat->name ? $chat->key : '' }}</label>
+          <label>{{ $chat->name ? $chat->key : '' }} {{ $chat->extra['phone_number'] ? '(' . $chat->extra['phone_number'] . ')' : '' }}</label>
         </div>
       </div>
     </div>

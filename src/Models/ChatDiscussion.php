@@ -4,8 +4,10 @@ namespace Andiwijaya\AppCore\Models;
 
 use Andiwijaya\AppCore\Models\Traits\LoggedTraitV3;
 use Andiwijaya\AppCore\Events\ChatEvent;
+use App\Mail\ChatDiscussionCustomerNotification;
 use Carbon\Carbon;
 use Illuminate\Database\Eloquent\Model;
+use Illuminate\Support\Facades\Mail;
 
 class ChatDiscussion extends Model
 {
@@ -35,8 +37,10 @@ class ChatDiscussion extends Model
   public function getLatestMessagesAttribute(){
 
     return ChatMessage::whereDiscussionId($this->id)
-      ->whereDate('created_at', Carbon::now()->format('Y-m-d'))
-      ->orderBy('created_at', 'desc')->get()->reverse();
+      ->orderBy('created_at', 'desc')
+      ->limit(5)
+      ->get()
+      ->reverse();
 
   }
 
@@ -82,6 +86,20 @@ class ChatDiscussion extends Model
       ChatMessage::whereDiscussionId($this->id)->where('direction', ChatMessage::DIRECTION_IN)->count();
 
     parent::save();
+  }
+
+  public function sendEmailNotification(){
+
+    if(filter_var($this->key, FILTER_VALIDATE_EMAIL)){
+
+      if(isset($this->latest_message->id) && $this->latest_message->direction == ChatMessage::DIRECTION_OUT){
+
+        Mail::to($this->key)
+          ->bcc(env('MAIL_BCC'))
+          ->queue(new ChatDiscussionCustomerNotification($this->id));
+      }
+    }
+
   }
 
 }
