@@ -2,7 +2,7 @@
 
 namespace Andiwijaya\AppCore;
 
-use App\Models\Setting;
+use Andiwijaya\AppCore\Models\Setting;
 use Illuminate\Mail\TransportManager;
 
 class CustomTransportManager extends TransportManager{
