@@ -21,6 +21,7 @@ use Illuminate\Support\Facades\Cache;
 use Illuminate\Support\Facades\Crypt;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\ServiceProvider;
+use Maatwebsite\Excel\Sheet;
 
 class AppCoreServiceProvider extends ServiceProvider
 {
@@ -154,6 +155,9 @@ class AppCoreServiceProvider extends ServiceProvider
       'migrations'
     );
 
+    Sheet::macro('styleCells', function (Sheet $sheet, string $cellRange, array $style) {
+      $sheet->getDelegate()->getStyle($cellRange)->applyFromArray($style);
+    });
   }
 
 }

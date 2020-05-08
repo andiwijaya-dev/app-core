@@ -17,37 +17,37 @@
 
 @section('upper')
 
-  <div class="hidden-sm head">
+  <div class="pad-2 hidden-sm">
+    <div class="rowc valign-middle">
+      <div class="col-lg-4 col-sm-3">
+        <h3>{{ $title }}</h3>
+      </div>
+      <div class="col-lg-8 col-sm-9 align-right">
+        <button class="hidden" name="action" value="search"></button>
 
-    <div class="pad-2">
-      <div class="rowc valign-middle">
-        <div class="col-lg-4 col-sm-3">
-          <h3>{{ $title }}</h3>
-        </div>
-        <div class="col-lg-8 col-sm-9 align-right">
-          <button class="hidden" name="action" value="search"></button>
+        @yield('upper-options')
 
-          @yield('upper-options')
+        <span class="textbox mw20v">
+          <input type="text" class="list-search" name="search" value="{{ $search }}"/>
+          <span class="icon icon-search"></span>
+        </span>
+        <button class="hpad-1" type="button" data-action="filterbar-toggle"><label><span class="fa fa-sliders-h"></span></label></button>
+      </div>
+    </div>
+  </div>
 
-          <span class="textbox mw30v">
-            <input type="text" class="list-search" name="search" value="{{ $search }}"/>
-            <span class="icon fa fa-search"></span>
-          </span>
-          <button class="hpad-1" type="button" data-action="filterbar-toggle"><label><span class="fa fa-sliders-h"></span></label></button>
+  <div class="header hidden-lg">
+    <div class="row0 valign-middle">
+      <div class="col-sm-2">
+        <span class="fa fa-bars pad-2" data-action="sidebar-open"></span>
+      </div>
+      <div class="col-sm-8 align-center"><a href="//{{ \Illuminate\Support\Facades\Request::getHost() . '/' .  \Illuminate\Support\Facades\Request::path() }}"><h5>{{ $title }}</h5></a></div>
+      <div class="col-sm-2 align-right">
+        <div>
+          <span class="icon icon-equalizer pad-2" data-action="filterbar-open"></span>
         </div>
       </div>
     </div>
-
-    <div class="hpad-1 vmart-1">
-      <div class="grid" data-grid-content=".grid-content">
-        <table>
-          <thead class="grid-thead">
-          @component($view_grid_head, [ 'sorts'=>$sorts, 'sortable'=>$sortable ])@endcomponent
-          </thead>
-        </table>
-      </div>
-    </div>
-
   </div>
 
 @endsection
@@ -185,33 +185,36 @@
 
   <form method="get" class="async">
 
-    <div class="list-page">
+    <div class="content-board">
 
       <div class="pad-lg-2">
         @yield('upper')
 
-        <div class="body hidden-sm desktop-list-cont v-scrollable" onscroll="if(this.scrollTop + this.clientHeight > this.scrollHeight - 10) $('.grid-content .load-more-btn').click();">
+        <div class="hidden-sm desktop-list-cont">
           <div class="pad-1">
-            <div class="grid grid-content">
+            <div class="grid">
               <table>
-                <thead></thead>
-                <tbody class="grid-content-tbody">
-                @yield('desktop-list-items')
-                </tbody>
+                <thead>
+                @component($view_grid_head, [ 'sorts'=>$sorts, 'sortable'=>$sortable ])@endcomponent
+                </thead>
               </table>
-              <div class="load-more-cont">
-                @yield('desktop-list-load-more');
+              <div class="grid-content v-scrollable" style="max-height:80vh;" onscroll="if(this.scrollTop + this.clientHeight > this.scrollHeight - 10) $('.load-more-btn').click();">
+                <table>
+                  <thead></thead>
+                  <tbody>
+                  @yield('desktop-list-items')
+                  </tbody>
+                </table>
+                <div class="load-more-cont">
+                  @yield('desktop-list-load-more')
+                </div>
               </div>
             </div>
           </div>
         </div>
 
-        <div class="body hidden-lg after-header mobile-list-cont">
+        <div class="hidden-lg after-header mobile-list-cont">
           @yield('mobile-list')
-        </div>
-
-        <div class="foot">
-          @yield('list-page-foot')
         </div>
       </div>
 

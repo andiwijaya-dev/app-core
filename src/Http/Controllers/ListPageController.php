@@ -38,16 +38,20 @@ class ListPageController extends BaseController{
 
     if($action == 'export') return $this->export($request);
 
-
     if(!($builder = $this->datasource($request)) && class_exists($this->model)) {
 
       $builder = $this->model::select('*');
 
-      if(method_exists(new $this->model, 'scopeFilter'))
-        $builder->filter($request->all());
+      if($request->get('action') != 'reset'){
 
-      if(method_exists(new $this->model, 'scopeSearch') && strlen($request->get('search')) > 0)
-        $builder->search($request->get('search'));
+        if (method_exists(new $this->model, 'scopeFilter'))
+          $builder->filter($request->all());
+
+        if (method_exists(new $this->model, 'scopeSearch') && strlen($request->get('search')) > 0)
+          $builder->search($request->get('search'));
+
+        $this->applySorts($builder, $request->get('sorts', []));
+      }
     }
 
     $row_per_page = 15;
@@ -125,7 +129,9 @@ class ListPageController extends BaseController{
         case 'reset':
           return [
             '.filter-cont'=>$sections['filter'],
-            '.desktop-list-cont'=>$sections['desktop-list'],
+            '.grid-thead'=>view($this->view_grid_head, [ 'sorts'=>$params['sorts'], 'sortable'=>$params['sortable'] ])->render(),
+            '.grid-content-tbody'=>$sections['desktop-list-items'],
+            '.load-more-cont'=>$sections['desktop-list-load-more'],
             '.mobile-list-cont'=>$sections['mobile-list'],
             'script'=>implode(';', [
               "$('.list-search').val('')"
@@ -161,7 +167,9 @@ class ListPageController extends BaseController{
 
         default:
           return [
-            '.desktop-list-cont'=>$sections['desktop-list'],
+            '.grid-thead'=>view($this->view_grid_head, [ 'sorts'=>$params['sorts'], 'sortable'=>$params['sortable'] ])->render(),
+            '.grid-content-tbody'=>$sections['desktop-list-items'],
+            '.load-more-cont'=>$sections['desktop-list-load-more'],
             '.mobile-list-cont'=>$sections['mobile-list'],
           ];
 
