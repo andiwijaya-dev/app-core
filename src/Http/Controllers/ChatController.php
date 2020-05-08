@@ -247,6 +247,8 @@ class ChatController{
     $message->extra = $extra;
     $message->save();
 
+    Session::put('chat.id', $discussion->id);
+
     $sections = view($this->view,
       array_merge([
         'extends'=>$this->extends,
@@ -305,9 +307,9 @@ class ChatController{
       ->renderSections();
 
     return [
-      '.chat-popup-head'=>$sections['chat-head'],
-      '.chat-popup-body'=>$sections['chat-body'],
-      '.chat-popup-foot'=>$sections['chat-foot'],
+      '.chat-popup-head'=>($offline ? $sections['offline-head'] : (isset($discussion->id) ? $sections['chat-head'] : $sections['intro-head'])),
+      '.chat-popup-body'=>($offline ? $sections['offline-body'] : (isset($discussion->id) ? $sections['chat-body'] : $sections['intro'])),
+      '.chat-popup-foot'=>($offline ? $sections['offline-foot'] : (isset($discussion->id) ? $sections['chat-foot'] : '')),
       '!.chat-popup'=>$sections['chat-popup'],
       'script'=>implode(';', [
         "$.chat_popup_open()",
