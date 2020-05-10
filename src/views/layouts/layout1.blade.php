@@ -18,11 +18,11 @@
   <script type="text/javascript" src="/js/jquery.min.js"></script>
 
   @if(true)
-    @foreach(glob(public_path('vendor/andiwijaya/js/default/*.js')) as $js)
-      <script type="text/javascript" src="{{ asset("vendor/andiwijaya/js/default/" . basename($js)) }}?v={{ time() }}"></script>
+    @foreach(glob(public_path('/js/default/*.js')) as $js)
+      <script type="text/javascript" src="{{ asset("/js/default/" . basename($js)) }}?v={{ time() }}"></script>
     @endforeach
   @else
-    <script type="text/javascript" src="{{ asset("vendor/andiwijaya/js/default.js") }}"></script>
+    <script type="text/javascript" src="{{ asset("/js/default.js") }}"></script>
   @endif
   @stack('scripts')
 

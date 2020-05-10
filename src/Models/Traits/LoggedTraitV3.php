@@ -15,6 +15,8 @@ trait LoggedTraitV3{
 
   public $updates = [];
 
+  public $log = true;
+
   public static function getShortName(){
 
     return (new \ReflectionClass(self::class))->getShortName();
@@ -52,7 +54,7 @@ trait LoggedTraitV3{
       if(!isset($options['pre-delete']) || $options['pre-delete'])
         $this->preDelete();
 
-      if(!isset($options['log']) || $options['log']){
+      if($this->log && (!isset($options['log']) || $options['log'])){
 
         $type = Log::TYPE_REMOVE;
         if(isset($options['log_type'])) $type = $options['log_type'];
@@ -136,9 +138,10 @@ trait LoggedTraitV3{
       if(!isset($options['post-save']) || $options['post-save'])
         $this->postSave();
 
-      if((count($this->updates) > 0 &&
-        !app()->runningInConsole() &&
-        (!isset($options['log']) || $options['log']))){
+      if($this->log &&
+        (count($this->updates) > 0 &&
+          !app()->runningInConsole() &&
+          (!isset($options['log']) || $options['log']))){
 
         $type = $exists ? Log::TYPE_UPDATE : Log::TYPE_CREATE;
         if(isset($options['log_type'])) $type = $options['log_type'];

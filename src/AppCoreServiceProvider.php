@@ -20,6 +20,7 @@ use Illuminate\Routing\ResponseFactory;
 use Illuminate\Support\Facades\Cache;
 use Illuminate\Support\Facades\Crypt;
 use Illuminate\Support\Facades\DB;
+use Illuminate\Support\Facades\Route;
 use Illuminate\Support\ServiceProvider;
 use Maatwebsite\Excel\Sheet;
 

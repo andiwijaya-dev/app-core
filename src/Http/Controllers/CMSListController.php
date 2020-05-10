@@ -58,7 +58,6 @@ class CMSListController extends BaseController
       return $next($request);
 
     });
-
   }
 
   public function index(Request $request){

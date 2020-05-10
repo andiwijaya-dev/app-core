@@ -20,7 +20,8 @@
     "extra": {
         "laravel": {
             "providers": [
-                "Andiwijaya\\AppCore\\AppCoreServiceProvider"
+                "Andiwijaya\\AppCore\\AppCoreServiceProvider",
+                "Andiwijaya\\AppCore\\CustomMailServiceProvider"
             ]
         }
     },

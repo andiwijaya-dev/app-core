@@ -4,12 +4,19 @@ namespace Andiwijaya\AppCore\Services;
 
 use App\Models\User;
 use Carbon\Carbon;
+use Illuminate\Support\Facades\Hash;
 use Illuminate\Support\Facades\Session;
 use Illuminate\Support\Facades\Validator;
 
 class AuthService{
 
   protected $user;
+
+  public function check(){
+
+    return Session::get('user_id') > 0;
+
+  }
 
   public function login(array $params)
   {
@@ -29,7 +36,7 @@ class AuthService{
 
     if(!$user) exc('Unable to login, invalid user id');
 
-    if($user->password != md5($params['password'])) exc('Invalid password');
+    if(!Hash::check($params['password'], $user->password)) exc(__('validation.password-invalid'));
 
     $user->last_login_at = Carbon::now()->toDateTimeString();
     $user->save();

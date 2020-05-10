@@ -43,6 +43,7 @@ class Log extends Model{
 
   const TYPE_LOGIN_SUCCESS = 51;
   const TYPE_LOGIN_ATTEMPT = 52;
+  const TYPE_REGISTER = 53;
 
 
   public function __construct(array $attributes = []){

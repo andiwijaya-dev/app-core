@@ -4,14 +4,14 @@
 
 @section('upper-options')
   @if($exportable)
-    <button class="more has-right" type="button" onclick="$.fetch('//{{ \Illuminate\Support\Facades\Request::getHost() . '/' .  \Illuminate\Support\Facades\Request::path() }}/create')"><label><span class="fa fa-plus selectable hmarr-05"></span> New...</label></button><button class="more has-left" type="button" data-click-popup=".action-popup">
-      <label>&nbsp;<span class="fa fa-caret-down selectable"></span>&nbsp;</label>
+    <button class="more has-right" type="button" onclick="$.fetch('//{{ \Illuminate\Support\Facades\Request::getHost() . '/' .  \Illuminate\Support\Facades\Request::path() }}/create')"><label>New...</label></button><button class="more has-left" type="button" data-click-popup=".action-popup">
+      <label>&nbsp;<span class="icon icon-circle-down" style="color:rgba(255, 255, 255, .6);position: relative;top:2px"></span>&nbsp;</label>
     </button>
     <div class="action-popup popup" data-ref=".has-right">
-      <a class="item block async" href="{{ \Illuminate\Support\Facades\Request::url() }}?action=export"><span class="fa fa-cloud-download-alt hmarr-05"></span> Export...</a>
+      <a class="item block async" href="{{ \Illuminate\Support\Facades\Request::url() }}?action=export"><span class="icon icon-download"></span>Export...</a>
     </div>
   @else
-    <button class="more hpad-1" type="button" onclick="$.fetch('//{{ \Illuminate\Support\Facades\Request::getHost() . '/' .  \Illuminate\Support\Facades\Request::path() }}/create')"><label><span class="fa fa-plus hmarr-05"></span>New...</label></button>
+    <button class="more hpad-1" type="button" onclick="$.fetch('//{{ \Illuminate\Support\Facades\Request::getHost() . '/' .  \Illuminate\Support\Facades\Request::path() }}/create')"><label><span class="fa fa-plus hmarr-1"></span>New...</label></button>
   @endif
 @endsection
 
@@ -31,7 +31,7 @@
           <input type="text" class="list-search" name="search" value="{{ $search }}"/>
           <span class="icon icon-search"></span>
         </span>
-        <button class="hpad-1" type="button" data-action="filterbar-toggle"><label><span class="fa fa-sliders-h"></span></label></button>
+        <button class="hpad-1" type="button" data-action="filterbar-toggle"><label><span class="icon icon-equalizer"></span></label></button>
       </div>
     </div>
   </div>
@@ -52,19 +52,32 @@
 
 @endsection
 
-@section('desktop-list-items')
+@section('desktop-list')
 
-  @foreach($items as $idx=>$item)
-    @component($view_grid_item, [ 'item'=>$item, 'idx'=>$idx ])@endcomponent
-  @endforeach
-
-@endsection
-
-@section('desktop-list-load-more')
-
-  @if($next_items_after > 0)
-    <div class="pad-1 align-center"><button class="min load-more-btn" name="action" value="load-more|{{ $next_items_after }}"><label class="less">Load More</label></button></div>
-  @endif
+  <div class="pad-1">
+    <div class="grid">
+      <table>
+        <thead>
+        @component($view_grid_head, [ 'sorts'=>$sorts, 'sortable'=>$sortable ])@endcomponent
+        </thead>
+      </table>
+      <div class="grid-content v-scrollable" style="max-height:80vh;" onscroll="if(this.scrollTop + this.clientHeight > this.scrollHeight - 10) $('.load-more-btn').click();">
+        <table>
+          <thead></thead>
+          <tbody>
+          @foreach($items as $idx=>$item)
+            @component($view_grid_item, [ 'item'=>$item, 'idx'=>$idx ])@endcomponent
+          @endforeach
+          </tbody>
+        </table>
+        <div class="load-more-cont">
+          @if($next_items_after > 0)
+            <div class="pad-1 align-center"><button class="min load-more-btn" name="action" value="load-more|{{ $next_items_after }}"><label class="less">Load More</label></button></div>
+          @endif
+        </div>
+      </div>
+    </div>
+  </div>
 
 @endsection
 
@@ -191,26 +204,7 @@
         @yield('upper')
 
         <div class="hidden-sm desktop-list-cont">
-          <div class="pad-1">
-            <div class="grid">
-              <table>
-                <thead>
-                @component($view_grid_head, [ 'sorts'=>$sorts, 'sortable'=>$sortable ])@endcomponent
-                </thead>
-              </table>
-              <div class="grid-content v-scrollable" style="max-height:80vh;" onscroll="if(this.scrollTop + this.clientHeight > this.scrollHeight - 10) $('.load-more-btn').click();">
-                <table>
-                  <thead></thead>
-                  <tbody>
-                  @yield('desktop-list-items')
-                  </tbody>
-                </table>
-                <div class="load-more-cont">
-                  @yield('desktop-list-load-more')
-                </div>
-              </div>
-            </div>
-          </div>
+          @yield('desktop-list')
         </div>
 
         <div class="hidden-lg after-header mobile-list-cont">
