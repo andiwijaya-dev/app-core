@@ -36,7 +36,10 @@ class AuthService{
 
     if(!$user) exc('Unable to login, invalid user id');
 
-    if(!Hash::check($params['password'], $user->password)) exc(__('validation.password-invalid'));
+    if(config('auth.method') == 'hash')
+      if(!Hash::check($params['password'], $user->password)) exc(__('validation.password-invalid'));
+    else
+      if($user->password != md5($params['password'])) exc(__('Invalid password'));
 
     $user->last_login_at = Carbon::now()->toDateTimeString();
     $user->save();
