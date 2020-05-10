@@ -90,12 +90,10 @@ class AppCoreServiceProvider extends ServiceProvider
               $created_at
             ]);
           }
-
         }
         catch(\Exception $ex){
 
-          throw $ex;
-
+          report($ex);
         }
 
         $kernel->terminate($request, $response);
@@ -110,8 +108,7 @@ class AppCoreServiceProvider extends ServiceProvider
       env('WEB_CACHE_HOST') == $request->getHttpHost() &&
       !$this->app->runningInConsole() &&
       $this->app->request->method() == 'GET' &&
-      !$request->has('webcache-reload'))
-    {
+      !$request->has('webcache-reload')){
 
       if(Cache::has(WebCache::getKey($request))){
 
@@ -125,36 +122,28 @@ class AppCoreServiceProvider extends ServiceProvider
         exit();
 
       }
-
     }
 
     $this->loadViewsFrom(__DIR__ . '/views', 'andiwijaya');
-
     $this->loadViewsFrom(storage_path('app'), 'app');
 
-    //$this->loadMigrationsFrom(__DIR__.'/database/migrations');
-
-    $this->loadRoutesFrom(__DIR__.'/routes.php');
-
     $this->app['router']->aliasMiddleware('web-cache-excluded', WebCacheExcludedMiddleware::class);
-
     $this->app['router']->aliasMiddleware('auth.web', AuthMiddleware::class);
 
     $this->app['router']->pushMiddlewareToGroup('web', WebCacheMiddleware::class);
 
     $this->publishes(
       [
-        __DIR__.'/public' => public_path('vendor/andiwijaya')
+        __DIR__.'/assets' => public_path(''),
+        __DIR__.'/database/default' => app_path('database/migrations')
       ],
-      'assets'
+      'default'
     );
-
-    $this->publishes(
-      [
-        __DIR__.'/database/migrations' => app_path('database/migrations')
-      ],
-      'migrations'
-    );
+    $this->publishes([ __DIR__.'/database/chat' => app_path('database/migrations') ], 'chat');
+    $this->publishes([ __DIR__.'/database/log' => app_path('database/migrations') ], 'log');
+    $this->publishes([ __DIR__.'/database/user' => app_path('database/migrations') ], 'user');
+    $this->publishes([ __DIR__.'/database/webcache' => app_path('database/migrations') ], 'webcache');
+    $this->publishes([ __DIR__.'/database/webhistory' => app_path('database/migrations') ], 'webhistory');
 
     Sheet::macro('styleCells', function (Sheet $sheet, string $cellRange, array $style) {
       $sheet->getDelegate()->getStyle($cellRange)->applyFromArray($style);
