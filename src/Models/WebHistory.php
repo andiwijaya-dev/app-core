@@ -20,5 +20,8 @@ class WebHistory extends Model
   ];
 
   const TYPE_VISIT = 1;
+  const TYPE_LEAVE = 2;
+  const TYPE_FOCUS = 3;
+  const TYPE_BLUR = 4;
 
 }

@@ -17,7 +17,9 @@ class ModelEvent
 {
   use Dispatchable, InteractsWithSockets, SerializesModels;
 
-  public $model;
+  public $type;
+  public $class;
+  public $id;
 
   const TYPE_CREATE = 1;
   const TYPE_UPDATE = 2;
@@ -28,11 +30,11 @@ class ModelEvent
    *
    * @return void
    */
-  public function __construct($type, Model $model)
+  public function __construct($type, $class, $id)
   {
     $this->type = $type;
-
-    $this->model = $model;
+    $this->class = $class;
+    $this->id = $id;
   }
 
 }

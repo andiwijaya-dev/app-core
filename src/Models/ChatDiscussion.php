@@ -2,18 +2,27 @@
 
 namespace Andiwijaya\AppCore\Models;
 
+use Andiwijaya\AppCore\Models\Traits\FilterableTrait;
 use Andiwijaya\AppCore\Models\Traits\LoggedTraitV3;
 use Andiwijaya\AppCore\Events\ChatEvent;
 use App\Mail\ChatDiscussionCustomerNotification;
 use Carbon\Carbon;
 use Illuminate\Database\Eloquent\Model;
+use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Mail;
+use Illuminate\Support\Facades\Redis;
 
 class ChatDiscussion extends Model
 {
-  use LoggedTraitV3;
+  use LoggedTraitV3, FilterableTrait;
 
   protected $table = 'chat_discussion';
+
+  protected $filter_searchable = [
+    'id:=',
+    'key:like',
+    'name:like',
+  ];
 
   protected $fillable = [ 'status', 'avatar_image_url', 'key', 'name', 'title', 'extra', 'unreplied_count', 'last_replied_at' ];
 
@@ -100,6 +109,41 @@ class ChatDiscussion extends Model
       }
     }
 
+  }
+
+
+  public static function notifyUnsent($callback = null){
+
+    $discussions = ChatDiscussion::whereExists(function($query){
+      $query->select(DB::raw(1))
+        ->from('chat_message')
+        ->whereRaw('chat_message.discussion_id = chat_discussion.id AND unsent = 1 AND notified <> 1');
+    })
+      ->get();
+
+    if(is_callable($callback))
+      call_user_func_array($callback, [ "Discussions require notification: " . count($discussions) ]);
+
+    foreach($discussions as $discussion){
+
+      $offline = count(Redis::pubsub('channels', "customer-discussion-{$discussion->id}")) <= 0;
+
+      if(is_callable($callback))
+        call_user_func_array($callback, [ "{$discussion->key}, " . ($offline ? 'offline' : 'online') ]);
+
+      if($offline){
+        $discussion->sendEmailNotification();
+
+        ChatMessage::where([
+          'discussion_id'=>$discussion->id,
+          'unsent'=>1
+        ])
+          ->update([ 'notified'=>1 ]);
+
+        if(is_callable($callback))
+          call_user_func_array($callback, [ "Notification to {$discussion->key} sent." ]);
+      }
+    }
   }
 
 }

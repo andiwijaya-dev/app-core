@@ -20,12 +20,14 @@ class CreateChatDiscussionTable extends Migration
 
           $table->boolean('status');
           $table->string('key');
+          $table->string('name');
           $table->string('title');
           $table->string('avatar_image_url')->nullable();
           $table->text('extra')->nullable();
           $table->smallInteger('unreplied_count')->nullable()->default(0);
           $table->timestamp('last_replied_at')->nullable();
 
+          $table->unique('key', 'chat-discussion-key-exists');
         });
     }
 

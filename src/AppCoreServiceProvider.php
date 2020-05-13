@@ -3,6 +3,7 @@
 namespace Andiwijaya\AppCore;
 
 
+use Andiwijaya\AppCore\Console\Commands\ChatDiscussionNotifyUnsent;
 use Andiwijaya\AppCore\Console\Commands\ModelExecute;
 use Andiwijaya\AppCore\Console\Commands\TestEmail;
 use Andiwijaya\AppCore\Console\Commands\WebCacheClear;
@@ -45,7 +46,8 @@ class AppCoreServiceProvider extends ServiceProvider
       WebCacheClear::class,
       WebCacheLoad::class,
       ModelExecute::class,
-      TestEmail::class
+      TestEmail::class,
+      ChatDiscussionNotifyUnsent::class
     ]);
   }
 
@@ -134,16 +136,28 @@ class AppCoreServiceProvider extends ServiceProvider
 
     $this->publishes(
       [
-        __DIR__.'/assets' => public_path(''),
-        __DIR__.'/database/default' => app_path('database/migrations')
+        __DIR__.'/assets/' => public_path(''),
+        __DIR__.'/database/default/' => database_path('migrations')
       ],
       'default'
     );
-    $this->publishes([ __DIR__.'/database/chat' => app_path('database/migrations') ], 'chat');
-    $this->publishes([ __DIR__.'/database/log' => app_path('database/migrations') ], 'log');
-    $this->publishes([ __DIR__.'/database/user' => app_path('database/migrations') ], 'user');
-    $this->publishes([ __DIR__.'/database/webcache' => app_path('database/migrations') ], 'webcache');
-    $this->publishes([ __DIR__.'/database/webhistory' => app_path('database/migrations') ], 'webhistory');
+    $this->publishes([ __DIR__.'/database/chat/' => database_path('migrations') ], 'chat');
+    $this->publishes([ __DIR__.'/database/log/' => database_path('migrations') ], 'log');
+    $this->publishes([ __DIR__.'/database/user/' => database_path('migrations') ], 'user');
+    $this->publishes([ __DIR__.'/database/webcache/' => database_path('migrations') ], 'webcache');
+    $this->publishes([ __DIR__.'/database/webhistory/' => database_path('migrations') ], 'webhistory');
+    $this->publishes(
+      [
+        __DIR__.'/assets/' => public_path(''),
+        __DIR__.'/database/default/' => database_path('migrations'),
+        __DIR__.'/database/chat/' => database_path('migrations'),
+        __DIR__.'/database/log/' => database_path('migrations'),
+        __DIR__.'/database/user/' => database_path('migrations'),
+        __DIR__.'/database/webcache/' => database_path('migrations'),
+        __DIR__.'/database/webhistory/' => database_path('migrations')
+      ],
+      'all'
+    );
 
     Sheet::macro('styleCells', function (Sheet $sheet, string $cellRange, array $style) {
       $sheet->getDelegate()->getStyle($cellRange)->applyFromArray($style);

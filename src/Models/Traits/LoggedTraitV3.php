@@ -91,7 +91,7 @@ trait LoggedTraitV3{
       if(method_exists($this, 'cmsListDelete'))
         $this->cmsListDelete();
 
-      event(new ModelEvent(ModelEvent::TYPE_REMOVE, $this));
+      event(new ModelEvent(ModelEvent::TYPE_REMOVE, self::class, $this->id));
 
     }
 
@@ -184,7 +184,7 @@ trait LoggedTraitV3{
       if(method_exists($this, 'cmsListUpdate'))
         $this->cmsListUpdate();
 
-      event(new ModelEvent($exists ? ModelEvent::TYPE_UPDATE : ModelEvent::TYPE_CREATE, $this));
+      event(new ModelEvent($exists ? ModelEvent::TYPE_UPDATE : ModelEvent::TYPE_CREATE, self::class, $this->id));
 
     }
 

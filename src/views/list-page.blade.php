@@ -225,4 +225,10 @@
 
   </form>
 
+  @if(isset($channel))
+    <script>
+      $.wsListen('{{ $channel }}', '{{ env('UPDATER_HOST') }}');
+    </script>
+  @endif
+
 @endsection

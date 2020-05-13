@@ -22,7 +22,7 @@ class User extends Model
   ];
 
   protected $fillable = [
-    'code', 'name', 'email',
+    'is_active', 'code', 'name', 'email', 'require_password_change', 'avatar_url', 'referral_code', 'referral_id'
   ];
 
   /**
@@ -41,6 +41,7 @@ class User extends Model
    */
   protected $casts = [
     'email_verified_at' => 'datetime',
+    'last_login_at' => 'datetime',
   ];
 
 
@@ -53,6 +54,13 @@ class User extends Model
   public function privileges(){
 
     return $this->hasMany('Andiwijaya\AppCore\Models\UserPrivilege', 'user_id', 'id');
+
+  }
+
+  public function privilege($module){
+
+    return $this->hasOne('Andiwijaya\AppCore\Models\UserPrivilege', 'user_id', 'id')
+      ->where('module', $module);
 
   }
 

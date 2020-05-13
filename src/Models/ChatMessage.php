@@ -6,6 +6,7 @@ use Andiwijaya\AppCore\Models\Traits\LoggedTraitV3;
 use Andiwijaya\AppCore\Events\ChatEvent;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Support\Facades\Session;
+use Illuminate\Support\Facades\Storage;
 use Illuminate\Support\Facades\Validator;
 
 class ChatMessage extends Model
@@ -14,11 +15,12 @@ class ChatMessage extends Model
 
   protected $table = 'chat_message';
 
-  protected $fillable = [ 'discussion_id', 'unread', 'direction', 'from_id', 'to_id', 'text', 'images', 'extra' ];
+  protected $fillable = [ 'discussion_id', 'unread', 'direction', 'text', 'images', 'extra', 'notified', 'unsent' ];
 
   protected $attributes = [
     'unread'=>1,
-    'unsent'=>1
+    'unsent'=>1,
+    'notified'=>0,
   ];
 
   protected $casts = [
@@ -40,7 +42,6 @@ class ChatMessage extends Model
     return ChatMessage::whereDiscussionId($this->discussion_id)
       ->where('created_at', '<', $this->created_at)
       ->count() > 0 ? true : false;
-
   }
 
   public function getPreviousMessagesAttribute(){
@@ -50,32 +51,41 @@ class ChatMessage extends Model
       ->orderBy('created_at')
       ->limit(10)
       ->get();
-
   }
 
-  public function preSave()
-  {
+  public function preSave(){
+
     if(isset($this->fill_attributes['images'])){
 
       $images = [];
-      foreach($this->fill_attributes['images'] as $image)
-        $images[] = save_image($image);
+      foreach($this->fill_attributes['images'] as $image){
+
+        if(isset($image['file'])){
+
+          $disk = isset($this->fill_attributes['image_disk']) ? $this->fill_attributes['image_disk'] : 'images';
+
+          $file_name = get_md5_filename($image['file']);
+          if(!Storage::disk($disk)->exists($file_name))
+            Storage::disk($disk)->put($file_name, file_get_contents($image['file']));
+
+          unset($image['file']);
+          $image['file_name'] = $file_name;
+        }
+
+        $images[] = $image;
+      }
 
       $this->images = $images;
-
     }
 
     $extra = array_merge($this->extra ?? [], [ 'user'=>User::find(Session::get('user_id'))->name ?? '', 'user_id'=>Session::get('user_id') ]);
     $this->extra = $extra;
-
   }
 
   public function postSave()
   {
-    if($this->wasRecentlyCreated){
+    if($this->wasRecentlyCreated)
       event(new ChatEvent(ChatEvent::TYPE_NEW_CHAT_MESSAGE, $this->discussion, $this));
-      event(new ChatEvent(ChatEvent::TYPE_UPDATE_CHAT, $this->discussion));
-    }
   }
 
   public function calculate()

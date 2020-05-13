@@ -21,6 +21,8 @@ class CreateChatMessageTable extends Migration
           $table->bigInteger('discussion_id')->unsigned();
 
           $table->smallInteger('unread');
+          $table->smallInteger('unsent');
+          $table->smallInteger('notified');
           $table->boolean('direction');
 
           $table->string('text');

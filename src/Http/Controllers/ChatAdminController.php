@@ -2,6 +2,7 @@
 
 namespace Andiwijaya\AppCore\Http\Controllers;
 
+use Andiwijaya\AppCore\Events\ChatEvent;
 use Andiwijaya\AppCore\Models\ChatDiscussion;
 use Andiwijaya\AppCore\Models\ChatMessage;
 use Carbon\Carbon;
@@ -12,131 +13,201 @@ use Illuminate\Foundation\Validation\ValidatesRequests;
 use Illuminate\Http\Request;
 use Illuminate\Routing\Controller as BaseController;
 use Illuminate\Support\Facades\DB;
+use Illuminate\Support\Facades\Log;
 use Illuminate\Support\Facades\Redis;
 use Illuminate\Support\Facades\Session;
+use Illuminate\Support\Facades\Storage;
 use Symfony\Component\HttpFoundation\StreamedResponse;
 
 class ChatAdminController extends BaseController
 {
-  use AuthorizesRequests, DispatchesJobs, ValidatesRequests;
+  public $extends = '';
+  public $path = ''; // Required for message notification onclick target
 
-  public $module_id = 33;
+  public $view = 'andiwijaya::chat-admin';
+  public $view_discussion_item = 'andiwijaya::components.chat-admin-discussion-item';
+  public $view_discussion_no_item = 'andiwijaya::components.chat-admin-discussion-no-item';
+  public $view_message_item = 'andiwijaya::components.chat-admin-message-item';
 
-  public $name = 'chat';
+  public $channel_discussion = 'chat-admin-discussion';
 
-  public $path = '/chat-admin';
+  public $storage = 'images';
 
-  public $view = 'andiwijaya::chat';
 
-  public $extends = 'website.minimal';
-
-  public $height = '90vh';
-
-  public function index(Request $request, array $extra = []){
-
-    $request->has('display') ? Session::put('chat.display', $request->get('display')) : '';
-
-    $model = ChatDiscussion::
-    whereExists(function($query){
-      $query->select(DB::raw(1))
-        ->from('chat_message')
-        ->whereRaw('chat_message.discussion_id =   chat_discussion.id');
-    })
-      ->orderBy('updated_at', 'desc');
-
-    switch(Session::get('chat.display')){
-
-      case 'unreplied':
-        $model->where('unreplied_count', '>', 0);
-        break;
-
-    }
+  public function index(Request $request){
 
     $action = isset(($actions = explode('|', $request->get('action')))[0]) ? $actions[0] : '';
 
-    $params = $this->getParams($request, $extra);
+    if($action == 'export') return $this->export($request);
 
-    $params['chats'] = $model->get();
+    $filter = $request->get('filter');
+    $after_id = $actions[1] ?? null;
+    $item_per_page = 10;
 
-    if($request->has('chat')){
-      $params['chat'] = $request->get('chat');
+    $model = ChatDiscussion::
+      whereExists(function($query){
+        $query->select(DB::raw(1))
+          ->from('chat_message')
+          ->whereRaw('chat_message.discussion_id = chat_discussion.id');
+      })
+        ->orderBy('updated_at', 'desc')
+        ->orderBy('id', 'desc');
+
+    if($filter != 'all')
+      $model->where('unreplied_count', '>', 0);
+
+    if(strlen($request->get('search')) > 0)
+      $model->filter($request->all());
+
+    if($after_id > 0){
+      $discussions = collect([]);
+
+      $append = false;
+      $model->chunk(1000, function($rows) use($after_id, $item_per_page, &$discussions, &$append){
+
+        foreach($rows as $row){
+
+          if($row->id == $after_id) $append = true;
+
+          if($append) $discussions->add($row);
+
+          if(count($discussions) >= $item_per_page + 1) break;
+        }
+
+        if(count($discussions) >= $item_per_page + 1) return false;
+      });
     }
+    else{
+
+      $discussions = $model
+        ->limit($item_per_page + 1)
+        ->get();
+    }
+
+    $after_id = count($discussions) >= $item_per_page + 1 ? $discussions[$item_per_page]->id : null;
+    $discussions = $discussions->splice(0, $item_per_page);
+
+    $params = [
+      'extends'=>$this->extends,
+      'discussions'=>$discussions,
+      'view_discussion_item'=>$this->view_discussion_item,
+      'view_discussion_no_item'=>$this->view_discussion_no_item,
+      'filter'=>$filter,
+      'after_id'=>$after_id,
+      'channel_discussion'=>$this->channel_discussion
+    ];
 
     if($request->ajax()){
 
-      return [
-        '.chat .chat-list-body'=>view($this->view, $params)->renderSections()['chat-list']
-      ];
-
-    }
-
-    else{
-
       switch($action){
 
-        case 'download':
-          return $this->download($request);
+        case 'load-more':
+          return [
+            'pre-script'=>"$('.chat-content .load-more').remove()",
+            '.chat-content'=>'>>' . view('andiwijaya::components.chat-admin-discussion-items', $params)->render()
+          ];
 
         default:
-          return view($this->view, $params);
-
+          return [
+            '.chat-content'=>view('andiwijaya::components.chat-admin-discussion-items', $params)->render()
+          ];
       }
-
     }
 
+    return view($this->view, $params);
   }
 
   public function show(Request $request, $id, array $extra = []){
 
-    $chat = ChatDiscussion::whereId($id)->first();
+    $item_per_page = 3;
 
     $action = isset(($actions = explode('|', $request->get('action')))[0]) ? $actions[0] : '';
+    $prev_id = isset($actions[1]) ? $actions[1] : null;
+    $last_id = isset($actions[1]) ? $actions[1] : null;
 
-    switch($action){
+    $discussion = ChatDiscussion::find($id);
 
-      case 'load-prev':
-        $message = ChatMessage::find($actions[1]);
+    $model = ChatMessage::whereDiscussionId($id)
+      ->orderBy('created_at', 'desc')
+      ->orderBy('id', 'desc');
 
-        return [
-          'pre-script'=>"$('.message-list-content .load-prev').remove()",
-          '.message-list-content'=>'<<' . view('andiwijaya::components.chat-admin-message-list', [ 'items'=>$message->previous_messages ])->render(),
-          'script'=>""
-        ];
-        break;
+    if($action == 'load-prev'){
+
+      $messages = collect([]);
+
+      $append = false;
+      $model->chunk(1000, function($rows) use($prev_id, $item_per_page, &$messages, &$append){
+
+        foreach($rows as $row){
+          if($row->id == $prev_id) $append = true;
+          if($append) $messages->add($row);
+          if(count($messages) >= $item_per_page + 1) break;
+        }
+        if(count($messages) >= $item_per_page + 1) return false;
+      });
 
     }
+    else if($action == 'load-next'){
 
-    $params = $this->getParams($request, $extra);
+      $messages = collect([]);
 
-    $params['chat'] = $chat;
+      $append = true;
+      $model->chunk(1000, function($rows) use($last_id, $item_per_page, &$messages, &$append){
 
-    if($request->ajax()){
-
-      $sections = view($this->view, $params)->renderSections();
-
-      return [
-        '.message-list'=>$sections['message-list'],
-        '.info-card'=>$sections['info'],
-        'rewrite'=>[
-          'title'=>'',
-          'url'=>$this->path . '/' . $id
-        ],
-        'script'=>implode(';', [
-          "$('.chat').chat_resize()",
-          "if(typeof channels[1]) socket.emit('leave', channels[1])",
-          "socket.emit('join', (channels[1] = 'discussion-{$params['chat']->id}'));"
-        ])
-      ];
+        foreach($rows as $row){
+          if($row->id == $last_id) $append = false;
+          if($append) $messages->add($row);
+        }
+      });
 
     }
     else{
 
-      $request->merge($params);
-
-      return $this->index($request, $extra);
-
+      $messages = $model->limit($item_per_page + 1)->get();
     }
 
+    $prev_id = count($messages) >= $item_per_page + 1 ? $messages[$item_per_page]->id : null;
+    $messages = $messages->splice(0, $item_per_page)->reverse();
+    $last_id = $messages->pluck('id')->last();
+
+    $params = [
+      'discussion'=>$discussion,
+      'messages'=>$messages,
+      'prev_id'=>$prev_id,
+      'last_id'=>$last_id,
+      'view_message_item'=>$this->view_message_item,
+      'storage'=>$this->storage
+    ];
+
+    switch($action){
+
+      case 'load-prev':
+        return [
+          'pre-script'=>"$('.message-list .load-prev').remove()",
+          '.message-list'=>'<<' . view('andiwijaya::components.chat-admin-message-items', $params)->render()
+        ];
+
+      case 'load-next':
+        $returns = [];
+        foreach($messages as $idx=>$message)
+          $returns[] = [
+            'type'=>'element',
+            'html'=>view($this->view_message_item, compact('idx', 'message', 'storage'))->render(),
+            'parent'=>'.chat-admin .message-list'
+          ];
+
+        return $returns;
+
+      default:
+        return [
+          '.message-cont'=>view('andiwijaya::components.chat-admin-message-cont', $params)->render(),
+          '.message-edit'=>view('andiwijaya::components.chat-admin-message-edit', $params)->render(),
+          'script'=>implode(';', [
+            "$('.chat-admin').chatadmin_resize().chatadmin_open()",
+          ])
+        ];
+
+    }
   }
 
   public function store(Request $request){
@@ -150,6 +221,8 @@ class ChatAdminController extends BaseController
 
     if(!$discussion) exc(__('models.chat-message-unable-to-send-message'));
 
+    $request->merge([ 'image_disk'=>$this->storage ]);
+
     $message = new ChatMessage([
       'discussion_id'=>$request->get('id'),
       'direction'=>ChatMessage::DIRECTION_OUT
@@ -157,22 +230,16 @@ class ChatAdminController extends BaseController
     $message->fill($request->all());
     $message->save();
 
-    $offline = count(Redis::pubsub('channels', "customer-discussion-{$discussion_id}")) <= 0;
-    if($offline)
-      $discussion->sendEmailNotification();
+    $request->merge([ 'action'=>'load-next|' . $request->get('last_id') ]);
 
-    return [
-      //".chat .message-list-body"=>'>>' . view('andiwijaya::components.chat-message-item', [ 'item'=>$message, 'highlight'=>1 ])->render(),
-      'script'=>implode(';', [
-        "$('.chat .message-list-body').scrollToBottom()",
-        "$('.chat .message-list-foot input[name=text]').val('')",
-        "$('.chat .message-list-foot .images-cont').html('')"
-      ])
-    ];
-
+    return array_merge(
+      $this->show($request, $discussion_id), [
+        [ 'type'=>'script', 'script'=>"$('.chat-admin').chatadmin_clear()" ]
+      ]
+    );
   }
 
-  public function download(Request $request){
+  public function export(Request $request){
 
     return new StreamedResponse(
       function(){
@@ -182,9 +249,9 @@ class ChatAdminController extends BaseController
         fputcsv($handle, [
           'Email',
           'Topic',
-          'Tanggal',
-          'Tipe',
-          'Pesan',
+          'Date',
+          'Type',
+          'Message',
         ]);
 
         ChatMessage::orderBy('discussion_id', 'asc')
@@ -196,7 +263,7 @@ class ChatAdminController extends BaseController
                 $message->discussion->key,
                 $message->discussion->title,
                 $message->created_at,
-                $message->direction == ChatMessage::DIRECTION_IN ? 'Masuk' : 'Keluar',
+                $message->direction == ChatMessage::DIRECTION_IN ? 'In' : 'Out',
                 $message->text
               ];
 
@@ -215,6 +282,49 @@ class ChatAdminController extends BaseController
         'Content-Disposition' => 'attachment; filename="chat-' . Carbon::now()->format('Y-m-d-H-i-s') . '.csv"',
       ]);
 
+  }
+
+  public function handle(ChatEvent $event){
+
+    $updates = [];
+
+    switch($event->type){
+
+      case ChatEvent::TYPE_NEW_CHAT_MESSAGE:
+
+        $online = count(Redis::pubsub('channels', $this->channel_discussion)) > 0;
+
+        if($online){
+
+          $updates[] = [
+            'type'=>'element',
+            'html'=>view($this->view_discussion_item, [ 'discussion'=>$event->discussion ])->render(),
+            'parent'=>'.chat-admin .chat-content',
+            'mode'=>'prepend'
+          ];
+
+          $updates[] = [
+            'type'=>'element',
+            'html'=>view($this->view_message_item, [ 'message'=>$event->message, 'storage'=>$this->storage ])->render(),
+            'parent'=>".chat-admin .message-list[data-id={$event->discussion->id}]"
+          ];
+        }
+        break;
+
+    }
+
+    $updates[] = [
+      'type'=>'script',
+      'script'=>implode(';', [
+        "$.lazy_load()",
+        "$('.chat-admin .message-list[data-id={$event->discussion->id}]').scrollToBottom()"
+      ])
+    ];
+
+    Redis::publish(
+      $this->channel_discussion,
+      json_encode($updates)
+    );
   }
 
 

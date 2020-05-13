@@ -18,23 +18,22 @@ class CreateUserPrivilegeTable extends Migration
           $table->bigIncrements('id');
           $table->timestamps();
 
-          $table->bigInteger('user_id')->unsigned()->nullable();
-          $table->bigInteger('module_id')->unsigned()->nullable();
-          $table->boolean('list');
-          $table->boolean('create');
-          $table->boolean('update');
-          $table->boolean('delete');
-          $table->boolean('import');
-          $table->boolean('export');
+          $table->bigInteger('user_id')->unsigned();
+          $table->string('module');
+          $table->text('list');
+          $table->text('create');
+          $table->text('update');
+          $table->text('delete');
+          $table->text('import');
+          $table->text('export');
 
           $table->foreign('user_id')->references('id')->on('user')
             ->onDelete('cascade')
             ->onUpdate('cascade');
 
-          $table->unique([ 'user_id', 'module_id' ]);
+          $table->unique([ 'user_id', 'module' ]);
 
           $table->index([ 'user_id' ]);
-
         });
     }
 

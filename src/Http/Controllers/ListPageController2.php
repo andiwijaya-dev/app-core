@@ -2,17 +2,21 @@
 
 namespace Andiwijaya\AppCore\Http\Controllers;
 
+use Andiwijaya\AppCore\Events\ModelEvent;
 use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Http\Request;
 use Illuminate\Support\Collection;
 use Illuminate\Routing\Controller as BaseController;
+use Illuminate\Support\Facades\Log;
+use Illuminate\Support\Facades\Redis;
 
 class ListPageController2 extends BaseController{
 
   public $model = null;
 
   public $title = '';
+  public $channel = '';
 
   public $extends = '';
   public $view = 'andiwijaya::list-page';
@@ -116,6 +120,7 @@ class ListPageController2 extends BaseController{
       'exportable'=>$this->exportable,
       'sortable'=>$this->sortable,
       'filterable'=>$this->filterable,
+      'channel'=>$this->channel
     ];
 
     $params = array_merge($params, $this->getParams());
@@ -197,6 +202,56 @@ class ListPageController2 extends BaseController{
   {
     return [];
   }
+
+  public function handle(ModelEvent $event){
+
+    if($this->channel && $this->model && $this->model == $event->class){
+
+      $updates = [];
+
+      $online = count(Redis::pubsub('channels', $this->channel)) > 0;
+      if($online) {
+
+        if($event->type == ModelEvent::TYPE_REMOVE){
+
+          $updates[] = [
+            'type'=>'script',
+            'script'=>implode(';', [
+              "$('.list-page .grid-content-tbody tr[data-id={$event->id}]').remove()",
+              "$('.list-page .feed-content .item[data-id={$event->id}]').remove()",
+            ])
+          ];
+        }
+
+        else{
+
+          $model = $this->model::whereId($event->id)->first();
+
+          $updates[] = [
+            'type' => 'element',
+            'html' => view($this->view_grid_item, ['item' => $model ])->render(),
+            'parent' => '.list-page .grid-content-tbody',
+            'mode' => 'prepend'
+          ];
+
+          $updates[] = [
+            'type' => 'element',
+            'html' => view($this->view_feed_item, ['item' => $model ])->render(),
+            'parent' => '.list-page .feed-content',
+            'mode' => 'prepend'
+          ];
+        }
+      }
+
+      Redis::publish(
+        $this->channel,
+        json_encode($updates)
+      );
+
+    }
+
+  }
+
 
 
   function datasource(Request $request){ }
