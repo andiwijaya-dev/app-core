@@ -3,25 +3,8 @@
 namespace Andiwijaya\AppCore;
 
 
-use Andiwijaya\AppCore\Console\Commands\ChatDiscussionNotifyUnsent;
 use Andiwijaya\AppCore\Console\Commands\ModelExecute;
 use Andiwijaya\AppCore\Console\Commands\TestEmail;
-use Andiwijaya\AppCore\Console\Commands\WebCacheClear;
-use Andiwijaya\AppCore\Console\Commands\WebCacheLoad;
-use Andiwijaya\AppCore\Middleware\AuthMiddleware;
-use Andiwijaya\AppCore\Middleware\WebCacheExcludedMiddleware;
-use Andiwijaya\AppCore\Middleware\WebCacheMiddleware;
-use Andiwijaya\AppCore\Services\AuthService;
-use Andiwijaya\AppCore\Services\WebCacheService;
-use Andiwijaya\AppCore\Facades\WebCache;
-use Carbon\Carbon;
-use Illuminate\Http\Request;
-use Illuminate\Http\Response;
-use Illuminate\Routing\ResponseFactory;
-use Illuminate\Support\Facades\Cache;
-use Illuminate\Support\Facades\Crypt;
-use Illuminate\Support\Facades\DB;
-use Illuminate\Support\Facades\Route;
 use Illuminate\Support\ServiceProvider;
 use Maatwebsite\Excel\Sheet;
 
@@ -34,26 +17,10 @@ class AppCoreServiceProvider extends ServiceProvider
    */
   public function register()
   {
-    $this->app->singleton('WebCache', function () {
-      return new WebCacheService();
-    });
-
-    $this->app->singleton('Auth', function () {
-      return new AuthService();
-    });
-
     $this->commands([
-      WebCacheClear::class,
-      WebCacheLoad::class,
       ModelExecute::class,
-      TestEmail::class,
-      ChatDiscussionNotifyUnsent::class
+      TestEmail::class
     ]);
-  }
-
-  public function provides()
-  {
-    return [ 'WebCache', 'Auth' ];
   }
 
   /**
@@ -61,102 +28,20 @@ class AppCoreServiceProvider extends ServiceProvider
    *
    * @return void
    */
-  public function boot(Request $request, ResponseFactory $response){
-
-    if(env('WEB_HISTORY') && !$this->app->runningInConsole()){
-
-      if(env('WEB_HISTORY_URL') == '/' . $request->path()){
-
-        global $kernel;
-
-        try{
-
-          $session_id = Crypt::decrypt($request->cookies->get(strtolower(env('APP_NAME')) . '_session'), false);
-          $type = $request->input('type');
-          $path = $request->input('path');
-          $referrer = $request->input('referrer', $request->input('referer'));
-          $remote_ip = $request->server('REMOTE_ADDR');
-          $user_agent = $request->server('HTTP_USER_AGENT');
-          $created_at = Carbon::now()->format('Y-m-d H:i:s');
-
-          if($type > 0 && !empty(trim($path))){
-            DB::statement("INSERT INTO web_history(`type`, session_id, path, referrer, remote_ip, user_agent, created_at, updated_at) 
-                  VALUES (?, ?, ?, ?, ?, ?, ?, ?)", [
-              $type,
-              $session_id,
-              $path,
-              $referrer,
-              $remote_ip,
-              $user_agent,
-              $created_at,
-              $created_at
-            ]);
-          }
-        }
-        catch(\Exception $ex){
-
-          report($ex);
-        }
-
-        $kernel->terminate($request, $response);
-
-        exit();
-
-      }
-
-    }
-
-    if(env('WEB_CACHE') &&
-      env('WEB_CACHE_HOST') == $request->getHttpHost() &&
-      !$this->app->runningInConsole() &&
-      $this->app->request->method() == 'GET' &&
-      !$request->has('webcache-reload')){
-
-      if(Cache::has(WebCache::getKey($request))){
-
-        global $kernel;
-
-        $response = Response::create(Cache::get(WebCache::getKey($this->app->request)));
-        $response->send();
-
-        $kernel->terminate($request, $response);
-
-        exit();
-
-      }
-    }
+  public function boot(){
 
     $this->loadViewsFrom(__DIR__ . '/views', 'andiwijaya');
     $this->loadViewsFrom(storage_path('app'), 'app');
 
-    $this->app['router']->aliasMiddleware('web-cache-excluded', WebCacheExcludedMiddleware::class);
-    $this->app['router']->aliasMiddleware('auth.web', AuthMiddleware::class);
-
-    $this->app['router']->pushMiddlewareToGroup('web', WebCacheMiddleware::class);
-
     $this->publishes(
       [
-        __DIR__.'/assets/' => public_path(''),
-        __DIR__.'/database/default/' => database_path('migrations')
-      ],
-      'default'
-    );
-    $this->publishes([ __DIR__.'/database/chat/' => database_path('migrations') ], 'chat');
-    $this->publishes([ __DIR__.'/database/log/' => database_path('migrations') ], 'log');
-    $this->publishes([ __DIR__.'/database/user/' => database_path('migrations') ], 'user');
-    $this->publishes([ __DIR__.'/database/webcache/' => database_path('migrations') ], 'webcache');
-    $this->publishes([ __DIR__.'/database/webhistory/' => database_path('migrations') ], 'webhistory');
-    $this->publishes(
-      [
-        __DIR__.'/assets/' => public_path(''),
-        __DIR__.'/database/default/' => database_path('migrations'),
-        __DIR__.'/database/chat/' => database_path('migrations'),
-        __DIR__.'/database/log/' => database_path('migrations'),
-        __DIR__.'/database/user/' => database_path('migrations'),
-        __DIR__.'/database/webcache/' => database_path('migrations'),
-        __DIR__.'/database/webhistory/' => database_path('migrations')
-      ],
-      'all'
+        __DIR__.'/database/default/' => database_path(),
+        __DIR__.'/assets/' => public_path(),
+        __DIR__.'/views/default/' => resource_path('views'),
+        __DIR__.'/lang/' => resource_path('lang'),
+        __DIR__.'/Exceptions/' => app_path('Exceptions'),
+        __DIR__.'/websocket/' => base_path(),
+      ]
     );
 
     Sheet::macro('styleCells', function (Sheet $sheet, string $cellRange, array $style) {

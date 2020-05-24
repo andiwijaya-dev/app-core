@@ -8,15 +8,10 @@ class UserPrivilege extends Model{
 
   protected $table = 'user_privilege';
 
-  protected $fillable = [ 'user_id', 'module_id', 'list', 'create', 'update', 'delete', 'import', 'export' ];
+  protected $fillable = [ 'user_id', 'key', 'value' ];
 
   protected $casts = [
-    'list'=>'array',
-    'create'=>'array',
-    'update'=>'array',
-    'delete'=>'array',
-    'import'=>'array',
-    'export'=>'array'
+    'value'=>'array'
   ];
 
   public function user(){

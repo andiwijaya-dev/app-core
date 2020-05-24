@@ -1054,3 +1054,95 @@ EOL;
   }
 
 }
+
+if(!function_exists('view_modal')){
+
+  function view_modal($view, array $options = []){
+
+    $data = $options['data'] ?? [];
+    unset($options['data']);
+
+    return [
+      array_merge(
+        $options,
+        [
+          'id'=>$options['id'] ?? uniqid(),
+          'type'=>'modal',
+          'html'=>view($view, $data)->render()
+        ]
+      ),
+      isset($options['pre-script']) ? [ 'type'=>'pre-script', 'script'=>$options['pre-script'] ] : '',
+      isset($options['script']) ? [ 'type'=>'script', 'script'=>$options['script'] ] : '',
+    ];
+  }
+
+}
+
+if(!function_exists('view_append')){
+
+  function view_append($params){
+
+    return $params;
+  }
+
+}
+
+if(!function_exists('csv_export')){
+
+  function csv_export($builder, array $headerColumns, $callback, array $options = []){
+
+    $filename = $options['filename'] ?? ($options['file'] ?? uniqid() . 'csv');
+    $headers = [
+      'Cache-Control'       => 'must-revalidate, post-check=0, pre-check=0',
+      'Content-type'        => 'text/csv',
+      'Content-Disposition' => "attachment; filename={$filename}",
+      'Expires'             => '0',
+      'Pragma'              => 'public'
+    ];
+
+    return Illuminate\Support\Facades\Response::stream(function() use($builder, $headerColumns, $callback){
+
+      $fp = fopen('php://output', 'w');
+
+      fputcsv($fp, $headerColumns);
+
+      $builder->chunk(1000, function($rows) use($fp, $callback){
+
+        foreach($rows as $row){
+
+          if(is_callable($callback)){
+
+            $data = call_user_func_array($callback, [ $row ]);
+            $data = !is_array($data) ? [] : $data;
+            fputcsv($fp, $data);
+          }
+        }
+
+      });
+
+      fclose($fp);
+
+    }, 200, $headers);
+
+  }
+
+}
+
+if(!function_exists('parsedown_ex')){
+
+  function parsedown_ex($text){
+
+    // Find <code></code> block, replace to <pre><code class=''></code></pre>
+    preg_match_all('/\<code\>(.*?(?=\<\/code\>))\<\/code\>/', $text, $matches);
+
+    if(isset($matches[0][0])){
+      foreach($matches[0] as $match) {
+
+        $code = str_replace('</code>', '</code></pre>', str_replace('<code>', '<pre><code class="language-css">', $match));
+        $text = str_replace($match, $code, $text);
+      }
+    }
+
+    return $text;
+  }
+}

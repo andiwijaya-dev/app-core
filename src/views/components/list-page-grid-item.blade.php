@@ -4,6 +4,8 @@
       <a href="/{{ \Illuminate\Support\Facades\Request::path() }}/{{ $item->id }}" class="async"><span class="fa fa-ellipsis-h selectable"></span></a>
     </div>
   </td>
+  <td><span class="img unloaded rat-88" data-src="/images/"></span></td>
   <td><label>{{ $item->name ?? '' }}</label></td>
-  <td>{{ $item->created_at->diffForHumans() }}</td>
+  <td></td>
+  <td><label>{{ $item->created_at->diffForHumans() }}</label></td>
 </tr>

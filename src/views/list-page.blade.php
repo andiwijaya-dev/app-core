@@ -8,7 +8,7 @@
       <label>&nbsp;<span class="fa fa-caret-down selectable"></span>&nbsp;</label>
     </button>
     <div class="action-popup popup" data-ref=".has-right">
-      <a class="item block async" href="{{ \Illuminate\Support\Facades\Request::url() }}?action=export"><span class="fa fa-cloud-download-alt hmarr-05"></span> Export...</a>
+      <button class="item min block" name="action" value="export" data-async="0"><span class="fa fa-cloud-download-alt hmarr-05"></span> Export...</button>
     </div>
   @else
     <button class="more hpad-1" type="button" onclick="$.fetch('//{{ \Illuminate\Support\Facades\Request::getHost() . '/' .  \Illuminate\Support\Facades\Request::path() }}/create')"><label><span class="fa fa-plus hmarr-05"></span>New...</label></button>
@@ -22,7 +22,7 @@
     <div class="pad-2">
       <div class="rowc valign-middle">
         <div class="col-lg-4 col-sm-3">
-          <h3>{{ $title }}</h3>
+          <h1>{{ $title }}</h1>
         </div>
         <div class="col-lg-8 col-sm-9 align-right">
           <button class="hidden" name="action" value="search"></button>
@@ -200,7 +200,7 @@
                 </tbody>
               </table>
               <div class="load-more-cont">
-                @yield('desktop-list-load-more');
+                @yield('desktop-list-load-more')
               </div>
             </div>
           </div>
@@ -225,7 +225,7 @@
 
   </form>
 
-  @if(isset($channel))
+  @if(isset($channel) && strlen($channel) > 0)
     <script>
       $.wsListen('{{ $channel }}', '{{ env('UPDATER_HOST') }}');
     </script>

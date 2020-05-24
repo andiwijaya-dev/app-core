@@ -7,6 +7,7 @@ use Andiwijaya\AppCore\Models\Traits\FilterableTrait;
 use Andiwijaya\AppCore\Models\Traits\LoggedTraitV3;
 use Andiwijaya\AppCore\Models\Traits\SearchableTrait;
 use Illuminate\Database\Eloquent\Model;
+use Illuminate\Support\Facades\Hash;
 use Illuminate\Support\Facades\Validator;
 
 class User extends Model
@@ -90,6 +91,24 @@ class User extends Model
 
   }
 
+
+  public function changePassword($password)
+  {
+    $validator = Validator::make([ 'password'=>$password ], [
+      'password'=>'required|min:6'
+    ]);
+    if($validator->fails()) exc($validator->errors()->first());
+
+    if(env('AUTH_PASSWORD_TYPE') == 'hash'){
+      $this->password = Hash::make($password);
+    }
+    else{
+      $this->password = md5($password);
+    }
+
+    if($this->exists)
+      $this->save([ 'log_type'=>Log::TYPE_CHANGE_PASSWORD ]);
+  }
 
   public function preSave(){
 

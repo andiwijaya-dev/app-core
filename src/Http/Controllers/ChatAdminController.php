@@ -23,6 +23,7 @@ class ChatAdminController extends BaseController
 {
   public $extends = '';
   public $path = ''; // Required for message notification onclick target
+  public $title = ''; // Required for message notification onclick target
 
   public $view = 'andiwijaya::chat-admin';
   public $view_discussion_item = 'andiwijaya::components.chat-admin-discussion-item';
@@ -94,7 +95,8 @@ class ChatAdminController extends BaseController
       'view_discussion_no_item'=>$this->view_discussion_no_item,
       'filter'=>$filter,
       'after_id'=>$after_id,
-      'channel_discussion'=>$this->channel_discussion
+      'channel_discussion'=>$this->channel_discussion,
+      'title'=>$this->title
     ];
 
     if($request->ajax()){
@@ -195,6 +197,8 @@ class ChatAdminController extends BaseController
             'html'=>view($this->view_message_item, compact('idx', 'message', 'storage'))->render(),
             'parent'=>'.chat-admin .message-list'
           ];
+
+        $returns[] = [ 'type'=>'script', 'script'=>"$('.chat-admin .message-list').scrollToBottom()" ];
 
         return $returns;
 

@@ -192,18 +192,27 @@ class ChatController{
         ])
       ];
     }
-    else{
+    else {
 
-      return [
-        //'.chat-popup-body'=>'>>' . view('andiwijaya::components.customer-chat-message', [ 'item'=>$message ])->render(),
-        'script'=>implode(';', [
+      $return = [];
+
+      $return[] = [
+        'type' => 'element',
+        'html' => view('andiwijaya::components.customer-chat-message', ['item' => $message])->render(),
+        'parent' => '.chat-body-messages',
+      ];
+
+      $return[] = [
+        'type' => 'script',
+        'script' => implode(';', [
           "$.chat_resize()",
           "$.chat_popup_clear()",
           "$('.chat-popup-body').scrollToBottom()"
         ])
       ];
-    }
 
+      return $return;
+    }
   }
 
   public function sendMessageOffline($request){

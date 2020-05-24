@@ -16,7 +16,8 @@ class WebHistory extends Model
     'referrer',
     'remote_ip',
     'city',
-    'user_agent'
+    'user_agent',
+    'timestamp'
   ];
 
   const TYPE_VISIT = 1;

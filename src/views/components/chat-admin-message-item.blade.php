@@ -2,7 +2,7 @@
   <div class="message direction-in" data-id="{{ $message->id }}">
     <span>
       <div class="text">
-        <p>{!! $message->text !!} {{ $storage }}</p>
+        <p>{!! $message->text !!}</p>
       </div>
       @if(is_array($message->images) && count($message->images) > 0)
         <div class="images pad-1 vpadb-0">

@@ -5,7 +5,7 @@
     <div class="message-head hidden-sm">
       <div class="flexrow">
         <div>
-          <span class="img unloaded" style="width:48px;height:48px" data-src="/images/avatar1.png"></span>
+          <span class="img unloaded rounded" style="width:48px;height:48px" data-src="/images/{{ $discussion->avatar_image_url }}"></span>
         </div>
         <div class="stretch hmarl-1">
           <h5>{{ $discussion->name ?? $discussion->key }}</h5><br />

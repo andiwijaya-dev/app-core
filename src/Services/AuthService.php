@@ -26,7 +26,7 @@ class AuthService{
     ]);
     if($validator->fails()) exc($validator->errors()->first());
 
-    $model = config('auth.providers.user.model');
+    $model = config('auth.model');
 
     $user = $model::where(function($query) use($params){
       $query->where('email', $params['user_id'])
@@ -34,14 +34,9 @@ class AuthService{
     })
       ->first();
 
-    if(!$user) exc('Unable to login, invalid user id');
+    if(!$user) exc(__('errors.login-invalid-user-id'));
 
-    if(env('AUTH_PASSWORD_TYPE') == 'hash'){
-      if(!Hash::check($params['password'], $user->password)) exc(__('validation.password-invalid'));
-    }
-    else{
-      if($user->password != md5($params['password'])) exc(__('Invalid password'));
-    }
+    if(!Hash::check($params['password'], $user->password)) exc(__('errors.password-invalid'));
 
     $user->last_login_at = Carbon::now()->toDateTimeString();
     $user->save();
@@ -69,7 +64,7 @@ class AuthService{
 
     if($user_id > 0){
 
-      $model = config('auth.providers.user.model');
+      $model = config('auth.model');
 
       $user = $model::find($user_id);
 

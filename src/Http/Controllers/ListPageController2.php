@@ -42,21 +42,7 @@ class ListPageController2 extends BaseController{
 
     if($action == 'export') return $this->export($request);
 
-    if(!($builder = $this->datasource($request)) && class_exists($this->model)) {
-
-      $builder = $this->model::select('*');
-
-      if($request->get('action') != 'reset'){
-
-        if (method_exists(new $this->model, 'scopeFilter'))
-          $builder->filter($request->all());
-
-        if (method_exists(new $this->model, 'scopeSearch') && strlen($request->get('search')) > 0)
-          $builder->search($request->get('search'));
-
-        $this->applySorts($builder, $request->get('sorts', []));
-      }
-    }
+    $builder = $this->datasource($request);
 
     $row_per_page = 15;
 
@@ -210,6 +196,7 @@ class ListPageController2 extends BaseController{
       $updates = [];
 
       $online = count(Redis::pubsub('channels', $this->channel)) > 0;
+
       if($online) {
 
         if($event->type == ModelEvent::TYPE_REMOVE){
@@ -241,21 +228,36 @@ class ListPageController2 extends BaseController{
             'mode' => 'prepend'
           ];
         }
+
+        Redis::publish(
+          $this->channel,
+          json_encode($updates)
+        );
       }
-
-      Redis::publish(
-        $this->channel,
-        json_encode($updates)
-      );
-
     }
 
   }
 
 
 
-  function datasource(Request $request){ }
+  function datasource(Request $request){
 
-  function export(Request $request){ }
+    $builder = $this->model::select('*');
+
+    if($request->get('action') != 'reset'){
+
+      if (method_exists(new $this->model, 'scopeFilter'))
+        $builder->filter($request->all());
+
+      if (method_exists(new $this->model, 'scopeSearch') && strlen($request->get('search')) > 0)
+        $builder->search($request->get('search'));
+
+      $this->applySorts($builder, $request->get('sorts', []));
+    }
+
+    return $builder;
+  }
+
+  /*function export(Request $request){ }*/
 
 }

@@ -1,4 +1,4 @@
-@extends($extends ?? 'admin.app')
+@extends($extends ?? '')
 
 @section('detail')
 
