@@ -4,14 +4,14 @@
 
 @section('upper-options')
   @if($exportable)
-    <button class="more has-right" type="button" onclick="$.fetch('//{{ \Illuminate\Support\Facades\Request::getHost() . '/' .  \Illuminate\Support\Facades\Request::path() }}/create')"><label><span class="fa fa-plus selectable hmarr-05"></span> New...</label></button><button class="more has-left" type="button" data-click-popup=".action-popup">
+    <button class="max has-right" type="button" onclick="$.fetch('//{{ \Illuminate\Support\Facades\Request::getHost() . '/' .  \Illuminate\Support\Facades\Request::path() }}/create')"><label><span class="fa fa-plus selectable hmarr-05"></span> New...</label></button><button class="max has-left" type="button" data-click-popup=".action-popup">
       <label>&nbsp;<span class="fa fa-caret-down selectable"></span>&nbsp;</label>
     </button>
     <div class="action-popup popup" data-ref=".has-right">
       <button class="item min block" name="action" value="export" data-async="0"><span class="fa fa-cloud-download-alt hmarr-05"></span> Export...</button>
     </div>
   @else
-    <button class="more hpad-1" type="button" onclick="$.fetch('//{{ \Illuminate\Support\Facades\Request::getHost() . '/' .  \Illuminate\Support\Facades\Request::path() }}/create')"><label><span class="fa fa-plus hmarr-05"></span>New...</label></button>
+    <button class="max hpad-1" type="button" onclick="$.fetch('//{{ \Illuminate\Support\Facades\Request::getHost() . '/' .  \Illuminate\Support\Facades\Request::path() }}/create')"><label><span class="fa fa-plus hmarr-05"></span>New...</label></button>
   @endif
 @endsection
 
@@ -183,47 +183,49 @@
 
 @section('content')
 
-  <form method="get" class="async">
+  <div class="content">
+    <form method="get" class="async">
 
-    <div class="list-page">
+      <div class="list-page">
 
-      <div class="pad-lg-2">
-        @yield('upper')
+        <div>
+          @yield('upper')
 
-        <div class="body hidden-sm desktop-list-cont v-scrollable" onscroll="if(this.scrollTop + this.clientHeight > this.scrollHeight - 10) $('.grid-content .load-more-btn').click();">
-          <div class="pad-1">
-            <div class="grid grid-content">
-              <table>
-                <thead></thead>
-                <tbody class="grid-content-tbody">
-                @yield('desktop-list-items')
-                </tbody>
-              </table>
-              <div class="load-more-cont">
-                @yield('desktop-list-load-more')
+          <div class="body hidden-sm desktop-list-cont v-scrollable">
+            <div class="pad-1">
+              <div class="grid grid-content">
+                <table>
+                  <thead></thead>
+                  <tbody class="grid-content-tbody">
+                  @yield('desktop-list-items')
+                  </tbody>
+                </table>
+                <div class="load-more-cont">
+                  @yield('desktop-list-load-more')
+                </div>
               </div>
             </div>
           </div>
+
+          <div class="body hidden-lg after-header mobile-list-cont">
+            @yield('mobile-list')
+          </div>
+
+          <div class="foot">
+            @yield('list-page-foot')
+          </div>
         </div>
 
-        <div class="body hidden-lg after-header mobile-list-cont">
-          @yield('mobile-list')
+        <div class="filter-cont">
+          @yield('filter')
         </div>
 
-        <div class="foot">
-          @yield('list-page-foot')
-        </div>
+        <div class="content-board-popup-cont"></div>
+
       </div>
 
-      <div class="filter-cont">
-        @yield('filter')
-      </div>
-
-      <div class="content-board-popup-cont"></div>
-
-    </div>
-
-  </form>
+    </form>
+  </div>
 
   @if(isset($channel) && strlen($channel) > 0)
     <script>

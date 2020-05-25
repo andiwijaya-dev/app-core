@@ -168,7 +168,7 @@ class ListPageController2 extends BaseController{
     }
     else{
 
-      return viewed($this->view, $params);
+      return view($this->view, $params);
     }
 
   }
