@@ -183,49 +183,46 @@
 
 @section('content')
 
-  <div class="content">
-    <form method="get" class="async">
+  <form method="get" class="async">
+    <div class="list-page">
 
-      <div class="list-page">
+      <div>
+        @yield('upper')
 
-        <div>
-          @yield('upper')
-
-          <div class="body hidden-sm desktop-list-cont v-scrollable">
-            <div class="pad-1">
-              <div class="grid grid-content">
-                <table>
-                  <thead></thead>
-                  <tbody class="grid-content-tbody">
-                  @yield('desktop-list-items')
-                  </tbody>
-                </table>
-                <div class="load-more-cont">
-                  @yield('desktop-list-load-more')
-                </div>
+        <div class="body hidden-sm desktop-list-cont v-scrollable">
+          <div class="pad-1">
+            <div class="grid grid-content">
+              <table>
+                <thead></thead>
+                <tbody class="grid-content-tbody">
+                @yield('desktop-list-items')
+                </tbody>
+              </table>
+              <div class="load-more-cont">
+                @yield('desktop-list-load-more')
               </div>
             </div>
           </div>
-
-          <div class="body hidden-lg after-header mobile-list-cont">
-            @yield('mobile-list')
-          </div>
-
-          <div class="foot">
-            @yield('list-page-foot')
-          </div>
         </div>
 
-        <div class="filter-cont">
-          @yield('filter')
+        <div class="body hidden-lg after-header mobile-list-cont">
+          @yield('mobile-list')
         </div>
 
-        <div class="content-board-popup-cont"></div>
-
+        <div class="foot">
+          @yield('list-page-foot')
+        </div>
       </div>
 
-    </form>
-  </div>
+      <div class="filter-cont">
+        @yield('filter')
+      </div>
+
+      <div class="content-board-popup-cont"></div>
+
+    </div>
+
+  </form>
 
   @if(isset($channel) && strlen($channel) > 0)
     <script>

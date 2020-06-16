@@ -2,9 +2,13 @@
 
 namespace App\Exceptions;
 
+use Andiwijaya\AppCore\Models\SysLog;
 use Exception;
 use Illuminate\Foundation\Exceptions\Handler as ExceptionHandler;
 use Illuminate\Http\Exceptions\PostTooLargeException;
+use Illuminate\Support\Facades\Log;
+use Illuminate\Support\Facades\Request;
+use Illuminate\Support\Facades\Session;
 
 class Handler extends ExceptionHandler
 {
@@ -35,7 +39,20 @@ class Handler extends ExceptionHandler
      */
     public function report(Exception $exception)
     {
-        parent::report($exception);
+      SysLog::create([
+        'type'=>SysLog::TYPE_ERROR,
+        'message'=>substr($exception->getMessage(), 0, 255),
+        'data'=>[
+          'console'=>app()->runningInConsole(),
+          'session_id'=>Session::getId(),
+          'method'=>Request::method(),
+          'url'=>Request::fullUrl(),
+          'data'=>Request::input(null),
+          'traces'=>$exception->getTrace()
+        ]
+      ]);
+
+      //parent::report($exception);
     }
 
     /**

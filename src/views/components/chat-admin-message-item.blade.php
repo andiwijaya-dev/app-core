@@ -7,7 +7,7 @@
       @if(is_array($message->images) && count($message->images) > 0)
         <div class="images pad-1 vpadb-0">
           @foreach($message->images as $idx=>$image)
-            <span class="img unloaded" style="width:24px;height:24px;background:#eee" data-src="{{ \Illuminate\Support\Facades\Storage::disk($storage ?? 'images')->url($image['file_name'] ?? '') }}"></span>
+            <span class="img unloaded" style="width:24px;height:24px;background:#eee" data-src="{{ \Illuminate\Support\Facades\Storage::disk($storage ?? 'images')->url($image) }}"></span>
           @endforeach
         </div>
       @endif
@@ -26,7 +26,8 @@
       @if(is_array($message->images) && count($message->images) > 0)
         <div class="images pad-1 vpadb-0">
           @foreach($message->images as $idx=>$image)
-            <span class="img unloaded" style="width:24px;height:24px;background:#eee" data-src="{{ \Illuminate\Support\Facades\Storage::disk($storage ?? 'images')->url($image['file_name'] ?? '') }}"></span>
+            <span class="img unloaded" style="width:24px;height:24px;background:#eee" data-src="{{ \Illuminate\Support\Facades\Storage::disk($storage ?? 'images')->url($image) }}"
+                  data-preview="{{ \Illuminate\Support\Facades\Storage::disk($storage ?? 'images')->url($image) }}"></span>
           @endforeach
         </div>
       @endif

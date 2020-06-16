@@ -1,10 +1,6 @@
-@extends('andiwijaya::layouts.minimal', [ 'theme_mode'=>'layout1' ])
+@extends('andiwijaya::layouts.minimal', [ 'screen_class'=>'layout1'])
 
-@section('sidebar')
-
-@endsection
-
-@section('header')
+@section('screen')
 
   <div class="header hidden-lg row0 valign-middle">
     <div class="col-sm-2">
@@ -17,5 +13,9 @@
   </div>
 
   @yield('sidebar')
+
+  <div class="content">
+  @yield('content')
+  </div>
 
 @endsection

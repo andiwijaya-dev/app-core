@@ -1,3 +1,3 @@
 <div class="align-center">
-  <strong class="less">No discussion</strong>
+  <strong class="less">Tidak ada diskusi</strong>
 </div>

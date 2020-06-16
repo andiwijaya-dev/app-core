@@ -43,7 +43,6 @@ class ListPageController2 extends BaseController{
     if($action == 'export') return $this->export($request);
 
     $builder = $this->datasource($request);
-
     $row_per_page = 15;
 
     $items = [];
@@ -252,7 +251,7 @@ class ListPageController2 extends BaseController{
       if (method_exists(new $this->model, 'scopeSearch') && strlen($request->get('search')) > 0)
         $builder->search($request->get('search'));
 
-      $this->applySorts($builder, $request->get('sorts', []));
+      $this->applySorts($builder, $request->get('sorts', [ 'updated_at,desc' ]));
     }
 
     return $builder;

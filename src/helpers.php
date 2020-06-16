@@ -753,14 +753,14 @@ if(!function_exists('save_base64_image')){
       $type = strtolower($type[1]);
 
       // Only handle image with extension below
-      if(!in_array($type, [ 'jpg', 'jpeg', 'gif', 'png' ]))
+      if(!in_array($type, [ 'jpg', 'jpeg', 'gif', 'png', 'webp' ]))
         return $data;
 
       $data = base64_decode($data);
       if($data === false)
         return $data; // base64_decode failed
 
-      $file_md5 = md5($data);
+      $file_md5 = md5($data) . '.' . $type;
       //list($width, $height) = getimagesize($data);
 
       if(!\Illuminate\Support\Facades\Storage::disk($disk)->exists($file_md5))
@@ -772,6 +772,20 @@ if(!function_exists('save_base64_image')){
 
     return '';
 
+  }
+
+}
+
+if(!function_exists('get_file_base64')){
+
+  function get_file_base64($path){
+
+    if(file_exists($path)){
+      $type = pathinfo($path, PATHINFO_EXTENSION);
+      $data = file_get_contents($path);
+      return 'data:image/' . $type . ';base64,' . base64_encode($data);
+    }
+    return '';
   }
 
 }
@@ -1145,4 +1159,61 @@ if(!function_exists('parsedown_ex')){
 
     return $text;
   }
+}
+
+if(!function_exists('money_alias')){
+
+  function money_alias($number, $precision = -1)
+  {
+    if($number >= 1000000000)
+      return trim(round($number / 1000000000, $precision == -1 ? 3 : $precision) . 'm');
+    if($number >= 1000000)
+      return trim(round($number / 1000000, $precision == -1 ? 2 : $precision) . 'jt');
+    else if($number >= 1000)
+      return trim(round($number / 1000, $precision == -1 ? 0 : $precision) . 'rb');
+    else
+      return $number;
+  }
+
+}
+
+if(!function_exists('assets_version')){
+
+  function assets_version(){
+
+    return env('APP_ENV') == 'production' ? env('APP_VERSION', '1.0') : time();
+  }
+
+}
+
+if(!function_exists('action2method')){
+
+  function action2method($action){
+
+    return collect(explode('-', $action))->map(function($item, $idx){
+      if($idx > 0) return ucwords($item);
+      return $item;
+    })->implode('');
+  }
+
+}
+
+if(!function_exists('str_var')){
+
+  function str_var($str, $obj){
+
+    $obj = json_decode(json_encode($obj), true);
+
+    preg_match_all('/\{.*?(?=\})\}/', $str, $matches);
+    foreach($matches[0] as $match){
+
+      $key = substr($match, 1, strlen($match) - 2);
+      $value = $obj[$key] ?? '';
+
+      $str = str_replace($match, $value, $str);
+    }
+
+    return $str;
+  }
+
 }

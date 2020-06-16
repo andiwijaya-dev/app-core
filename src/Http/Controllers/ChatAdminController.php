@@ -105,13 +105,13 @@ class ChatAdminController extends BaseController
 
         case 'load-more':
           return [
-            'pre-script'=>"$('.chat-content .load-more').remove()",
-            '.chat-content'=>'>>' . view('andiwijaya::components.chat-admin-discussion-items', $params)->render()
+            'pre-script'=>"$('.chat-list-body .load-more').remove()",
+            '.chat-list-body'=>'>>' . view('andiwijaya::components.chat-admin-discussion-items', $params)->render()
           ];
 
         default:
           return [
-            '.chat-content'=>view('andiwijaya::components.chat-admin-discussion-items', $params)->render()
+            '.chat-list-body'=>view('andiwijaya::components.chat-admin-discussion-items', $params)->render()
           ];
       }
     }
@@ -185,8 +185,8 @@ class ChatAdminController extends BaseController
 
       case 'load-prev':
         return [
-          'pre-script'=>"$('.message-list .load-prev').remove()",
-          '.message-list'=>'<<' . view('andiwijaya::components.chat-admin-message-items', $params)->render()
+          'pre-script'=>"$('.chat-message-body .load-prev').remove()",
+          '.chat-message-body'=>'<<' . view('andiwijaya::components.chat-admin-message-items', $params)->render()
         ];
 
       case 'load-next':
@@ -195,19 +195,23 @@ class ChatAdminController extends BaseController
           $returns[] = [
             'type'=>'element',
             'html'=>view($this->view_message_item, compact('idx', 'message', 'storage'))->render(),
-            'parent'=>'.chat-admin .message-list'
+            'parent'=>'.chat-admin .chat-message-body'
           ];
 
-        $returns[] = [ 'type'=>'script', 'script'=>"$('.chat-admin .message-list').scrollToBottom()" ];
+        $returns[] = [ 'type'=>'script', 'script'=>"$('.chat-admin .chat-message-body').scrollToBottom()" ];
 
         return $returns;
 
       default:
         return [
-          '.message-cont'=>view('andiwijaya::components.chat-admin-message-cont', $params)->render(),
-          '.message-edit'=>view('andiwijaya::components.chat-admin-message-edit', $params)->render(),
+          '.chat-message-head'=>view('andiwijaya::components.chat-admin-message-head', $params)->render(),
+          '.chat-message-body'=>view('andiwijaya::components.chat-admin-message-body', $params)->render(),
+          '.chat-message-foot'=>view('andiwijaya::components.chat-admin-message-foot', $params)->render(),
           'script'=>implode(';', [
+            "$('.chat-message form[method=get]').attr('action', '/chat-admin/{$discussion->id}');",
+            "$('.chat-message').attr('data-id', {$discussion->id})",
             "$('.chat-admin').chatadmin_resize().chatadmin_open()",
+            "$('.chat-admin .chat-message-body').scrollToBottom()"
           ])
         ];
 
@@ -235,6 +239,10 @@ class ChatAdminController extends BaseController
     $message->save();
 
     $request->merge([ 'action'=>'load-next|' . $request->get('last_id') ]);
+
+    return [
+      [ 'type'=>'script', 'script'=>"$('.chat-admin').chatadmin_clear()" ]
+    ];
 
     return array_merge(
       $this->show($request, $discussion_id), [
@@ -288,29 +296,30 @@ class ChatAdminController extends BaseController
 
   }
 
-  public function handle(ChatEvent $event){
+  public function handle(ChatEvent $event)
+  {
 
     $updates = [];
 
-    switch($event->type){
+    switch ($event->type) {
 
       case ChatEvent::TYPE_NEW_CHAT_MESSAGE:
 
         $online = count(Redis::pubsub('channels', $this->channel_discussion)) > 0;
 
-        if($online){
+        if ($online) {
 
           $updates[] = [
-            'type'=>'element',
-            'html'=>view($this->view_discussion_item, [ 'discussion'=>$event->discussion ])->render(),
-            'parent'=>'.chat-admin .chat-content',
-            'mode'=>'prepend'
+            'type' => 'element',
+            'html' => view($this->view_discussion_item, ['discussion' => $event->discussion])->render(),
+            'parent' => '.chat-admin .chat-list-body',
+            'mode' => 'prepend'
           ];
 
           $updates[] = [
-            'type'=>'element',
-            'html'=>view($this->view_message_item, [ 'message'=>$event->message, 'storage'=>$this->storage ])->render(),
-            'parent'=>".chat-admin .message-list[data-id={$event->discussion->id}]"
+            'type' => 'element',
+            'html' => view($this->view_message_item, ['message' => $event->message, 'storage' => $this->storage])->render(),
+            'parent' => ".chat-admin .chat-message[data-id={$event->discussion->id}] .chat-message-body"
           ];
         }
         break;
@@ -318,10 +327,10 @@ class ChatAdminController extends BaseController
     }
 
     $updates[] = [
-      'type'=>'script',
-      'script'=>implode(';', [
+      'type' => 'script',
+      'script' => implode(';', [
         "$.lazy_load()",
-        "$('.chat-admin .message-list[data-id={$event->discussion->id}]').scrollToBottom()"
+        "$('.chat-admin .chat-message[data-id={$event->discussion->id}] .chat-message-body').scrollToBottom()"
       ])
     ];
 
@@ -329,6 +338,20 @@ class ChatAdminController extends BaseController
       $this->channel_discussion,
       json_encode($updates)
     );
+
+    if(isset($event->message) && $event->message->direction == ChatMessage::DIRECTION_IN){
+
+      $title = "Pesan baru dari {$event->discussion->key}";
+      $description = substr($event->message->text, 0, 30) . '...';
+      $target = "/chat-admin/{$event->discussion->id}";
+      Redis::publish(
+        'global-notification',
+        json_encode([
+          ['type' => 'script', 'script' => "$.notify({ title:\"{$title}\", description:\"{$description}\", target:\"{$target}\" })"]
+        ])
+      );
+    }
+
   }
 
 

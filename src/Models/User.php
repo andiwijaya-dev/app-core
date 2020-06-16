@@ -132,24 +132,6 @@ class User extends Model
       ($privileges = array_diff_assoc2($this->privileges, $this->fill_attributes['privileges'])))
       $this->updates['privileges'] = $privileges;
 
-    if(isset($this->fill_attributes['password']) && strlen($this->fill_attributes['password']) > 0){
-
-      $validator = Validator::make($this->fill_attributes,
-        [
-          'password'=>'required|min:6|confirmed',
-        ],
-        [
-          'password.required'=>'Password harus diisi.',
-          'password.min'=>'Minimal password diisi 6 karakter',
-          'password.confirmed'=>'Konfirmasi password tidak sama'
-        ]
-      );
-      if($validator->fails()) throw new \Exception($validator->errors()->first());
-
-      $this->password = md5($this->fill_attributes['password']);
-
-    }
-
   }
 
   public function postSave(){

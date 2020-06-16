@@ -198,7 +198,7 @@ class ChatController{
 
       $return[] = [
         'type' => 'element',
-        'html' => view('andiwijaya::components.customer-chat-message', ['item' => $message])->render(),
+        'html' => view('andiwijaya::components.customer-chat-message', ['item' => $message ])->render(),
         'parent' => '.chat-body-messages',
       ];
 

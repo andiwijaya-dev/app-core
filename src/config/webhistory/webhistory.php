@@ -2,10 +2,12 @@
 
 return [
 
-  'enabled'=>1,
+  'enabled'=>0,
+
+  'path'=>'/t',
 
   'hosts'=>[
-    ''
-  ]
+    'andiwijaya.local'=>'/t'
+  ],
 
 ];

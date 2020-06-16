@@ -28,6 +28,10 @@ class CreateWebHistoryTable extends Migration
           $table->string('city')->nullable();
           $table->text('user_agent')->nullable();
 
+          $table->text('extra')->nullable();
+
+          $table->double('timestamp', 13, 3);
+
           $table->timestamps();
 
         });

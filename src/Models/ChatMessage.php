@@ -5,6 +5,7 @@ namespace Andiwijaya\AppCore\Models;
 use Andiwijaya\AppCore\Models\Traits\LoggedTraitV3;
 use Andiwijaya\AppCore\Events\ChatEvent;
 use Illuminate\Database\Eloquent\Model;
+use Illuminate\Http\UploadedFile;
 use Illuminate\Support\Facades\Session;
 use Illuminate\Support\Facades\Storage;
 use Illuminate\Support\Facades\Validator;
@@ -58,21 +59,30 @@ class ChatMessage extends Model
     if(isset($this->fill_attributes['images'])){
 
       $images = [];
+      $disk = isset($this->fill_attributes['image_disk']) ? $this->fill_attributes['image_disk'] : 'images';
+
       foreach($this->fill_attributes['images'] as $image){
 
-        if(isset($image['file'])){
+        if(is_object($image) &&  get_class($image) == UploadedFile::class){
 
-          $disk = isset($this->fill_attributes['image_disk']) ? $this->fill_attributes['image_disk'] : 'images';
+          $file_name = get_md5_filename($image);
+          if(!Storage::disk($disk)->exists($file_name))
+            Storage::putFile($disk, $image, $file_name);
+
+          $images[] = $file_name;
+        }
+
+        else if(isset($image['file'])){
 
           $file_name = get_md5_filename($image['file']);
+
           if(!Storage::disk($disk)->exists($file_name))
             Storage::disk($disk)->put($file_name, file_get_contents($image['file']));
 
           unset($image['file']);
-          $image['file_name'] = $file_name;
+          $images[] = $file_name;
         }
 
-        $images[] = $image;
       }
 
       $this->images = $images;
