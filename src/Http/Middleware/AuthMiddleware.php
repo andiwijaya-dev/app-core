@@ -13,7 +13,7 @@ class AuthMiddleware{
     try{
 
       Auth::load();
-
+      
       if(Auth::user()->require_password_change && $request->path() != 'set-password')
         return redirect('set-password');
     }

@@ -725,7 +725,14 @@ if(!function_exists('save_image')){
 
     if(!is_file($image) && !filter_var($image, FILTER_VALIDATE_URL)) exc('Invalid file');
 
-    $file_md5 = md5_file($image);
+    $ext = '';
+    if(is_object($image) && get_class($image) == \Illuminate\Http\UploadedFile::class)
+      $ext = $image->getClientOriginalExtension();
+
+    $file_md5 = implode('.', [
+      md5_file($image),
+      $ext
+    ]);
     //list($width, $height) = getimagesize($image);
 
     if(!\Illuminate\Support\Facades\Storage::disk($disk)->exists($file_md5))

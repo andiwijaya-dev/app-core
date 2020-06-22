@@ -9,6 +9,7 @@ use Andiwijaya\AppCore\Models\Traits\SearchableTrait;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Support\Facades\Hash;
 use Illuminate\Support\Facades\Validator;
+use Illuminate\Support\Str;
 
 class User extends Model
 {
@@ -111,22 +112,16 @@ class User extends Model
   }
 
   public function preSave(){
-
+    
     $validator = Validator::make($this->attributes,
       [
-        'code'=>($this->exists ? 'sometimes|' : '') . 'required|unique:user,code' . ($this->exists ? ',' . $this->id : ''),
-        'email'=>($this->exists ? 'sometimes|' : '') . 'required|email|unique:user,email' . ($this->exists ? ',' . $this->id : ''),
-        'name'=>($this->exists ? 'sometimes|' : '') . 'required'
-      ],
-      [
-        'code.required'=>'Kode user harus diisi.',
-        'code.unique'=>'Kode user sudah ada.',
-        'email.required'=>'Email harus diisi.',
-        'email.unique'=>'Email sudah ada.',
-        'name.required'=>'Nama harus diisi.'
+        'email'=>'required|email|unique:user,email,' . $this->id,
+        'name'=>'required'
       ]
     );
     if($validator->fails()) throw new \Exception($validator->errors()->first());
+
+    if(!$this->code) $this->code = Str::random(6);
 
     if(isset($this->fill_attributes['privileges']) &&
       ($privileges = array_diff_assoc2($this->privileges, $this->fill_attributes['privileges'])))

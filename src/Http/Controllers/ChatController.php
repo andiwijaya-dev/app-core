@@ -4,6 +4,7 @@ namespace Andiwijaya\AppCore\Http\Controllers;
 
 use Andiwijaya\AppCore\Models\ChatDiscussion;
 use Andiwijaya\AppCore\Models\ChatMessage;
+use App\Models\ChatTemplate;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Redis;
@@ -97,6 +98,8 @@ class ChatController{
       'avatar_image_url'=>$request->get('avatar_image_url')
     ]);
 
+    $templates = ChatTemplate::all();
+
     Session::put('chat.id', $discussion->id);
     Session::put('chat.key', $request->get('key'));
     Session::put('chat.topic', $request->get('topic'));
@@ -105,7 +108,8 @@ class ChatController{
       array_merge([
         'extends'=>$this->extends,
         'item'=>$discussion,
-        'offline'=>0
+        'offline'=>0,
+        'templates'=>$templates
       ])
     )
       ->renderSections();
@@ -201,6 +205,27 @@ class ChatController{
         'html' => view('andiwijaya::components.customer-chat-message', ['item' => $message ])->render(),
         'parent' => '.chat-body-messages',
       ];
+
+      // Auto answer templated message
+      if(($template_id = $request->get('template_id')) > 0){
+
+        $template = ChatTemplate::find($template_id);
+        if($template){
+
+          $message = new ChatMessage([
+            'discussion_id'=>$discussion->id,
+            'direction'=>ChatMessage::DIRECTION_OUT,
+            'text'=>$template->answer
+          ]);
+          $message->save();
+
+          $return[] = [
+            'type' => 'element',
+            'html' => view('andiwijaya::components.customer-chat-message', ['item' => $message ])->render(),
+            'parent' => '.chat-body-messages',
+          ];
+        }
+      }
 
       $return[] = [
         'type' => 'script',
@@ -299,6 +324,8 @@ class ChatController{
 
     $latest_messages = $discussion->latest_messages ?? [];
 
+    $templates = ChatTemplate::all();
+
     DB::statement("UPDATE chat_message SET unsent = 0 WHERE discussion_id = ? and direction = ? and unsent = 1", [
       $discussion_id, ChatMessage::DIRECTION_OUT
     ]);
@@ -310,7 +337,8 @@ class ChatController{
         'latest_messages'=>$latest_messages,
         'key'=>$key,
         'available_topics'=>$available_topics,
-        'offline'=>$offline
+        'offline'=>$offline,
+        'templates'=>$templates
       ])
     )
       ->renderSections();
@@ -371,12 +399,24 @@ class ChatController{
 
     $discussion_id = Session::get('chat.id');
 
-    $messages = ChatMessage::where([
-      'discussion_id'=>$discussion_id
-    ])
-      ->where('id', '>', $last_message_id)
-      ->orderBy('id')
-      ->get();
+    if($last_message_id > 0){
+
+      $messages = ChatMessage::where([
+        'discussion_id'=>$discussion_id
+      ])
+        ->where('id', '>', $last_message_id)
+        ->orderBy('id')
+        ->get();
+    }
+    else{
+
+      $messages = ChatMessage::where([
+        'discussion_id'=>$discussion_id
+      ])
+        ->orderBy('id', 'desc')
+        ->limit(5)
+        ->get();
+    }
 
     if(count($messages) > 0){
 

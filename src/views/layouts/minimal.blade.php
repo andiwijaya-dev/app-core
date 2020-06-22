@@ -54,27 +54,27 @@
   <script type="text/javascript" src="/js/exif.js" defer></script>
   @if(isset($debug) && $debug)
     @foreach(glob(public_path("/js/" . ($js ?? 'default') . "/*.js")) as $path)
-      <script type="text/javascript" src="{{ asset("/js/" . ($js ?? 'default') . "/" . basename($path)) }}?v={{ env('APP_ENV') == 'production' ? env('APP_VERSION') : time()}}" defer></script>
+      <script type="text/javascript" src="{{ asset("/js/" . ($js ?? 'default') . "/" . basename($path)) }}?v={{ assets_version() }}" defer></script>
     @endforeach
   @else
-    <script type="text/javascript" src="/js/{{ $js ?? 'default' }}.js?v={{ env('APP_ENV') == 'production' ? env('APP_VERSION') : time()}}" defer></script>
+    <script type="text/javascript" src="/js/{{ $js ?? 'default' }}.js?v={{ assets_version() }}" defer></script>
   @endif
 
   <link rel="stylesheet" href="/css/all.min.css" media="print" onload="c.apply(this)"/>
   @if(isset($debug) && $debug)
     @foreach(glob(public_path('/css/' . ($css ?? 'clean') . '/*.css')) as $path)
-      <link rel="stylesheet" href="{{ '/css/' . ($css ?? 'clean') . '/' . basename($path) }}?v={{ env('APP_ENV') == 'production' ? env('APP_VERSION') : time()}}" media="print" onload="c.apply(this)"/>
+      <link rel="stylesheet" href="{{ '/css/' . ($css ?? 'clean') . '/' . basename($path) }}?v={{ assets_version () }}" media="print" onload="c.apply(this)"/>
     @endforeach
   @else
-    <link rel="stylesheet" href="{{ asset("/css/" . ($css ?? 'default')) }}.css?v={{ env('APP_ENV') == 'production' ? env('APP_VERSION') : time()}}" media="print" onload="c.apply(this)"/>
+    <link rel="stylesheet" href="{{ asset("/css/" . ($css ?? 'default')) }}.css?v={{ assets_version () }}" media="print" onload="c.apply(this)"/>
   @endif
   <noscript>
     @if(isset($debug) && $debug)
       @foreach(glob(public_path('/css/' . ($css ?? 'style') . '/*.css')) as $path)
-        <link rel="stylesheet" href="{{ '/css/' . ($css ?? 'style') . '/' . basename($path) }}?v={{ env('APP_ENV') == 'production' ? env('APP_VERSION') : time()}}"/>
+        <link rel="stylesheet" href="{{ '/css/' . ($css ?? 'style') . '/' . basename($path) }}?v={{ assets_version () }}"/>
       @endforeach
     @else
-      <link rel="stylesheet" href="{{ asset("/css/" . ($css ?? 'default')) }}.css?v={{ env('APP_ENV') == 'production' ? env('APP_VERSION') : time()}}"/>
+      <link rel="stylesheet" href="{{ asset("/css/" . ($css ?? 'default')) }}.css?v={{ assets_version () }}"/>
     @endif
   </noscript>
 

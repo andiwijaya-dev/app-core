@@ -8,9 +8,9 @@
     </div>
     <div class="col-sm-8 align-center"><a href="#"><h5>{{ $discussion->name ?? $discussion->key }}</h5></a></div>
     <div class="col-sm-2 align-right">
-      <div>
-        <span class="fa fa-ellipsis-h pad-2"></span>
-      </div>
+{{--      <div>--}}
+{{--        <span class="fa fa-ellipsis-h pad-2"></span>--}}
+{{--      </div>--}}
     </div>
   </div>
 
