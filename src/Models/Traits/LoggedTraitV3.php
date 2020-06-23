@@ -4,6 +4,7 @@ namespace Andiwijaya\AppCore\Models\Traits;
 
 use Andiwijaya\AppCore\Events\ModelEvent;
 use Andiwijaya\AppCore\Models\Log;
+use App\Models\OrderItem;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\QueryException;
 use Illuminate\Support\Facades\DB;
@@ -103,7 +104,8 @@ trait LoggedTraitV3{
    */
   public function save(array $options = [], $debug = null){
 
-    if(in_array(debug_backtrace()[1]['function'], [ 'calculate', 'preSave', 'postSave' ]))
+    if(in_array(($trace = debug_backtrace()[1])['function'], [ 'calculate', 'preSave', 'postSave' ]) &&
+      $trace['class'] == get_class($this))
       return Model::save($options);
 
     try{
