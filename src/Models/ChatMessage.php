@@ -67,7 +67,7 @@ class ChatMessage extends Model
 
           $file_name = get_md5_filename($image);
           if(!Storage::disk($disk)->exists($file_name))
-            Storage::putFile($disk, $image, $file_name);
+            Storage::disk($disk)->put($file_name, file_get_contents($image));
 
           $images[] = $file_name;
         }

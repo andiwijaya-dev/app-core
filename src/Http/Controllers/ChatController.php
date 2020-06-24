@@ -351,6 +351,7 @@ class ChatController{
       'script'=>implode(';', [
         "$.chat_popup_open()",
         "$('.chat-popup-body').scrollToBottom()",
+        "window.scrollTo(0, 0)"
       ])
     ];
 
