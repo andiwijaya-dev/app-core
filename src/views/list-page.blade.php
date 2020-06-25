@@ -21,7 +21,7 @@
 
     <div class="pad-2">
       <div class="rowc valign-middle">
-        <div class="col-lg-4 col-sm-3">
+        <div class="col-lg-4 col-sm-3 hpadl-1">
           <h1>{{ $title }}</h1>
         </div>
         <div class="col-lg-8 col-sm-9 align-right">
@@ -226,7 +226,9 @@
 
   @if(isset($channel) && strlen($channel) > 0)
     <script>
-      $.wsListen('{{ $channel }}', '{{ env('UPDATER_HOST') }}');
+      window.scriptBuffer.push(function(){
+        $.wsListen('{{ $channel }}', '{{ env('UPDATER_HOST') }}');
+      });
     </script>
   @endif
 

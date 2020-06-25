@@ -12,7 +12,7 @@
 
       <div class="row0">
         <div class="col-6">
-          <h3 class="hpadl-1">Chat</h3>
+          <h3 class="hpadl-1">{{ $title ?? 'Chat' }}</h3>
         </div>
         <div class="col-6 align-right">
           <button class="min hpad-1 chat-admin-options" type="button" data-click-popup=".action-popup"><label><span class="fa fa-ellipsis-v"></span></label></button>

@@ -98,7 +98,7 @@ class ChatController{
       'avatar_image_url'=>$request->get('avatar_image_url')
     ]);
 
-    $templates = ChatTemplate::all();
+    $templates = ChatTemplate::where('type', ChatTemplate::TYPE_FRONT_END)->get();
 
     Session::put('chat.id', $discussion->id);
     Session::put('chat.key', $request->get('key'));
@@ -324,7 +324,7 @@ class ChatController{
 
     $latest_messages = $discussion->latest_messages ?? [];
 
-    $templates = ChatTemplate::all();
+    $templates = ChatTemplate::where('type', ChatTemplate::TYPE_FRONT_END)->get();
 
     DB::statement("UPDATE chat_message SET unsent = 0 WHERE discussion_id = ? and direction = ? and unsent = 1", [
       $discussion_id, ChatMessage::DIRECTION_OUT
