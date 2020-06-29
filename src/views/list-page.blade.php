@@ -233,3 +233,9 @@
   @endif
 
 @endsection
+
+@if(isset($channel) && strlen($channel) > 0)
+  @push('head')
+    <script type="text/javascript" src="/js/socket.io.js" defer></script>
+  @endpush
+@endif

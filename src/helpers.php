@@ -1170,14 +1170,14 @@ if(!function_exists('parsedown_ex')){
 
 if(!function_exists('money_alias')){
 
-  function money_alias($number, $precision = -1)
+  function money_alias($number, $precision = -1, $no_label = false)
   {
     if($number >= 1000000000)
-      return trim(round($number / 1000000000, $precision == -1 ? 3 : $precision) . 'm');
+      return trim(round($number / 1000000000, $precision == -1 ? 3 : $precision) . (!$no_label ? 'm' : ''));
     if($number >= 1000000)
-      return trim(round($number / 1000000, $precision == -1 ? 2 : $precision) . 'jt');
+      return trim(round($number / 1000000, $precision == -1 ? 2 : $precision) . (!$no_label ? 'jt' : ''));
     else if($number >= 1000)
-      return trim(round($number / 1000, $precision == -1 ? 0 : $precision) . 'rb');
+      return trim(round($number / 1000, $precision == -1 ? 0 : $precision) . (!$no_label ? 'rb' : ''));
     else
       return $number;
   }
@@ -1223,4 +1223,41 @@ if(!function_exists('str_var')){
     return $str;
   }
 
+}
+
+if(!function_exists('imgresizer')){
+
+  function imgresizer($image, $resize){
+
+    $file_name = save_base64_image($image);
+    $ext = explode('.', $file_name)[1] ?? '';
+    $image_path = \Illuminate\Support\Facades\Storage::disk('images')->getDriver()->getAdapter()->getPathPrefix();
+    $path = \Illuminate\Support\Facades\Storage::disk('images')->getDriver()->getAdapter()->getPathPrefix() . $file_name;
+
+    $img = Image::make($path);
+
+    $resizes = explode(' ', $resize);
+    foreach($resizes as $resize){
+
+      $action = substr($resize, 0, 1);
+      switch($action){
+
+        case 'c':
+          $params = explode(',', substr($resize, 1));
+          call_user_func_array([ $img, 'crop' ], $params);
+          break;
+
+        case 'r':
+          $params = explode(',', substr($resize, 1));
+          call_user_func_array([ $img, 'resize' ], $params);
+          break;
+      }
+    }
+
+    $img->save($image_path . 'temp.jpeg');
+    $file_name = md5_file(storage_path('app/public/images/temp.jpeg')) . '.' . $ext;
+    rename(storage_path('app/public/images/temp.jpeg'), storage_path('app/public/images/') . $file_name);
+
+    return $file_name;
+  }
 }

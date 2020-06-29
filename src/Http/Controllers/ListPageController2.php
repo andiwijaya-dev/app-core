@@ -40,7 +40,82 @@ class ListPageController2 extends BaseController{
 
     $action = isset(($actions = explode('|', $request->get('action')))[0]) ? $actions[0] : '';
 
-    if($action == 'export') return $this->export($request);
+    $method = action2method($action);
+    if(method_exists($this, $method))
+      return call_user_func_array([ $this, $method ], func_get_args());
+
+    return call_user_func_array([ $this, 'fetch' ], func_get_args());
+  }
+
+  public function applySorts($builder, array $sorts)
+  {
+    foreach($sorts as $sort){
+
+      list($key, $type) = explode(',', $sort);
+
+      $builder->orderBy($key, $type);
+
+    }
+  }
+
+  public function getParams() : array
+  {
+    return [];
+  }
+
+  public function handle(ModelEvent $event){
+
+    if($this->channel && $this->model && $this->model == $event->class){
+
+      $updates = [];
+
+      $online = count(Redis::pubsub('channels', $this->channel)) > 0;
+
+      if($online) {
+
+        if($event->type == ModelEvent::TYPE_REMOVE){
+
+          $updates[] = [
+            'type'=>'script',
+            'script'=>implode(';', [
+              "$('.list-page .grid-content-tbody tr[data-id={$event->id}]').remove()",
+              "$('.list-page .feed-content .item[data-id={$event->id}]').remove()",
+            ])
+          ];
+        }
+
+        else{
+
+          $model = $this->model::whereId($event->id)->first();
+
+          $updates[] = [
+            'type' => 'element',
+            'html' => view($this->view_grid_item, ['item' => $model ])->render(),
+            'parent' => '.list-page .grid-content-tbody',
+            'mode' => 'prepend'
+          ];
+
+          $updates[] = [
+            'type' => 'element',
+            'html' => view($this->view_feed_item, ['item' => $model ])->render(),
+            'parent' => '.list-page .feed-content',
+            'mode' => 'prepend'
+          ];
+        }
+
+        Redis::publish(
+          $this->channel,
+          json_encode($updates)
+        );
+      }
+    }
+
+  }
+
+
+  public function fetch(Request $request){
+
+    $action = isset(($actions = explode('|', $request->get('action')))[0]) ? $actions[0] : '';
 
     $builder = $this->datasource($request);
     $row_per_page = 15;
@@ -169,75 +244,7 @@ class ListPageController2 extends BaseController{
 
       return view($this->view, $params);
     }
-
   }
-
-  public function applySorts($builder, array $sorts)
-  {
-    foreach($sorts as $sort){
-
-      list($key, $type) = explode(',', $sort);
-
-      $builder->orderBy($key, $type);
-
-    }
-  }
-
-  public function getParams() : array
-  {
-    return [];
-  }
-
-  public function handle(ModelEvent $event){
-
-    if($this->channel && $this->model && $this->model == $event->class){
-
-      $updates = [];
-
-      $online = count(Redis::pubsub('channels', $this->channel)) > 0;
-
-      if($online) {
-
-        if($event->type == ModelEvent::TYPE_REMOVE){
-
-          $updates[] = [
-            'type'=>'script',
-            'script'=>implode(';', [
-              "$('.list-page .grid-content-tbody tr[data-id={$event->id}]').remove()",
-              "$('.list-page .feed-content .item[data-id={$event->id}]').remove()",
-            ])
-          ];
-        }
-
-        else{
-
-          $model = $this->model::whereId($event->id)->first();
-
-          $updates[] = [
-            'type' => 'element',
-            'html' => view($this->view_grid_item, ['item' => $model ])->render(),
-            'parent' => '.list-page .grid-content-tbody',
-            'mode' => 'prepend'
-          ];
-
-          $updates[] = [
-            'type' => 'element',
-            'html' => view($this->view_feed_item, ['item' => $model ])->render(),
-            'parent' => '.list-page .feed-content',
-            'mode' => 'prepend'
-          ];
-        }
-
-        Redis::publish(
-          $this->channel,
-          json_encode($updates)
-        );
-      }
-    }
-
-  }
-
-
 
   function datasource(Request $request){
 
@@ -256,7 +263,5 @@ class ListPageController2 extends BaseController{
 
     return $builder;
   }
-
-  /*function export(Request $request){ }*/
 
 }
