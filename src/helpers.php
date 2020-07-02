@@ -1237,19 +1237,26 @@ if(!function_exists('imgresizer')){
     $img = Image::make($path);
 
     $resizes = explode(' ', $resize);
+
     foreach($resizes as $resize){
 
       $action = substr($resize, 0, 1);
       switch($action){
 
-        case 'c':
+        /*case 'c':
           $params = explode(',', substr($resize, 1));
-          call_user_func_array([ $img, 'crop' ], $params);
-          break;
+          //call_user_func_array([ $img, 'crop' ], $params);
+          $img->crop($params[0], $params[1], $params[2], $params[3]);
+          \Illuminate\Support\Facades\Log::info(json_encode([ 'crop', $params ]));
+          break;*/
 
         case 'r':
           $params = explode(',', substr($resize, 1));
-          call_user_func_array([ $img, 'resize' ], $params);
+          $params[0] = round($params[0]);
+          $params[1] = round($params[1]);
+          $img->resize($params[0], $params[1]);
+          //call_user_func_array([ $img, 'resize' ], $params);
+          \Illuminate\Support\Facades\Log::info(json_encode([ 'resize', $params ]));
           break;
       }
     }
@@ -1260,4 +1267,14 @@ if(!function_exists('imgresizer')){
 
     return $file_name;
   }
+}
+
+if(!function_exists('appcore_boot')){
+
+  function appcore_boot($provider){
+
+
+
+  }
+
 }

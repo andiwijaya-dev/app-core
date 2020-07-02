@@ -7,6 +7,9 @@
     </span>
     <div class="hmarl-1">
       <h5>{{ $discussion->name ?? $discussion->key }}</h5><br />
+      @if(isset($discussion->extra['phone_number']))
+      <label><span class="fa fa-mobile-alt"></span> {{ $discussion->extra['phone_number'] }}</label><br />
+      @endif
       <small>{{ $discussion->created_at->diffForHumans() }}</small>
     </div>
   </div>

@@ -13,7 +13,10 @@
         </div>
       @endif
       <div class="hpad-1">
-        <small class="less">{{ $message->created_at->diffForHumans() }}</small>
+        @if(($username = $message->extra['user'] ?? ''))
+          <small class="less">{{ $message->extra['user'] ?? '' }} &sdot;</small>
+        @endif
+        <small class="less">{{ $message->created_at->format('j M Y H:i') }}</small>
       </div>
     </span>
   </div>
@@ -33,7 +36,10 @@
         </div>
       @endif
       <div class="hpad-1">
-        <small class="less">{{ $message->created_at->diffForHumans() }}</small>
+        @if(($username = $message->extra['user'] ?? ''))
+          <small class="less">{{ $message->extra['user'] ?? '' }} &sdot;</small>
+        @endif
+        <small class="less">{{ $message->created_at->format('j M Y H:i') }}</small>
       </div>
     </span>
   </div>
