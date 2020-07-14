@@ -55,6 +55,22 @@ class PageBuilderController extends ListPageController2 {
     abort(404);
   }
 
+  public function destroy(Request $request, $id){
+
+    if($request->ajax()){
+
+      $instance = $this->model::find($id) ?? exc(__('errors.find-and-fail', [ 'model'=>'page' ]));
+      $instance->delete();
+
+      return view_append([
+        'script' => implode(';', [
+          "$(\"*[data-id={$instance->id}]\").remove()",
+          "$('#page-builder-edit').modal_close()",
+        ])
+      ]);
+    }
+  }
+
   public function store(Request $request){
 
     if($request->ajax()){

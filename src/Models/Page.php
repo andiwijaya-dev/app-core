@@ -11,7 +11,7 @@ class Page extends Model
 
   protected $table = 'page';
 
-  protected $fillable = [ 'is_active', 'path', 'title', 'description', 'keywords', 'h1', 'p', 'offers' ];
+  protected $fillable = [ 'is_active', 'path', 'title', 'description', 'keywords', 'h1', 'p', 'offers', 'image_url' ];
 
   protected $casts = [
     'offers'=>'array'
@@ -28,6 +28,7 @@ class Page extends Model
 
       $this->sections()->delete();
 
+      $image_url = '';
       foreach($this->fill_attributes['sections'] as $obj){
 
         if(isset($obj['data']['html'])){
@@ -37,9 +38,27 @@ class Page extends Model
         $this->sections()->create($obj);
       }
 
-
       $this->load([ 'sections' ]);
+
     }
+
+  }
+
+  public function calculate()
+  {
+    $image_url = $this->image_url;
+    foreach($this->sections as $section){
+
+      preg_match_all('/src=[\'|\"](.*?(?=[\'|\"]))/', $section->data['html'] ?? '', $matches);
+
+      if(isset($matches[1][0])){
+        $image_url = $matches[1][0];
+        break;
+      }
+    }
+
+    $this->image_url = $image_url;
+    parent::save();
 
   }
 }

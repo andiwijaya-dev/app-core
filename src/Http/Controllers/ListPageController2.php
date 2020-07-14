@@ -185,8 +185,7 @@ class ListPageController2 extends BaseController{
 
     $params = array_merge($params, $this->getParams());
 
-    if($request->ajax())
-    {
+    if($action && $request->ajax()){
       $sections = view($this->view, $params)->renderSections();
 
       switch($action){

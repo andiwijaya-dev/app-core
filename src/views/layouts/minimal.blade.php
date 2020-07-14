@@ -1,3 +1,11 @@
+@section('splash')
+  @if(!request()->ajax())
+  <div class="splash">
+    <h5>Loading...</h5>
+  </div>
+  @endif
+@endsection
+
 <!DOCTYPE html>
 <html>
 <head>
@@ -85,18 +93,13 @@
 
   @stack('body-pre')
 
-  @section('splash')
-    <div class="splash">
-      <h5>Loading...</h5>
-    </div>
-  @endsection
-
   @if(!isset($no_splash) || !$no_splash)
   @yield('splash')
   @endif
 
   <div class="screen{{ isset($screen_class) ? ' ' . $screen_class : '' }}">
     @yield('screen')
+    @yield('screen-post')
   </div>
 
   @stack('body-post')

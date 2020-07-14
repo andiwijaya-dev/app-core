@@ -1,9 +1,9 @@
 <tr data-id="{{ $item->id ?? '' }}" data-parent=".grid-content tbody">
   <td>
     <div class="pad-1 align-center">
-      <a href="/{{ \Illuminate\Support\Facades\Request::path() }}/{{ $item->id }}" class="async"><span class="fa fa-ellipsis-h selectable pad-1"></span></a>
+      <a href="/{{ \Illuminate\Support\Facades\Request::path() }}/{{ $item->id }}" class="async" data-push-state="0"><span class="fa fa-ellipsis-h selectable pad-1"></span></a>
       @if($item->flag != 's')
-        <a href="/{{ \Illuminate\Support\Facades\Request::path() }}/{{ $item->id }}" class="async" data-method="DELETE" data-confirm="Confirm task removal?"><span class="fa fa-times selectable pad-1"></span></a>
+        <a href="/{{ \Illuminate\Support\Facades\Request::path() }}/{{ $item->id }}" class="async" data-method="DELETE" data-confirm="Confirm task removal?" data-push-state="0"><span class="fa fa-times selectable pad-1"></span></a>
       @endif
     </div>
   </td>

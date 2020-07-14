@@ -148,12 +148,14 @@ trait LoggedTraitV3{
 
         $user_id = isset($options['user-id']) ? $options['user-id'] : Session::get('user_id');
 
-        $this->logs()->create([
+        $log = [
           'type'=>$type,
           'data'=>$this->updates,
-          'user_id'=>$user_id
-        ]);
-
+          'user_id'=>$user_id,
+        ];
+        if(isset($options['log_created_at'])) $log['created_at'] = date('Y-m-d H:i:s', strtotime($options['log_created_at']));
+        if(isset($options['log_updated_at'])) $log['updated_at'] = date('Y-m-d H:i:s', strtotime($options['log_updated_at']));
+        $this->logs()->create($log);
       }
 
       DB::commit();

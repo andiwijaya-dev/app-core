@@ -1099,6 +1099,37 @@ if(!function_exists('view_modal')){
 
 }
 
+if(!function_exists('view_async')){
+
+  function view_async($view, $data = []){
+
+    $html = view($view, $data)->render();
+
+    preg_match_all('/<title>(.*?(?=<\/title>))<\/title>/', $html, $matches);
+    $title = $matches[1][0] ?? '';
+
+    preg_match_all('/<body(.*?(?=>))>(.*?(?=<\/body>))<\/body>/s', $html, $matches);
+
+    return [
+      'body'=>$matches[2][0] ?? 'body',
+      'title'=>$title
+    ];
+  }
+}
+
+if (! function_exists('auth2')) {
+  /**
+   * Get the available auth instance.
+   *
+   * @param  string|null  $guard
+   * @return \Illuminate\Contracts\Auth\Factory|\Illuminate\Contracts\Auth\Guard|\Illuminate\Contracts\Auth\StatefulGuard
+   */
+  function auth2()
+  {
+    return app('Auth');
+  }
+}
+
 if(!function_exists('view_append')){
 
   function view_append($params){
@@ -1112,7 +1143,7 @@ if(!function_exists('csv_export')){
 
   function csv_export($builder, array $headerColumns, $callback, array $options = []){
 
-    $filename = $options['filename'] ?? ($options['file'] ?? uniqid() . 'csv');
+    $filename = $options['filename'] ?? ($options['file'] ?? uniqid() . '.csv');
     $headers = [
       'Cache-Control'       => 'must-revalidate, post-check=0, pre-check=0',
       'Content-type'        => 'text/csv',
@@ -1243,12 +1274,11 @@ if(!function_exists('imgresizer')){
       $action = substr($resize, 0, 1);
       switch($action){
 
-        /*case 'c':
+        case 'c':
           $params = explode(',', substr($resize, 1));
           //call_user_func_array([ $img, 'crop' ], $params);
           $img->crop($params[0], $params[1], $params[2], $params[3]);
-          \Illuminate\Support\Facades\Log::info(json_encode([ 'crop', $params ]));
-          break;*/
+          break;
 
         case 'r':
           $params = explode(',', substr($resize, 1));

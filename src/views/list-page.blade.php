@@ -167,7 +167,7 @@
 
         <div class="col-12">
           <div class="vmart-3">
-            <button class="hpad-1 more apply-filter" name="action" value=""><label>Apply</label></button>
+            <button class="hpad-1 more apply-filter" name="action" value="filter"><label>Apply</label></button>
             <button class="hpad-1" name="action" value="reset"><label>Reset</label></button>
           </div>
         </div>

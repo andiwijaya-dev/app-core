@@ -100,7 +100,7 @@ class User extends Model
     ]);
     if($validator->fails()) exc($validator->errors()->first());
 
-    if(env('AUTH_PASSWORD_TYPE') == 'hash'){
+    if(config('auth.hash_type') == 'hash'){
       $this->password = Hash::make($password);
     }
     else{

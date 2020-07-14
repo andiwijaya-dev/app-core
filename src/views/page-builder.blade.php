@@ -7,13 +7,15 @@
 @push('body-post')
 
 <script>
+  function _(){ }
+
   function tinymce_init(selector){
 
     tinymce.init({
       selector: selector,
       height: 300,
       content_css:"{{ $content_css ?? '' }}",
-      plugins: [ 'image', 'table', 'paste', 'link' ],
+      plugins: [ 'image', 'table', 'paste', 'link', 'lists' ],
       menubar:false,
       statusbar:false,
       paste_as_text:true,
@@ -60,6 +62,48 @@
           };
         };
         input.click();
+      },
+      images_upload_handler: function (blobInfo, success, failure, progress) {
+        var xhr, formData;
+
+        xhr = new XMLHttpRequest();
+        xhr.withCredentials = false;
+        xhr.open('POST', '/images/upload');
+
+        xhr.upload.onprogress = function (e) {
+          progress(e.loaded / e.total * 100);
+        };
+
+        xhr.onload = function() {
+          var json;
+
+          if (xhr.status < 200 || xhr.status >= 300) {
+            failure('HTTP Error: ' + xhr.status);
+            return;
+          }
+
+          json = JSON.parse(xhr.responseText);
+
+          if(json){
+            if(typeof json.error !== 'undefined'){
+              failure(json.message);
+            }
+            else if(typeof json.location !== 'undefined')
+              success(json.location);
+          }
+          else
+            failure('Invalid JSON: ' + xhr.responseText);
+
+        };
+
+        xhr.onerror = function () {
+          failure('Image upload failed due to a XHR Transport error. Code: ' + xhr.status);
+        };
+
+        formData = new FormData();
+        formData.append('file', blobInfo.blob(), blobInfo.filename());
+
+        xhr.send(formData);
       },
       table_default_attributes: { border: '0' },
       setup: function (editor) {
