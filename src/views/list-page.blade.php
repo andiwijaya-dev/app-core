@@ -239,3 +239,8 @@
     <script type="text/javascript" src="/js/socket.io.js" defer></script>
   @endpush
 @endif
+
+@push('head')
+  <script type="text/javascript" src="/js/tinymce/tinymce.min.js"></script>
+  {{--  <script src="https://cdn.tiny.cloud/1/k53ts3nziyi7rlczx4mysphbzjfojzqb2w3dwt8p0ttjx894/tinymce/5/tinymce.min.js" referrerpolicy="origin"/></script>--}}
+@endpush

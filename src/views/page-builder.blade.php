@@ -1,7 +1,7 @@
 @extends('andiwijaya::list-page')
 
 @push('head')
-  <script src="/js/tinymce/tinymce.min.js" defer/></script>
+  <script type="text/javascript" src="/js/tinymce/tinymce.min.js" defer></script>
 @endpush
 
 @push('body-post')

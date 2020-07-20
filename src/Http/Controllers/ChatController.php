@@ -130,7 +130,8 @@ class ChatController{
     $sections = view($this->view,
       array_merge([
         'extends'=>$this->extends,
-        'offline'=>1
+        'offline'=>1,
+        'key'=>Session::get('chat.key')
       ])
     )
       ->renderSections();

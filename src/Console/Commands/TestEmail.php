@@ -42,7 +42,7 @@ class TestEmail extends Command
 
       Mail::raw('This is test email, if you receive this email it means the email is setup correctly.', function($message)
         use($to){
-        $message->from(env('MAIL_FROM'), env('MAIL_FROM_NAME'));
+        //$message->from(env('MAIL_FROM'), env('MAIL_FROM_NAME'));
         $message->to($to);
         $message->subject("Test email from " . env('APP_NAME'));
       });

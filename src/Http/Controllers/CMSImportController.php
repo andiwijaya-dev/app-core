@@ -3,581 +3,279 @@
 namespace Andiwijaya\AppCore\Http\Controllers;
 
 use Andiwijaya\AppCore\Imports\GenericImport;
+use App\Exceptions\AppException;
+use App\Exceptions\BusinessLogicException;
 use Illuminate\Foundation\Auth\Access\AuthorizesRequests;
 use Illuminate\Foundation\Bus\DispatchesJobs;
 use Illuminate\Foundation\Validation\ValidatesRequests;
 use Illuminate\Http\Request;
 use Illuminate\Routing\Controller as BaseController;
-use Illuminate\Support\Facades\Config;
-use Illuminate\Support\Facades\DB;
-use Illuminate\Support\Facades\Log;
-use Illuminate\Support\Facades\Redis;
-use Illuminate\Support\Facades\Session;
 use Illuminate\Support\Facades\Storage;
-use Illuminate\Support\Str;
 use Maatwebsite\Excel\Facades\Excel;
+use PhpOffice\PhpSpreadsheet\Shared\Date;
 
 class CMSImportController extends BaseController{
   use AuthorizesRequests, DispatchesJobs, ValidatesRequests;
 
-  protected $default_columns = [
-    [ 'name'=>'is_active', 'text'=>'Aktif', 'default_mapping'=>[], 'value'=>1 ]
-  ];
+  protected $columns = [];
 
-  protected $path = 'path/to/url';
+  protected $path = '';
 
   protected $view = 'andiwijaya::cms-import';
+  protected $view_column_section = 'andiwijaya::sections.cms-import-columns';
+  protected $view_completed_section = 'andiwijaya::sections.cms-import-completed';
 
-  protected $samples = [];
+  protected $title = 'Import';
+  protected $description = 'Lorem ipsum dolor sit amet, consectetur adipiscing elit. In egestas at sem vel vehicula.';
 
-  //protected function preProcessImport($session_data){}
+  protected $column_section_title = 'Column';
+  protected $column_section_description = 'Please complete column mapping below';
 
-  //protected function processImport($obj, &$error, $index = null, $session_data = null){}
+  protected $completed_section_title = 'Import Completed';
+  protected $completed_section_description = '';
 
-  //protected function processAllImport(array $arr, &$errors, &$warnings, $session_data = null){}
+  protected $disk = 'imports';
+  protected $sub_dir = '';
 
-  protected $percentage = 0;
-
-  private $last_progress_sent_at = null;
-
+  protected $results = [];
 
   public function index(Request $request){
 
-    $params = [
-      'columns'=>$this->default_columns,
-      'path'=>$this->path,
-      'channel'=>$this->getChannel(),
-      'samples'=>$this->samples,
-    ];
-
-    $sections = view($this->view, $params)->renderSections();
-
-    return [
-      '_'=>$sections['detail'],
-      'script'=>"$('#import-modal').modal_open()"
-    ];
-
+    $method = action2method($request->input('action', 'view'));
+    if(method_exists($this, $method))
+      return call_user_func_array([ $this, $method ], func_get_args());
   }
 
   public function store(Request $request){
 
-    $step = $request->get('step', 1);
-    $action = isset(($actions = explode('|', $request->get('action')))[0]) ? $actions[0] : '';
+    $method = action2method($request->input('action', 'save'));
+    if(method_exists($this, $method))
+      return call_user_func_array([ $this, $method ], func_get_args());
+  }
 
-    switch($action){
 
-      case 'next':
-        if($step == 1) return $this->analyse($request);
-        if($step == 2) return $this->process($request);
-        if($step == 3) return [
-          'script'=>implode(';', [
-            "$('#import-modal').close()",
-            "if(typeof cmslist_reload == 'function') cmslist_reload()"
-          ])
-        ];
 
-      case 'back':
-        if($step == 2) return $this->upload($request);
-        if($step == 3) return $this->analyse($request);
+  public function view(Request $request){
 
+    if($request->ajax()){
+      return view_modal($this->view, [
+        'id'=>md5($this->path),
+        'width'=>600,
+        'height'=>600,
+        'data'=>[
+          'path'=>$this->path,
+          'title'=>$this->title,
+          'description'=>$this->description
+        ],
+      ]);
     }
-
+    abort(404);
   }
 
-
-
-  public function upload(Request $request){
-
-    $params = $this->getParams($request);
-    $sections = view($this->view, $params)->renderSections();
-
-    return [
-      '.import-modal-col'=>$sections['detail-1'],
-      'script'=>implode(';', [
-        "$('.legend>*:nth-child(2) .circle', '#import-modal').removeClass('active')",
-        "$('.legend>*:nth-child(3) .circle', '#import-modal').removeClass('active')",
-        "$('button[value=back]', '#import-modal').addClass('hidden')",
-        "$('#import-modal .progressbar').reset()"
-      ])
-    ];
-
-  }
 
   public function analyse(Request $request){
 
-    if($request->has('file')){
+    try{
 
-      if (is_zip($request->file('file')->getClientMimeType())){
+      if(!$request->hasFile('file')) exc(__('text.file-not-found'));
 
-        return $this->analyseZip($request);
+      if(is_zip($request->file('file')->getMimeType())) {
 
+        $filename = md5_file($request->file('file')->getRealPath());
+        $za = new \ZipArchive();
+        $za->open($request->file('file')->getRealPath());
+        $za->extractTo(Storage::disk($this->disk)->path($this->sub_dir) . '/' . $filename);
+
+        $dir_path = Storage::disk($this->disk)->path($this->sub_dir) . '/' . $filename;
+        $files = array_merge(
+          rglob("{$dir_path}/*.xlsx"),
+          rglob("{$dir_path}/*.xls"),
+          rglob("{$dir_path}/*.csv")
+        );
+
+        if(count($files) > 1) exc('Tidak dapat melakukan proses, terdapat lebih dari 1 file excel dalam file zip ini.');
+
+        $csv_path = $files[0];
       }
       else{
 
-        return $this->analyseExcel($request);
+        if(!in_array($request->file('file')->getClientOriginalExtension(), [ 'csv', 'xls', 'xlsx' ]))
+          throw new AppException(__('text.import-csv-invalid-ext'));
 
+        $filename = md5_file($request->file('file')->getRealPath()) . '.' . $request->file('file')->getClientOriginalExtension();
+
+        Storage::putFileAs($this->disk, $request->file('file'), ($this->sub_dir ? $this->sub_dir . '/' : '') . $filename);
+
+        $csv_path = Storage::disk($this->disk)->path($this->sub_dir) . '/' . $filename;
       }
 
-    }
-    else{
+      $rows = Excel::toArray(new GenericImport, $csv_path);
 
-      return $this->analyseExcel($request);
-
-    }
-
-  }
-
-  public function analyseZip(Request $request){
-
-    $za = new \ZipArchive();
-    $za->open($request->file('file')->getRealPath());
-
-    $id = Session::getId();
-    Storage::disk('local')->deleteDirectory($id);
-    Storage::disk('local')->makeDirectory($id);
-    $dir_name = Storage::disk('local')->path($id);
-    $za->extractTo($dir_name);
-
-    $files = array_merge(
-      rglob("{$dir_name}/*.xlsx"),
-      rglob("{$dir_name}/*.xls"),
-      rglob("{$dir_name}/*.csv")
-    );
-
-    if(count($files) > 0){
-
-      $file = $files[0];
-      //$readerType = ucwords(mime2ext(mime_content_type($file)));
-
-      $path_info = pathinfo($file);
-      $readerType = ucwords($path_info['extension']);
-
-      if(!in_array($readerType, [ 'Csv', 'Xlsx', 'Xls' ]))
-        exc('Unsupported file format, please provide csv, xls or xlsx.');
-
-      $rows = Excel::toArray(new GenericImport, $file,null, $readerType);
-
-      $defined_column_names = [];
-      foreach($this->default_columns as $column){
-        if(isset($column['text'])) $defined_column_names[] = $column['text'];
-        if(isset($column['default_mapping']) && is_array($column['default_mapping']))
-          $defined_column_names = array_merge($defined_column_names, $column['default_mapping']);
-      }
-      foreach($defined_column_names as $idx=>$column)
-        $defined_column_names[$idx] = strtoupper($defined_column_names[$idx]);
-
-      if(isset($rows[0]) && is_array($rows[0])){
-
-        $header_row_index = -1;
-        foreach($rows[0] as $index=>$row){
-          foreach($row as $column){
-            if(in_array(strtoupper($column), $defined_column_names)){
-              $header_row_index = $index;
-              break;
-            }
-          }
-          if($header_row_index != -1) break;
-        }
-
-        if($header_row_index === -1) exc('Header row not found.');
-
-        foreach($this->default_columns as $idx=>$column){
-
-          $texts = [];
-          if(isset($column['text'])) $texts[] = $column['text'];
-          if(isset($column['default_mapping']) && is_array($column['default_mapping']))
-            $texts = array_merge($texts, $column['default_mapping']);
-
-          $column_index = -1;
-          foreach($rows[0][$header_row_index] as $idx2=>$column_text){
-            if(in_array($column_text, $texts)){
-              $column_index = $idx2;
-              break;
-            }
-          }
-          $this->default_columns[$idx]['index'] = $column_index;
-
-        }
-
-      }
-
-      Session::put(str_replace('/', '.',  $this->path), [
-        'columns'=>$this->default_columns,
-        'file_path'=>$id . str_replace($dir_name, '', $file),
-        'zip_dir'=>Storage::disk('local')->path($id),
-        'header_row_index'=>$header_row_index,
-        'headers'=>$rows[0][$header_row_index],
-        'reader_type'=>$readerType
-      ]);
-
-      if(redis_available())
-        Redis::publish($this->getChannel(), json_encode([ 'script'=>"$('#import-modal .progressbar').reset()" ]));
-
-      $session_data = Session::get(str_replace('/', '.',  $this->path));
-
-      $params = $this->getParams($request);
-      $params['columns'] = $session_data['columns'];
-      $params['headers'] = $session_data['headers'];
-      $sections = view($this->view, $params)->renderSections();
+      $csv_columns = $rows[0][0] ?? [];
 
       return [
-        '.import-modal-col'=>$sections['detail-2'],
-        'script'=>implode(';', [
-          "$('.legend>*:nth-child(2) .circle', '#import-modal').addClass('active')",
-          "$('.legend>*:nth-child(3) .circle', '#import-modal').removeClass('active')",
-          "$('button[value=back]', '#import-modal').removeClass('hidden')"
-        ])
+        '#' . md5($this->path)=>view($this->view_column_section, [
+          'title'=>$this->column_section_title,
+          'description'=>$this->column_section_description,
+          'path'=>$this->path,
+          'columns'=>$this->columns,
+          'csv_columns'=>$csv_columns,
+          'filename'=>$filename
+        ])->render(),
+        'script'=>"$('#" . md5($this->path) . "').modal_resize()"
       ];
-
     }
+    catch(AppException $ex){
 
+      exc($ex->getMessage());
+    }
+    catch(\Exception $ex){
+
+      exc($ex);
+      exc(__('text.general-error'));
+    }
   }
 
-  public function analyseExcel(Request $request){
+  public function run(Request $request){
 
-    if($request->has('file')){
+    $t1 = microtime(1);
 
-      ini_set('memory_limit', '1G');
+    try{
 
-      $readerType = ucwords($request->file('file')->getClientOriginalExtension());
+      $filename = $request->input('_filename');
+      $csv_path = Storage::disk($this->disk)->path('') . ($this->sub_dir ? $this->sub_dir . '/' : '') . $filename;
 
-      try{
-        $rows = Excel::toArray(new GenericImport, $request->file('file')->getRealPath(), null, $readerType);
-      }
-      catch(\Exception $ex){
-        if(strpos($ex->getMessage(), 'No reader found for') !== false)
-          exc('Unable to process the file, please supply valid csv, xls, xlsx or zip file');
-        throw $ex;
-      }
+      $rows = Excel::toArray(new GenericImport, $csv_path);
 
-      $defined_column_names = [];
-      foreach($this->default_columns as $column){
-        if(isset($column['text'])) $defined_column_names[] = $column['text'];
-        if(isset($column['default_mapping']) && is_array($column['default_mapping']))
-          $defined_column_names = array_merge($defined_column_names, $column['default_mapping']);
-      }
+      // Convert mapped column text to index
+      $headers = $rows[0][0] ?? [];
+      foreach($this->columns as $key=>$column){
 
-      if(isset($rows[0]) && is_array($rows[0])){
+        if(!$request->has($key) || $request->get($key) == null) continue;
 
-        $header_row_index = -1;
-        foreach($rows[0] as $index=>$row){
-          foreach($row as $column){
-            if(in_array($column, $defined_column_names)){
-              $header_row_index = $index;
-              break;
-            }
-          }
-          if($header_row_index != -1) break;
-        }
-
-        if($header_row_index < 0) $header_row_index = 0;
-
-        foreach($this->default_columns as $idx=>$column){
-
-          $texts = [];
-          if(isset($column['text'])) $texts[] = $column['text'];
-          if(isset($column['default_mapping']) && is_array($column['default_mapping']))
-            $texts = array_merge($texts, $column['default_mapping']);
-
-          foreach($texts as $idx2=>$text)
-            $texts[$idx2] = strtolower($text);
-
-          $column_index = -1;
-          foreach($rows[0][$header_row_index] as $idx2=>$column_text){
-            if(in_array(strtolower($column_text), $texts)){
-              $column_index = $idx2;
-              break;
-            }
-          }
-          $this->default_columns[$idx]['index'] = $column_index;
-
-        }
-
-      }
-
-      Session::put(str_replace('/', '.',  $this->path), [
-        'columns'=>$this->default_columns,
-        'file_path'=>$request->file('file')->storeAs('', md5($request->file('file')->getClientOriginalName()), 'local'),
-        'header_row_index'=>$header_row_index,
-        'headers'=>$rows[0][$header_row_index],
-        'reader_type'=>$readerType
-      ]);
-
-    }
-
-    if(redis_available())
-      Redis::publish($this->getChannel(), json_encode([ 'script'=>"$('#import-modal .progressbar').reset()" ]));
-
-    $session_data = Session::get(str_replace('/', '.',  $this->path));
-
-    $params = $this->getParams($request);
-    $params['columns'] = $session_data['columns'];
-    $params['headers'] = $session_data['headers'];
-    $sections = view($this->view, $params)->renderSections();
-
-    return [
-      '.import-modal-col'=>$sections['detail-2'],
-      'script'=>implode(';', [
-        "$('.legend>*:nth-child(2) .circle', '#import-modal').addClass('active')",
-        "$('.legend>*:nth-child(3) .circle', '#import-modal').removeClass('active')",
-        "$('button[value=back]', '#import-modal').removeClass('hidden')"
-      ])
-    ];
-
-  }
-
-  public function process(Request $request){
-
-    $this->last_progress_sent_at = $t1 = microtime(1);
-
-    ini_set('memory_limit', '1G');
-    ini_set('max_execution_time', 1200);
-    ini_set('set_time_limit', 1200);
-    set_time_limit(1200);
-
-    $this->percentage = 20;
-
-    $session_data = Session::get(str_replace('/', '.',  $this->path));
-    $session_data = array_merge($request->all(), $session_data);
-
-    $custom_columns = $request->get('columns');
-    foreach($custom_columns as $custom_column_name=>$custom_column_index){
-      foreach($session_data['columns'] as $idx=>$column){
-        if($custom_column_name == $column['name'] && $custom_column_index >= 0){
-          $session_data['columns'][$idx]['index'] = $custom_column_index;
-        }
-      }
-    }
-
-    if(isset($session_data['zip_dir'])){
-
-      $zip_files = [];
-
-      $files = rglob($session_data['zip_dir'] . '/*');
-      foreach($files as $file)
-        $zip_files[basename($file)] = $file;
-
-      $session_data['zip_files'] = $zip_files;
-
-    }
-
-    $reader_type = $session_data['reader_type'];
-    $header_row_index = $session_data['header_row_index'];
-    $rows = Excel::toArray(new GenericImport, Storage::disk('local')->path($session_data['file_path']),null, $reader_type);
-    $headers = $rows[0][$header_row_index];
-
-    if(redis_available() && microtime(1) - $this->last_progress_sent_at > 1){
-      $this->percentage += 20;
-      Redis::publish($this->getChannel(), json_encode([  'script'=>"$('#import-modal .progressbar').val(" . ($this->percentage) . ")" ]));
-      $this->last_progress_sent_at = microtime(1);
-    }
-
-    $arr = [];
-    for($i = $header_row_index + 1 ; $i < count($rows[0]) ; $i++){
-
-      $is_empty = true;
-      foreach($rows[0][$i] as $col)
-        if($col){
-          $is_empty = false;
-          break;
-        }
-
-      $obj = [];
-      if($is_empty)
-        $obj = null;
-      else{
-
-        foreach($headers as $idx=>$header){
-          if(empty(trim($header))) continue;
-          $obj[$header] = isset($rows[0][$i][$idx]) ? $rows[0][$i][$idx] : '';
-        }
-
-        foreach($session_data['columns'] as $column){
-
-          if(!is_null($column['index']) && $column['index'] >= 0 && $column['index'] < count($rows[0][$i]))
-            $obj[$column['name']] = $rows[0][$i][$column['index']];
-          else if(isset($column['value']))
-            $obj[$column['name']] = $column['value'];
-          else if(!isset($column['optional']) || !$column['optional'])
-            exc('Column ' . $column['text'] . ' is required');
-
-        }
-
-      }
-
-      $arr[] = $obj;
-    }
-
-    $errors = [];
-    $warnings = [];
-    $total = 0;
-
-    if(method_exists($this, 'processAllImport')) {
-
-      try{
-
-        DB::beginTransaction();
-
-        if(method_exists($this, 'preProcessImport'))
-          $this->preProcessImport($session_data);
-
-        $total = $this->processAllImport($arr, $errors, $warnings, $session_data);
-
-        if(count($errors) > 0)
-          throw new \Exception();
-
-        DB::commit();
-
-      }
-      catch(\Exception $ex){
-
-        DB::rollBack();
-
-        if($ex->getMessage() && isset($index))
-          $errors[] = [ 'row'=>$index + $header_row_index + 2, 'message'=>$ex->getMessage() . (env('APP_DEBUG') ? $ex->getFile() . ':' . $ex->getLine() : '') ];
-        else
-          $errors[] = [ 'row'=>'-', 'message'=>$ex->getMessage() . (env('APP_DEBUG') ? $ex->getFile() . ':' . $ex->getLine() : '') ];
-
-      }
-
-      if(method_exists($this, 'postProcessImport'))
-        $this->postProcessImport($session_data);
-
-    }
-
-    else {
-
-      try{
-
-        DB::beginTransaction();
-
-        foreach($arr as $index=>$obj){
-
-          if(!$obj) continue;
-
-          $error = '';
-
-          $this->processImport($obj, $error, $index + $header_row_index + 2, $session_data);
-
-          if($error){
-            if(isset($error['type'])){
-              switch($error['type']){
-
-                case 1:
-                  $errors[] = [ 'row'=>$index + $header_row_index + 2, 'message'=>isset($error['message']) ? $error['message'] : 'Error not specified' ];
-                  break;
-
-                case 2:
-                  $warnings[] = [ 'row'=>$index + $header_row_index + 2, 'message'=>$error['message'] ];
-                  break;
-
-              }
-            }
-            else
-              $errors[] = [ 'row'=>$index + $header_row_index + 2, 'message'=>$error ];
+        $mapped_to = $request->get($key);
+        $mapped_to_idx = -1;
+        foreach($headers as $idx=>$header_text)
+          if($header_text == $mapped_to){
+            $mapped_to_idx = $idx;
+            break;
           }
 
-          $total++;
+        $this->columns[$key]['csv_index'] = $mapped_to_idx;
+      }
 
-          $this->addProgress(80 / count($arr));
+      // Generate data
+      $data = [];
+      if(isset($rows[0][0])){
+        for($i = 1 ; $i < count($rows[0]) ; $i++){
 
+          $row = $rows[0][$i];
+          $obj = [];
+          foreach($this->columns as $key=>$column){
+
+            $optional = $column['optional'] ?? 0;
+
+            if(!isset($column['csv_index'])){
+              if(!$optional) throw new AppException("Kolom " . ($column['text'] ?? '') . " harus diisi");
+              else continue;
+            }
+
+            $value = $row[$column['csv_index']] ?? '';
+
+            // Cast
+            switch($column['cast'] ?? ''){
+              case 'datetime':
+                $value = $this->castDatetime($value);
+                break;
+              case 'date':
+                $value = $this->castDate($value);
+                break;
+            }
+
+            $obj[$key] = $value;
+          }
+
+          $data[] = $obj;
         }
-
-        if(method_exists($this, 'postProcessImport'))
-          $this->postProcessImport($session_data);
-
-        if(count($errors) > 0)
-          throw new \Exception();
-
-        DB::commit();
-
-      }
-      catch(\Exception $ex){
-
-        DB::rollBack();
-
-        if($ex->getMessage() && isset($index))
-          $errors[] = [ 'row'=>$index + $header_row_index + 2, 'message'=>$ex->getMessage() . (env('APP_DEBUG') ? $ex->getFile() . ':' . $ex->getLine() : '') ];
-        else
-          $errors[] = [ 'row'=>'-', 'message'=>$ex->getMessage() . (env('APP_DEBUG') ? $ex->getFile() . ':' . $ex->getLine() : '') ];
-
       }
 
+      $this->process($data, $request);
+
+      return [
+        '#' . md5($this->path)=>view($this->view_completed_section, [
+          'title'=>$this->completed_section_title,
+          'description'=>$this->completed_section_description,
+          'path'=>$this->path,
+          'results'=>$this->results,
+          'ellapsed'=>round(microtime(1) - $t1, 3)
+        ])->render(),
+        'script'=>"$('#" . md5($this->path) . "').modal_resize()"
+      ];
     }
+    catch(AppException $ex){
 
+      exc($ex->getMessage());
+    }
+    catch(\Exception $ex){
 
-
-    if(redis_available())
-      Redis::publish($this->getChannel(), json_encode([  'script'=>"$('#import-modal .progressbar').val(100)" ]));
-
-    Session::put(str_replace('/', '.',  $this->path), $session_data);
-
-    $params = $this->getParams($request);
-    $params['errors'] = $errors;
-    $params['warnings'] = $warnings;
-    $params['total'] = $total;
-    $params['ellapsed'] = round(microtime(1) - $t1, 2);
-    $sections = view($this->view, $params)->renderSections();
-
-    return [
-      '.import-modal-col'=>$sections['detail-3'],
-      'script'=>implode(';', [
-        "$('.legend>*:nth-child(3) .circle', '#import-modal').addClass('active')",
-        count($errors) > 0 ?
-          "$('button[value=back]', '#import-modal').removeClass('hidden')" :
-          implode(';', [
-            "$('button[value=back]', '#import-modal').addClass('hidden')",
-            "$('button[value=next]>label', '#import-modal').html('Selesai')",
-          ]),
-      ])
-    ];
-
-  }
-
-  protected function sendProgressbar($percentage){
-
-    if(microtime(1) - $this->last_progress_sent_at > 1 && redis_available()){
-
-      $max_percentage = 100 - $this->percentage;
-      $real_percentage = $this->percentage + ($percentage / 100 * $max_percentage);
-
-      Redis::publish($this->getChannel(), json_encode(['script' => "$('#import-modal .progressbar').val({$real_percentage})"]));
-
-      $this->last_progress_sent_at = microtime(1);
-
+      exc($ex);
+      exc(__('text.general-error'));
     }
 
   }
 
-  protected function addProgress($percentage){
+  public function process(array $data, Request $request){}
 
-    $this->percentage += $percentage;
+  public function back(Request $request){
 
-    if($this->percentage > 100) $this->percentage = 100;
+    switch($request->get('step')){
 
-    if(microtime(1) - $this->last_progress_sent_at > 1 && redis_available()){
-
-      Redis::publish($this->getChannel(), json_encode(['script' => "$('#import-modal .progressbar').val({$this->percentage})"]));
-
-      $this->last_progress_sent_at = microtime(1);
+      case 2:
+        return [
+          '#' . md5($this->path)=>view($this->view, [
+            'path'=>$this->path,
+            'title'=>$this->title,
+            'description'=>$this->description
+          ])->render(),
+          'script'=>"$('#" . md5($this->path) . "').modal_resize()"
+        ];
 
     }
-
   }
 
-  public function getParams(Request $request, array $params = [])
-  {
-    return [
-      'columns'=>$this->default_columns,
-      'path'=>$this->path,
-      'channel'=>$this->getChannel()
-    ];
+
+  private function castDate($value){
+
+    try{
+
+      $value = Date::excelToDateTimeObject($value)->format('Y-m-d');
+    }
+    catch(\Exception $ex){
+
+      if(date('Y', strtotime($value)) != 1970)
+        $value = date('Y-m-d', strtotime($value));
+      else
+        $value = '';
+    }
+
+    return $value;
   }
 
-  protected function getChannel(){
+  private function castDatetime($value){
 
-    return Str::slug($this->path) . Session::get('user_id');
+    try{
 
+      $value = Date::excelToDateTimeObject($value)->format('Y-m-d H:i:s');
+    }
+    catch(\Exception $ex){
+
+      if(date('Y', strtotime($value)) != 1970)
+        $value = date('Y-m-d H:i:s', strtotime($value));
+      else
+        $value = '';
+    }
+
+    return $value;
   }
 
 }
