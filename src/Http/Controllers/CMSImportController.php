@@ -93,8 +93,6 @@ class CMSImportController extends BaseController{
           rglob("{$dir_path}/*.csv")
         );
 
-        if(count($files) > 1) exc('Tidak dapat melakukan proses, terdapat lebih dari 1 file excel dalam file zip ini.');
-
         $csv_path = $files[0];
       }
       else{
@@ -111,7 +109,7 @@ class CMSImportController extends BaseController{
 
       $rows = Excel::toArray(new GenericImport, $csv_path);
 
-      $csv_columns = $rows[0][0] ?? [];
+      $csv_columns = array_filter($rows[0][0] ?? []);
 
       return [
         '#' . md5($this->path)=>view($this->view_column_section, [
@@ -143,59 +141,102 @@ class CMSImportController extends BaseController{
     try{
 
       $filename = $request->input('_filename');
-      $csv_path = Storage::disk($this->disk)->path('') . ($this->sub_dir ? $this->sub_dir . '/' : '') . $filename;
 
-      $rows = Excel::toArray(new GenericImport, $csv_path);
+      $path = Storage::disk($this->disk)->path('') . ($this->sub_dir ? $this->sub_dir . '/' : '') . $filename;
+
+      if(is_dir($path)){
+
+        $files = array_merge(
+          rglob("{$path}/*.xlsx"),
+          rglob("{$path}/*.xls"),
+          rglob("{$path}/*.csv")
+        );
+
+        $rows = [];
+        foreach($files as $csv_path)
+          $rows = array_merge($rows, Excel::toArray(new GenericImport, $csv_path));
+
+        $files = rglob("{$path}/*.*");
+        $_files = [];
+        foreach($files as $file){
+          if(in_array(explode('.', basename($file))[1] ?? '', [ 'xlsx', 'xls', 'csv' ])) continue;
+
+          $_files[basename($file)] = $file;
+        }
+
+        $request->merge([ '_is_dir'=>1, '_dir'=>$path, '_files'=>$_files ]);
+      }
+      else{
+
+        $csv_path = $path;
+        $rows = Excel::toArray(new GenericImport, $csv_path);
+      }
 
       // Convert mapped column text to index
-      $headers = $rows[0][0] ?? [];
       foreach($this->columns as $key=>$column){
 
         if(!$request->has($key) || $request->get($key) == null) continue;
 
-        $mapped_to = $request->get($key);
-        $mapped_to_idx = -1;
-        foreach($headers as $idx=>$header_text)
-          if($header_text == $mapped_to){
-            $mapped_to_idx = $idx;
-            break;
-          }
-
-        $this->columns[$key]['csv_index'] = $mapped_to_idx;
+        $this->columns[$key]['mapped_to'] = $request->get($key);
       }
 
       // Generate data
       $data = [];
       if(isset($rows[0][0])){
-        for($i = 1 ; $i < count($rows[0]) ; $i++){
+        foreach($rows as $tabidx=>$tab){
 
-          $row = $rows[0][$i];
-          $obj = [];
+          $headers = $tab[0] ?? [];
           foreach($this->columns as $key=>$column){
 
-            $optional = $column['optional'] ?? 0;
+            unset($this->columns[$key]['csv_index']);
 
-            if(!isset($column['csv_index'])){
-              if(!$optional) throw new AppException("Kolom " . ($column['text'] ?? '') . " harus diisi");
-              else continue;
+            if(isset($column['mapped_to'])){
+
+              foreach($headers as $headeridx=>$text){
+                if($text == $column['mapped_to']){
+                  $this->columns[$key]['csv_index'] = $headeridx;
+                  break;
+                }
+              }
+
+              if(!($column['optional'] ?? false) && !isset($this->columns[$key]['csv_index']))
+                exc(__('text.import-required-column-not-found'));
             }
-
-            $value = $row[$column['csv_index']] ?? '';
-
-            // Cast
-            switch($column['cast'] ?? ''){
-              case 'datetime':
-                $value = $this->castDatetime($value);
-                break;
-              case 'date':
-                $value = $this->castDate($value);
-                break;
-            }
-
-            $obj[$key] = $value;
           }
 
-          $data[] = $obj;
+          for($i = 1 ; $i < count($tab) ; $i++){
+
+            $row = $tab[$i];
+
+            if(!trim(implode('', $row))) continue;
+
+            $obj = [];
+            foreach($this->columns as $key=>$column){
+
+              $optional = $column['optional'] ?? 0;
+
+              if(!isset($column['csv_index'])){
+                if(!$optional) throw new AppException("Kolom " . ($column['text'] ?? '') . " harus diisi");
+                else continue;
+              }
+
+              $value = $row[$column['csv_index']] ?? '';
+
+              // Cast
+              switch($column['cast'] ?? ''){
+                case 'datetime':
+                  $value = $this->castDatetime($value);
+                  break;
+                case 'date':
+                  $value = $this->castDate($value);
+                  break;
+              }
+
+              $obj[$key] = $value;
+            }
+
+            $data[] = $obj;
+          }
         }
       }
 
