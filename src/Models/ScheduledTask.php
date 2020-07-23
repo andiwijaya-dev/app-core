@@ -6,6 +6,7 @@ use Andiwijaya\AppCore\Models\Traits\LoggedTraitV3;
 use Carbon\Carbon;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Support\Facades\Artisan;
+use Illuminate\Support\Facades\DB;
 use Symfony\Component\Process\Process;
 
 class ScheduledTask extends Model
@@ -14,14 +15,15 @@ class ScheduledTask extends Model
 
   protected $table = 'scheduled_task';
 
-  protected $fillable = [ 'status', 'description', 'creator', 'creator_id', 'command', 'start', 'repeat', 'repeat_options',
-    'result', 'result_details', 'parent_id', 'completed_at', 'ellapsed', 'flag' ];
+  protected $fillable = [ 'status', 'description', 'creator', 'creator_id',
+    'command', 'start', 'repeat', 'repeat_custom', 'count', 'error' ];
 
   const STATUS_DISABLED = -1;
   const STATUS_ACTIVE = 1;
-  const STATUS_COMPLETED = 2;
+  const STATUS_RUNNING = 2;
+  const STATUS_COMPLETED = 5;
 
-  const REPEAT_ONCE = 0;
+  const REPEAT_NONE = 0;
   const REPEAT_MINUTELY = 1;
   const REPEAT_EVERY_FIVE_MINUTE = 2;
   const REPEAT_EVERY_TEN_MINUTE = 3;
@@ -32,50 +34,17 @@ class ScheduledTask extends Model
   const REPEAT_CUSTOM = 21;
 
   protected $attributes = [
-    'repeat'=>self::REPEAT_ONCE,
+    'repeat'=>self::REPEAT_NONE,
     'status'=>self::STATUS_ACTIVE
   ];
 
   protected $casts = [
-    'repeat_options'=>'array', // { every:{ n:1, unit:"day" }, max_count:10, except:{ dates:[], day:[] } }
-    'result_details'=>'array'
+    'repeat_custom'=>'array', // { every:{ n:1, unit:"day" }, max_count:10, except:{ dates:[], day:[] } }
   ];
 
+  public function results(){
 
-
-
-  public function instances(){
-
-    return $this->hasMany('Andiwijaya\AppCore\Models\ScheduledTaskInstance', 'task_id');
-  }
-
-  public function last_instance(){
-
-    return $this->hasOne('Andiwijaya\AppCore\Models\ScheduledTaskInstance', 'task_id', 'id')
-      ->orderBy('id', 'desc');
-  }
-
-  public function last_completed_instance(){
-
-    return $this->hasOne('Andiwijaya\AppCore\Models\ScheduledTaskInstance', 'task_id', 'id')
-      ->where('status', ScheduledTaskInstance::STATUS_COMPLETED)
-      ->orderBy('id', 'desc');
-  }
-
-  public function calculate()
-  {
-
-    // Calculate status
-    switch($this->repeat) {
-
-      case self::REPEAT_ONCE:
-        $this->load([ 'instances' ]);
-        if($this->instances[0]->status >= ScheduledTaskInstance::STATUS_COMPLETED)
-          $this->status = self::STATUS_COMPLETED;
-        break;
-    }
-
-    parent::save();
+    return $this->hasMany('Andiwijaya\AppCore\Models\ScheduledTaskResult', 'task_id');
   }
 
   public function preSave()
@@ -105,15 +74,71 @@ class ScheduledTask extends Model
 
   }
 
-  public function postSave()
+  public function calculate()
   {
-    $this->createInstances();
+    $model = DB::table('scheduled_task_result')->where('task_id', $this->id)
+      ->select(DB::raw("COUNT(*) as `count`, SUM(case when `status` = " . ScheduledTaskResult::STATUS_ERROR .
+        " then 1 else 0 end) as `error`"));
+    //exc($model->toSql());
+    $res = $model->first();
+    
+    $this->count = $res->count ?? 0;
+    $this->error = $res->error ?? 0;
+    parent::save();
   }
 
-  public function preDelete()
-  {
-    if($this->flag == 's') exc('Unable to remove system task');
+  public function run(){
+
+    if(in_array($this->status, [ self::STATUS_RUNNING, self::STATUS_DISABLED ])) return;
+
+    $t1 = microtime(1);
+
+    $this->status = self::STATUS_RUNNING;
+    $this->save();
+
+    $report = $this->results()->create([
+      'status'=>ScheduledTaskResult::STATUS_RUNNING,
+      'started_at'=>Carbon::now()->format('Y-m-d H:i:s'),
+      'pid'=>getmypid()
+    ]);
+
+    $exitCode = Artisan::call($this->command);
+    $output = Artisan::output();
+
+    $report->status = $exitCode > 0 ? ScheduledTaskResult::STATUS_ERROR : ScheduledTaskResult::STATUS_COMPLETED;
+    $report->verbose = $output;
+    $report->ellapsed = microtime(1) - $t1;
+    $report->completed_at = Carbon::now()->format('Y-m-d H:i:s');
+    $report->save();
+
+    $this->status = self::STATUS_COMPLETED;
+    $this->save();
   }
+
+  public function runInBackground(){
+
+    chdir(base_path());
+
+    exec("php artisan scheduled-task:run --id={$this->id} > /dev/null 2>&1 & disown", $output, $return_var);
+  }
+
+  public static function check(){
+
+    ScheduledTask::where('status', ScheduledTask::STATUS_ACTIVE)
+      ->orderBy('id')
+      ->chunk(1000, function($tasks){
+
+        foreach($tasks as $task){
+
+          if($task->repeat == self::REPEAT_NONE && $task->count <= 0)
+            $this->runInBackground();
+
+        }
+
+      });
+  }
+
+
 
   public function createInstances(){
 
@@ -123,12 +148,13 @@ class ScheduledTask extends Model
 
     switch($this->repeat){
 
-      case self::REPEAT_ONCE:
-        if(count($this->instances) <= 0)
+      case self::REPEAT_NONE:
+        if(count($this->instances) <= 0){
           $this->instances()->create([
             'command'=>$this->command,
-            'start'=>null
+            'start'=>$this->start
           ]);
+        }
         break;
 
       case self::REPEAT_MINUTELY:
@@ -221,6 +247,7 @@ class ScheduledTask extends Model
 
       case self::STATUS_DISABLED: $html[] = "<span class='badge gray'><span>Inactive</span></span>"; break;
       case self::STATUS_ACTIVE: $html[] = "<span class='badge green'><span>Active</span></span>"; break;
+      case self::STATUS_RUNNING: $html[] = "<span class='badge yellow'><span>Running</span></span>"; break;
       case self::STATUS_COMPLETED: $html[] = "<span class='badge blue'><span>Completed</span></span>"; break;
     }
 

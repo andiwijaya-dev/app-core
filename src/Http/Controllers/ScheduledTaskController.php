@@ -4,6 +4,8 @@ namespace Andiwijaya\AppCore\Http\Controllers;
 
 use Andiwijaya\AppCore\Models\ScheduledTask;
 use Illuminate\Http\Request;
+use Illuminate\Support\Facades\Log;
+use Illuminate\Support\Facades\Session;
 
 class ScheduledTaskController extends ListPageController2 {
 
@@ -16,6 +18,8 @@ class ScheduledTaskController extends ListPageController2 {
   public $view_grid_item = 'andiwijaya::components.scheduled-task-grid-item';
   public $view_feed_item = 'andiwijaya::components.scheduled-task-feed-item';
 
+  public $channel = 'scheduled-task';
+
   public function create(Request $request){
 
     $task = new ScheduledTask();
@@ -23,30 +27,31 @@ class ScheduledTaskController extends ListPageController2 {
 
     return view_modal($this->view_detail, [
       'id'=>'scheduled-task-edit',
-      'width'=>'480px',
+      'width'=>480,
+      'height'=>720,
       'data'=>compact('task', 'readonly')
     ]);
   }
 
   public function show(Request $request, $id){
 
-    $task = ScheduledTask::findOrFail($id); //  TODO
-    $readonly = $task->flag == 's';
-
-    return view_modal($this->view_detail, [
-      'id'=>'scheduled-task-edit',
-      'width'=>'480px',
-      'data'=>compact('task', 'readonly')
-    ]);
+    $method = action2method($request->get('action', 'open'));
+    if(method_exists($this, $method))
+      return call_user_func_array([ $this, $method ], func_get_args());
   }
 
   public function store(Request $request){
 
     if($request->ajax()){
 
+      $request->merge([ 'creator_id'=>Session::get('user_id') ]);
+
       $instance = $request->get('id') > 0 ? $this->model::find($request->get('id')) : new $this->model();
       $instance->fill($request->all());
       $instance->save();
+
+      if($instance->repeat == ScheduledTask::REPEAT_NONE && $instance->count <= 0)
+        $instance->runInBackground();
 
       return view_append([
         view($this->view_feed_item, [ 'item'=>$instance ])->render(),
@@ -72,6 +77,29 @@ class ScheduledTaskController extends ListPageController2 {
         ])
       ]);
     }
+  }
+
+  public function open(Request $request, $id){
+
+    $task = ScheduledTask::findOrFail($id); //  TODO
+    $readonly = $task->flag == 's';
+
+    return view_modal($this->view_detail, [
+      'id'=>'scheduled-task-edit',
+      'width'=>480,
+      'height'=>720,
+      'data'=>compact('task', 'readonly')
+    ]);
+  }
+
+  public function run(Request $request, $id){
+
+    $task = ScheduledTask::findOrFail($id); //  TODO
+    $task->runInBackground();
+
+    return [
+      'script'=>''
+    ];
   }
 
 }

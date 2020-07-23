@@ -17,9 +17,28 @@
 
     <div class="cls valign-middle">
 
+      @if(isset($results['summary']))
+      <div class="pc-100">
+        <div class="cls">
+          <div class="pc-33 pad-1 bg-light">
+            <strong>New</strong><br />
+            <h5>{{ $results['summary']['new'] ?? 'N/A' }}</h5>
+          </div>
+          <div class="pc-33 pad-1 bg-light">
+            <strong>Update</strong><br />
+            <h5>{{ $results['summary']['update'] ?? 'N/A' }}</h5>
+          </div>
+          <div class="pc-33 pad-1 bg-light">
+            <strong>Warning</strong><br />
+            <h5>{{ $results['summary']['warning'] ?? 'N/A' }}</h5>
+          </div>
+        </div>
+      </div>
+      @endif
+
       <div class="pc-100">
 
-        <div class="accordion">
+        <div class="accordion hmar-1">
 
           @if(isset($results['errors']))
             <div class="item">
