@@ -2,6 +2,7 @@
 
 namespace Andiwijaya\AppCore\Models;
 
+use Andiwijaya\AppCore\Models\Traits\FilterableTrait;
 use Andiwijaya\AppCore\Models\Traits\LoggedTraitV3;
 use Carbon\Carbon;
 use Illuminate\Database\Eloquent\Model;
@@ -11,12 +12,17 @@ use Symfony\Component\Process\Process;
 
 class ScheduledTask extends Model
 {
-  use LoggedTraitV3;
+  use LoggedTraitV3, FilterableTrait;
 
   protected $table = 'scheduled_task';
 
   protected $fillable = [ 'status', 'description', 'creator', 'creator_id',
     'command', 'start', 'repeat', 'repeat_custom', 'count', 'error' ];
+
+  protected $filter_searchable = [
+    'id:=',
+    'description:like'
+  ];
 
   const STATUS_DISABLED = -1;
   const STATUS_ACTIVE = 1;
@@ -89,7 +95,12 @@ class ScheduledTask extends Model
 
   public function run(){
 
-    if(in_array($this->status, [ self::STATUS_RUNNING, self::STATUS_DISABLED ])) return;
+    if(in_array($this->status, [ self::STATUS_DISABLED ])) return;
+
+    if($this->status == self::STATUS_RUNNING){
+      foreach($this->results->where('status', ScheduledTaskResult::STATUS_RUNNING) as $result)
+        exec("kill -9 {$result->pid}");
+    }
 
     $t1 = microtime(1);
 
@@ -111,7 +122,7 @@ class ScheduledTask extends Model
     $report->completed_at = Carbon::now()->format('Y-m-d H:i:s');
     $report->save();
 
-    $this->status = self::STATUS_COMPLETED;
+    $this->status = $report->status;
     $this->save();
   }
 
@@ -119,7 +130,7 @@ class ScheduledTask extends Model
 
     chdir(base_path());
 
-    exec("php artisan scheduled-task:run --id={$this->id} > /dev/null 2>&1 & disown", $output, $return_var);
+    exec("php artisan scheduled-task:run --id={$this->id} > /Users/andiwijaya/www/kliknss/storage/logs/scheduled-task.log 2>&1 &", $output, $return_var);
   }
 
   public static function check(){

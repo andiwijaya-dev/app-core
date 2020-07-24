@@ -150,11 +150,10 @@ class ChatController{
 
   }
 
-  private function sendMessage($request){
+  protected function sendMessage($request){
 
     $discussion_id = Session::get('chat.id');
     $discussion = ChatDiscussion::whereId($discussion_id)
-      ->whereStatus(ChatDiscussion::STATUS_OPEN)
       ->first();
 
     if(!$discussion){

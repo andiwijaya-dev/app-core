@@ -37,22 +37,28 @@ class ChatAdminController extends BaseController
 
   public function index(Request $request){
 
-    $action = isset(($actions = explode('|', $request->get('action')))[0]) ? $actions[0] : '';
+    $action = isset(($actions = explode('|', $request->get('action', 'view')))[0]) ? $actions[0] : '';
+    $method = action2method($action);
+    if(method_exists($this, $method))
+      return call_user_func_array([ $this, $method ], func_get_args());
+  }
 
-    if($action == 'export') return $this->export($request);
+  public function view(Request $request){
+
+    $action = isset(($actions = explode('|', $request->get('action', 'view')))[0]) ? $actions[0] : '';
 
     $filter = $request->get('filter');
     $after_id = $actions[1] ?? null;
     $item_per_page = 10;
 
     $model = ChatDiscussion::
-      whereExists(function($query){
-        $query->select(DB::raw(1))
-          ->from('chat_message')
-          ->whereRaw('chat_message.discussion_id = chat_discussion.id');
-      })
-        ->orderBy('updated_at', 'desc')
-        ->orderBy('id', 'desc');
+    whereExists(function($query){
+      $query->select(DB::raw(1))
+        ->from('chat_message')
+        ->whereRaw('chat_message.discussion_id = chat_discussion.id');
+    })
+      ->orderBy('updated_at', 'desc')
+      ->orderBy('id', 'desc');
 
     if($filter != 'all')
       $model->where('unreplied_count', '>', 0);
@@ -119,9 +125,79 @@ class ChatAdminController extends BaseController
     return view($this->view, $params);
   }
 
+  public function loadMore(Request $request){
+
+    $filter = $request->get('filter');
+    $after_id = $actions[1] ?? null;
+    $item_per_page = 10;
+
+    $model = ChatDiscussion::
+    whereExists(function($query){
+      $query->select(DB::raw(1))
+        ->from('chat_message')
+        ->whereRaw('chat_message.discussion_id = chat_discussion.id');
+    })
+      ->orderBy('updated_at', 'desc')
+      ->orderBy('id', 'desc');
+
+    if($filter != 'all')
+      $model->where('unreplied_count', '>', 0);
+
+    if(strlen($request->get('search')) > 0)
+      $model->filter($request->all());
+
+    if($after_id > 0){
+      $discussions = collect([]);
+
+      $append = false;
+      $model->chunk(1000, function($rows) use($after_id, $item_per_page, &$discussions, &$append){
+
+        foreach($rows as $row){
+
+          if($row->id == $after_id) $append = true;
+
+          if($append) $discussions->add($row);
+
+          if(count($discussions) >= $item_per_page + 1) break;
+        }
+
+        if(count($discussions) >= $item_per_page + 1) return false;
+      });
+    }
+    else{
+
+      $discussions = $model
+        ->limit($item_per_page + 1)
+        ->get();
+    }
+
+    $after_id = count($discussions) >= $item_per_page + 1 ? $discussions[$item_per_page]->id : null;
+    $discussions = $discussions->splice(0, $item_per_page);
+
+    $params = [
+      'extends'=>$this->extends,
+      'discussions'=>$discussions,
+      'view_discussion_item'=>$this->view_discussion_item,
+      'view_discussion_no_item'=>$this->view_discussion_no_item,
+      'filter'=>$filter,
+      'after_id'=>$after_id,
+      'channel_discussion'=>$this->channel_discussion,
+      'title'=>$this->title
+    ];
+
+    if($request->ajax()){
+
+      return [
+        'pre-script'=>"$('.chat-list-body .load-more').remove()",
+        '.chat-list-body'=>'>>' . view('andiwijaya::components.chat-admin-discussion-items', $params)->render()
+      ];
+    }
+    abort(404);
+  }
+
   public function show(Request $request, $id, array $extra = []){
 
-    $item_per_page = 3;
+    $item_per_page = 8;
 
     $action = isset(($actions = explode('|', $request->get('action')))[0]) ? $actions[0] : '';
     $prev_id = isset($actions[1]) ? $actions[1] : null;
@@ -220,35 +296,9 @@ class ChatAdminController extends BaseController
 
   public function store(Request $request){
 
-    $discussion_id = $request->get('id');
-    $discussion = ChatDiscussion::where([
-      'id'=>$discussion_id,
-      'status'=>ChatDiscussion::STATUS_OPEN
-    ])
-      ->first();
-
-    if(!$discussion) exc(__('models.chat-message-unable-to-send-message'));
-
-    $request->merge([ 'image_disk'=>$this->storage ]);
-
-    $message = new ChatMessage([
-      'discussion_id'=>$request->get('id'),
-      'direction'=>ChatMessage::DIRECTION_OUT
-    ]);
-    $message->fill($request->all());
-    $message->save();
-
-    $request->merge([ 'action'=>'load-next|' . $request->get('last_id') ]);
-
-    return [
-      [ 'type'=>'script', 'script'=>"$('.chat-admin').chatadmin_clear()" ]
-    ];
-
-    return array_merge(
-      $this->show($request, $discussion_id), [
-        [ 'type'=>'script', 'script'=>"$('.chat-admin').chatadmin_clear()" ]
-      ]
-    );
+    $method = action2method($request->get('action', 'send-message'));
+    if(method_exists($this, $method))
+      return call_user_func_array([ $this, $method ], func_get_args());
   }
 
   public function export(Request $request){
@@ -353,6 +403,33 @@ class ChatAdminController extends BaseController
     }
 
   }
+
+  public function sendMessage(Request $request){
+
+    $discussion_id = $request->get('id');
+    $discussion = ChatDiscussion::where([
+      'id'=>$discussion_id
+    ])
+      ->first();
+
+    if(!$discussion) exc(__('models.chat-message-unable-to-send-message'));
+
+    $request->merge([ 'image_disk'=>$this->storage ]);
+
+    $message = new ChatMessage([
+      'discussion_id'=>$request->get('id'),
+      'direction'=>ChatMessage::DIRECTION_OUT
+    ]);
+    $message->fill($request->all());
+    $message->save();
+
+    $request->merge([ 'action'=>'load-next|' . $request->get('last_id') ]);
+
+    return [
+      [ 'type'=>'script', 'script'=>"$('.chat-admin').chatadmin_clear()" ]
+    ];
+  }
+
 
 
   protected function getParams(Request $request, array $params = []){

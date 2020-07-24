@@ -12,7 +12,8 @@
     </div>
     @if(isset($task->id))
     <div class="align-center">
-      <span class="tabs less vmart-1" data-cont=".scheduled-task-edit-tabcont">
+      <span class="tabs less vmart-1" data-cont=".scheduled-task-edit-tabcont"
+            data-onchange="$('.scheduled-result-stack').css({ height:$('.scheduled-task-edit-tabcont').height() - 20 })">
         <span class="item active">Properties</span><span class="item">Result</span>
       </span>
     </div>
@@ -75,31 +76,39 @@
       <div class="cls">
         <div class="pc-100">
 
-          <div class="grid">
-            <table>
-              <thead>
-                <tr>
-                  <th style="width:3%"></th>
-                  <th style="width:10%"><label>Status</label></th>
-                  <th style="width:15%"><label>Started</label></th>
-                  <th style="width:10%"><label>Ellapsed</label></th>
-                </tr>
-              </thead>
-              <tbody>
-              @if(isset($task->id))
-                @foreach($task->results as $result)
+          <div class="stack scheduled-result-stack scheduled-result-stack-{{ $task->id ?? '' }}" style="height:300px">
+            <div class="active">
+              <div class="grid">
+                <table>
+                  <thead>
                   <tr>
-                    <td>
-                      <span class="fa fa-bars pad-1 hidden"></span>
-                    </td>
-                    <td><label>{{ $result->status_text }}</label></td>
-                    <td><label>{{ $result->started_at->format('j M Y H:i') }}</label></td>
-                    <td><label>{{ $result->ellapsed }}s</label></td>
+                    <th style="width:3%"></th>
+                    <th style="width:10%"><label>Status</label></th>
+                    <th style="width:15%"><label>Started</label></th>
+                    <th style="width:10%"><label>Ellapsed</label></th>
                   </tr>
-                @endforeach
-              @endif
-              </tbody>
-            </table>
+                  </thead>
+                  <tbody>
+                  @if(isset($task->id))
+                    @forelse($results as $result)
+                      <tr>
+                        <td>
+                          <a href="/scheduled-task/{{ $task->id }}?action=open-result-detail&id={{ $result->id }}" class="async" data-push-state="0"><span class="fa fa-bars pad-1 selectable"></span></a>
+                        </td>
+                        <td><label>{{ $result->status_text }}</label></td>
+                        <td><label>{{ $result->started_at->format('j M Y H:i') }}</label></td>
+                        <td><label>{{ $result->ellapsed }}s</label></td>
+                      </tr>
+                    @empty
+                      <tr>
+                        <td colspan="4" class="align-center"><label>No result data</label></td>
+                      </tr>
+                    @endforelse
+                  @endif
+                  </tbody>
+                </table>
+              </div>
+            </div>
           </div>
 
         </div>

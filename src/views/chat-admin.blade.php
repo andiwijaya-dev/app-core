@@ -4,28 +4,32 @@
   <script type="text/javascript" src="/js/socket.io.js" defer></script>
 @endpush
 
+@section('chat-head')
+  <div class="pad-1 chat-admin-head hidden-sm">
+
+    <div class="row0">
+      <div class="col-6">
+        <h3 class="hpadl-1">{{ $title ?? 'Chat' }}</h3>
+      </div>
+      <div class="col-6 align-right">
+        <button class="min hpad-1 chat-admin-options" type="button" data-click-popup=".action-popup"><label><span class="fa fa-ellipsis-v"></span></label></button>
+        <div class="action-popup popup" data-ref=".chat-admin-options">
+          <a class="item block nowrap" href="{{ \Illuminate\Support\Facades\Request::url() }}?action=export">
+            <span class="fa fa-cloud-download-alt hmarr-05 selectable"></span>
+            Download
+          </a>
+        </div>
+      </div>
+    </div>
+
+  </div>
+@endsection
+
 @section('content')
 
   <div class="content chat-admin">
 
-    <div class="pad-1 chat-admin-head hidden-sm">
-
-      <div class="row0">
-        <div class="col-6">
-          <h3 class="hpadl-1">{{ $title ?? 'Chat' }}</h3>
-        </div>
-        <div class="col-6 align-right">
-          <button class="min hpad-1 chat-admin-options" type="button" data-click-popup=".action-popup"><label><span class="fa fa-ellipsis-v"></span></label></button>
-          <div class="action-popup popup" data-ref=".chat-admin-options">
-            <a class="item block nowrap" href="{{ \Illuminate\Support\Facades\Request::url() }}?action=export">
-              <span class="fa fa-cloud-download-alt hmarr-05 selectable"></span>
-              Download
-            </a>
-          </div>
-        </div>
-      </div>
-
-    </div>
+    @yield('chat-head')
 
     <div class="chat-admin-body">
 

@@ -2,9 +2,9 @@
 
   @case(\Andiwijaya\AppCore\Models\ChatMessage::DIRECTION_OUT)
   <div class="message direction-in" data-id="{{ $item->id }}">
-    <div class="text">
+    <span class="text">
       {!! $item->text !!}
-    </div>
+    </span>
     @if(isset($item->images[0]))
       <div class="pad-1">
         @foreach($item->images as $image)
@@ -20,9 +20,9 @@
 
   @case(\Andiwijaya\AppCore\Models\ChatMessage::DIRECTION_IN)
   <div class="message direction-out" data-id="{{ $item->id }}">
-    <div class="text">
+    <span class="text">
       {!! $item->text !!}
-    </div>
+    </span>
     @if(isset($item->images[0]))
       <div class="pad-1">
         @foreach($item->images as $image)

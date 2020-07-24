@@ -3,6 +3,7 @@
 namespace Andiwijaya\AppCore\Http\Controllers;
 
 use Andiwijaya\AppCore\Models\ScheduledTask;
+use Andiwijaya\AppCore\Models\ScheduledTaskResult;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Log;
 use Illuminate\Support\Facades\Session;
@@ -84,12 +85,27 @@ class ScheduledTaskController extends ListPageController2 {
     $task = ScheduledTask::findOrFail($id); //  TODO
     $readonly = $task->flag == 's';
 
+    $results = ScheduledTaskResult::where('task_id', $task->id)
+      ->orderBy('created_at', 'desc')
+      ->limit(10)
+      ->get();
+
     return view_modal($this->view_detail, [
       'id'=>'scheduled-task-edit',
       'width'=>480,
       'height'=>720,
-      'data'=>compact('task', 'readonly')
+      'data'=>compact('task', 'results', 'readonly')
     ]);
+  }
+
+  public function openResultDetail(Request $request){
+
+    $result = ScheduledTaskResult::findOrFail($request->get('id'));
+
+    return [
+      ".scheduled-result-stack-{$result->task_id}"=>'>>' . view('admin.sections.scheduled-task-result', compact('result'))->render(),
+      'script'=>"$('.scheduled-result-stack-{$result->task_id}').stack_activate()"
+    ];
   }
 
   public function run(Request $request, $id){
