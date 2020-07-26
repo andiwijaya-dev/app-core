@@ -184,7 +184,7 @@
 @section('content')
 
   <form method="get" class="async">
-    <div class="list-page">
+    <div class="list-page" id="{{ \Illuminate\Support\Str::slug($title) }}-page">
 
       <div>
         @yield('upper')
@@ -240,7 +240,7 @@
   @endpush
 @endif
 
-@push('head')
+@push('body-pre')
   <script type="text/javascript" src="/js/tinymce/tinymce.min.js"></script>
   {{--  <script src="https://cdn.tiny.cloud/1/k53ts3nziyi7rlczx4mysphbzjfojzqb2w3dwt8p0ttjx894/tinymce/5/tinymce.min.js" referrerpolicy="origin"/></script>--}}
 @endpush

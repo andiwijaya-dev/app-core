@@ -5,6 +5,7 @@ namespace Andiwijaya\AppCore\Models;
 use Andiwijaya\AppCore\Models\Traits\FilterableTrait;
 use Andiwijaya\AppCore\Models\Traits\LoggedTraitV3;
 use Carbon\Carbon;
+use Illuminate\Console\Command;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Support\Facades\Artisan;
 use Illuminate\Support\Facades\DB;
@@ -24,10 +25,11 @@ class ScheduledTask extends Model
     'description:like'
   ];
 
-  const STATUS_DISABLED = -1;
+  const STATUS_DISABLED = -2;
+  const STATUS_ERROR = -1;
   const STATUS_ACTIVE = 1;
   const STATUS_RUNNING = 2;
-  const STATUS_COMPLETED = 5;
+  const STATUS_COMPLETED = 3;
 
   const REPEAT_NONE = 0;
   const REPEAT_MINUTELY = 1;
@@ -46,6 +48,7 @@ class ScheduledTask extends Model
 
   protected $casts = [
     'repeat_custom'=>'array', // { every:{ n:1, unit:"day" }, max_count:10, except:{ dates:[], day:[] } }
+    'updated_at'=>'datetime'
   ];
 
   public function results(){
@@ -83,7 +86,7 @@ class ScheduledTask extends Model
   public function calculate()
   {
     $model = DB::table('scheduled_task_result')->where('task_id', $this->id)
-      ->select(DB::raw("COUNT(*) as `count`, SUM(case when `status` = " . ScheduledTaskResult::STATUS_ERROR .
+      ->select(DB::raw("COUNT(*) as `count`, SUM(case when `status` = " . ScheduledTask::STATUS_ERROR .
         " then 1 else 0 end) as `error`"));
     //exc($model->toSql());
     $res = $model->first();
@@ -98,7 +101,7 @@ class ScheduledTask extends Model
     if(in_array($this->status, [ self::STATUS_DISABLED ])) return;
 
     if($this->status == self::STATUS_RUNNING){
-      foreach($this->results->where('status', ScheduledTaskResult::STATUS_RUNNING) as $result)
+      foreach($this->results->where('status', ScheduledTask::STATUS_RUNNING) as $result)
         exec("kill -9 {$result->pid}");
     }
 
@@ -108,7 +111,7 @@ class ScheduledTask extends Model
     $this->save();
 
     $report = $this->results()->create([
-      'status'=>ScheduledTaskResult::STATUS_RUNNING,
+      'status'=>self::STATUS_RUNNING,
       'started_at'=>Carbon::now()->format('Y-m-d H:i:s'),
       'pid'=>getmypid()
     ]);
@@ -116,7 +119,7 @@ class ScheduledTask extends Model
     $exitCode = Artisan::call($this->command);
     $output = Artisan::output();
 
-    $report->status = $exitCode > 0 ? ScheduledTaskResult::STATUS_ERROR : ScheduledTaskResult::STATUS_COMPLETED;
+    $report->status = $exitCode > 0 ? self::STATUS_ERROR : self::STATUS_COMPLETED;
     $report->verbose = $output;
     $report->ellapsed = microtime(1) - $t1;
     $report->completed_at = Carbon::now()->format('Y-m-d H:i:s');
@@ -133,16 +136,57 @@ class ScheduledTask extends Model
     exec("php artisan scheduled-task:run --id={$this->id} > /Users/andiwijaya/www/kliknss/storage/logs/scheduled-task.log 2>&1 &", $output, $return_var);
   }
 
-  public static function check(){
+  public static function check(Command $cmd = null){
 
-    ScheduledTask::where('status', ScheduledTask::STATUS_ACTIVE)
+    ScheduledTask::where('status', '>=', ScheduledTask::STATUS_ACTIVE)
       ->orderBy('id')
-      ->chunk(1000, function($tasks){
+      ->chunk(1000, function($tasks) use($cmd){
 
         foreach($tasks as $task){
 
-          if($task->repeat == self::REPEAT_NONE && $task->count <= 0)
-            $this->runInBackground();
+          switch($task->repeat){
+
+            case self::REPEAT_NONE:
+              if($task->count <= 0){
+                if($cmd) $cmd->info("Run in background {$task->id}");
+
+                $task->runInBackground();
+              }
+              break;
+
+            case self::REPEAT_MINUTELY:
+              if(strtotime($task->start) < time() && (Carbon::now()->format('YmdHi') - $task->updated_at->format('YmdHi')) >= 1){
+                if($cmd) $cmd->info("Run in background {$task->id} (every minute)");
+
+                $task->runInBackground();
+              }
+              break;
+
+            case self::REPEAT_HOURLY:
+              if(strtotime($task->start) < time() && (Carbon::now()->format('YmdH') - $task->updated_at->format('YmdH')) >= 1){
+                if($cmd) $cmd->info("Run in background {$task->id} (every hour)");
+
+                $task->runInBackground();
+              }
+              break;
+
+            case self::REPEAT_DAILY:
+              if(strtotime($task->start) < time() && (Carbon::now()->format('Ymd') - $task->updated_at->format('Ymd')) >= 1){
+                if($cmd) $cmd->info("Run in background {$task->id} (every day)");
+
+                $task->runInBackground();
+              }
+              break;
+
+            case self::REPEAT_MONTHLY:
+              if(strtotime($task->start) < time() && (Carbon::now()->format('Ym') - $task->updated_at->format('Ym')) >= 1){
+                if($cmd) $cmd->info("Run in background {$task->id} (every month)");
+
+                $task->runInBackground();
+              }
+              break;
+
+          }
 
         }
 
@@ -250,6 +294,32 @@ class ScheduledTask extends Model
 
   }
 
+
+  public function getRepeatTextAttribute(){
+
+    switch($this->repeat){
+
+      case self::REPEAT_MINUTELY: return 'Every minute';
+      case self::REPEAT_HOURLY: return 'Every hour';
+      case self::REPEAT_DAILY: return 'Every day';
+      case self::REPEAT_MONTHLY: return 'Every month';
+      default: return '';
+
+    }
+  }
+
+  public function getStatusTextAttribute(){
+
+    switch($this->status){
+
+      case self::STATUS_DISABLED: return 'Disabled';
+      case self::STATUS_ACTIVE: return 'Active';
+      case self::STATUS_RUNNING: return 'Running';
+      case self::STATUS_COMPLETED: return 'Completed';
+      case self::STATUS_ERROR: return 'Error';
+    }
+  }
+
   public function getStatusHtmlAttribute(){
 
     $html = [ "<div class='pad-1'>" ];
@@ -260,6 +330,7 @@ class ScheduledTask extends Model
       case self::STATUS_ACTIVE: $html[] = "<span class='badge green'><span>Active</span></span>"; break;
       case self::STATUS_RUNNING: $html[] = "<span class='badge yellow'><span>Running</span></span>"; break;
       case self::STATUS_COMPLETED: $html[] = "<span class='badge blue'><span>Completed</span></span>"; break;
+      case self::STATUS_ERROR: $html[] = "<span class='badge red'><span>Error</span></span>"; break;
     }
 
     $html[] = "</div>";

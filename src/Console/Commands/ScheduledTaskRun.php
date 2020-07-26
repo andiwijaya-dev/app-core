@@ -28,7 +28,7 @@ class ScheduledTaskRun extends Command
     if($id > 0)
       ($task = ScheduledTask::find($id)) ? $task->run() : Log::info("schedule-task:run {$id} task not found");
     else
-      ScheduledTask::check();
+      ScheduledTask::check($this);
 
     $this->info("Completed in " . (microtime(1) - LARAVEL_START));
   }

@@ -16,7 +16,8 @@ class ChatMessage extends Model
 
   protected $table = 'chat_message';
 
-  protected $fillable = [ 'discussion_id', 'unread', 'direction', 'text', 'images', 'extra', 'notified', 'unsent', 'context' ];
+  protected $fillable = [ 'discussion_id', 'unread', 'direction', 'text', 'images', 'extra', 'notified', 'unsent',
+    'context', 'is_bot' ];
 
   protected $attributes = [
     'unread'=>1,
@@ -35,6 +36,27 @@ class ChatMessage extends Model
   public function discussion()
   {
     return $this->belongsTo('Andiwijaya\AppCore\Models\ChatDiscussion', 'discussion_id', 'id');
+  }
+
+
+  public function getHtmlAttribute(){
+
+    // Find link
+    //https://www.google.com
+    // www.google.com
+
+    preg_match_all('/([http:\/\/|https:\/\/]*\w+\.\w+\.\w+[\.\w]*[\/]*[\S]+)/', $this->text, $matches);
+
+    if(isset($matches[0]) && is_array($matches[0])){
+
+      foreach($matches[0] as $link){
+
+        $this->text = str_replace($link, "<a href=\"{$link}\">{$link}</a>", $this->text);
+      }
+    }
+
+
+    return nl2br($this->text);
   }
 
 

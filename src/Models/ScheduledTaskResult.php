@@ -6,10 +6,6 @@ use Illuminate\Database\Eloquent\Model;
 
 class ScheduledTaskResult extends Model{
 
-  const STATUS_RUNNING = 1;
-  const STATUS_COMPLETED = 2;
-  const STATUS_ERROR = -1;
-
   protected $table = 'scheduled_task_result';
 
   protected $fillable = [ 'task_id', 'status', 'verbose', 'started_at', 'completed_at',
@@ -20,14 +16,15 @@ class ScheduledTaskResult extends Model{
     'completed_at'=>'datetime',
   ];
 
-
   public function getStatusTextAttribute(){
 
     switch($this->status){
 
-      case self::STATUS_RUNNING: return 'Running';
-      case self::STATUS_COMPLETED: return 'Completed';
-      case self::STATUS_ERROR: return 'Error';
+      case ScheduledTask::STATUS_DISABLED: return 'Disabled';
+      case ScheduledTask::STATUS_ACTIVE: return 'Active';
+      case ScheduledTask::STATUS_RUNNING: return 'Running';
+      case ScheduledTask::STATUS_COMPLETED: return 'Completed';
+      case ScheduledTask::STATUS_ERROR: return 'Error';
     }
   }
 

@@ -48,12 +48,11 @@
             </div>
 
             <div class="pad-1">
-              <button class="hidden" name="action" value="search"></button>
+              <button class="block hidden" name="action" value="view"></button>
               <div class="textbox">
                 <input type="text" class="list-search" name="search" placeholder="@lang('text.search')..." value="{{ $search ?? '' }}"/>
                 <span class="icon fa fa-search"></span>
               </div>
-              <button class="block hidden" name="action" value="fetch"></button>
             </div>
           </div>
 
@@ -82,7 +81,7 @@
           <div class="chat-message-foot">
             @csrf
             @if(isset($discussion))
-              @component('andiwijaya::components.chat-admin-message-foot', compact('discussion'))@endcomponent
+              @component($view_message_foot, compact('discussion'))@endcomponent
             @endif
           </div>
         </form>

@@ -29,6 +29,8 @@ class ChatAdminController extends BaseController
   public $view_discussion_item = 'andiwijaya::components.chat-admin-discussion-item';
   public $view_discussion_no_item = 'andiwijaya::components.chat-admin-discussion-no-item';
   public $view_message_item = 'andiwijaya::components.chat-admin-message-item';
+  public $view_message_foot = 'andiwijaya::components.chat-admin-message-foot';
+
 
   public $channel_discussion = 'chat-admin-discussion';
 
@@ -39,6 +41,7 @@ class ChatAdminController extends BaseController
 
     $action = isset(($actions = explode('|', $request->get('action', 'view')))[0]) ? $actions[0] : '';
     $method = action2method($action);
+
     if(method_exists($this, $method))
       return call_user_func_array([ $this, $method ], func_get_args());
   }
@@ -126,6 +129,8 @@ class ChatAdminController extends BaseController
   }
 
   public function loadMore(Request $request){
+
+    $actions = explode('|', $request->get('action', 'view'));
 
     $filter = $request->get('filter');
     $after_id = $actions[1] ?? null;
@@ -254,6 +259,7 @@ class ChatAdminController extends BaseController
       'prev_id'=>$prev_id,
       'last_id'=>$last_id,
       'view_message_item'=>$this->view_message_item,
+      'view_message_foot'=>$this->view_message_foot,
       'storage'=>$this->storage
     ];
 
@@ -344,6 +350,23 @@ class ChatAdminController extends BaseController
         'Content-Disposition' => 'attachment; filename="chat-' . Carbon::now()->format('Y-m-d-H-i-s') . '.csv"',
       ]);
 
+  }
+
+  public function beginChat(Request $request){
+
+    $discussion = ChatDiscussion::find($request->get('id'));
+
+    if($discussion->handled_by > 0 && $discussion->handled_by != $this->user->id)
+      exc(__('text.chat-admin-discussion-unable-to-begin-chat', [
+        'name'=>ucwords(strtolower($discussion->handled_by_user->name ?? ''))
+      ]));
+
+    $discussion->handled_by = $this->user->id;
+    $discussion->save();
+
+    return [
+      '.chat-admin .chat-message-foot'=>view($this->view_message_foot, compact('discussion'))->render()
+    ];
   }
 
   public function handle(ChatEvent $event)

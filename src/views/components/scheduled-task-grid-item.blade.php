@@ -11,22 +11,13 @@
   <td>{!! $item->status_html !!}</td>
   <td><label>{!! $item->description !!}</label></td>
   <td>
-    <label>
-      @switch($item->repeat)
-        @case(\Andiwijaya\AppCore\Models\ScheduledTask::REPEAT_NONE)
-          Once
-        @break
-      @endswitch
-    </label>
+    <span>{{ $item->repeat_text }}</span>
+    @if($item->start)
+    <br /><small class="less">from {{ $item->start }}</small>
+    @endif
   </td>
   <td>
-    <label>
-      @if(!$item->start)
-        Immediately
-      @else
-        {{ $item->start }}
-      @endif
-    </label>
+    <label>{{ $item->updated_at->format('j M Y H:i') }}</label>
   </td>
   <td>
     <label>

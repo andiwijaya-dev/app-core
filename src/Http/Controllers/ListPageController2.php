@@ -10,6 +10,7 @@ use Illuminate\Support\Collection;
 use Illuminate\Routing\Controller as BaseController;
 use Illuminate\Support\Facades\Log;
 use Illuminate\Support\Facades\Redis;
+use Illuminate\Support\Str;
 
 class ListPageController2 extends BaseController{
 
@@ -76,8 +77,8 @@ class ListPageController2 extends BaseController{
           $updates[] = [
             'type'=>'script',
             'script'=>implode(';', [
-              "$('.list-page .grid-content-tbody tr[data-id={$event->id}]').remove()",
-              "$('.list-page .feed-content .item[data-id={$event->id}]').remove()",
+              "$('#" . Str::slug($this->title) . " .grid-content-tbody tr[data-id={$event->id}]').remove()",
+              "$('#" . Str::slug($this->title) . " .feed-content .item[data-id={$event->id}]').remove()",
             ])
           ];
         }
@@ -89,14 +90,14 @@ class ListPageController2 extends BaseController{
           $updates[] = [
             'type' => 'element',
             'html' => view($this->view_grid_item, ['item' => $model ])->render(),
-            'parent' => '.list-page .grid-content-tbody',
+            'parent' => '#' . Str::slug($this->title) . ' .grid-content-tbody',
             'mode' => 'prepend'
           ];
 
           $updates[] = [
             'type' => 'element',
             'html' => view($this->view_feed_item, ['item' => $model ])->render(),
-            'parent' => '.list-page .feed-content',
+            'parent' => '#' . Str::slug($this->title) . ' .feed-content',
             'mode' => 'prepend'
           ];
         }

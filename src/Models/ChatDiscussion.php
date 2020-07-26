@@ -7,6 +7,7 @@ use Andiwijaya\AppCore\Models\Traits\LoggedTraitV3;
 use Andiwijaya\AppCore\Events\ChatEvent;
 use App\Mail\ChatDiscussionCustomerNotification;
 use Carbon\Carbon;
+use Illuminate\Console\Command;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Mail;
@@ -24,7 +25,8 @@ class ChatDiscussion extends Model
     'name:like',
   ];
 
-  protected $fillable = [ 'status', 'avatar_image_url', 'key', 'name', 'title', 'extra', 'unreplied_count', 'last_replied_at' ];
+  protected $fillable = [ 'status', 'avatar_image_url', 'key', 'name', 'title', 'extra', 'unreplied_count',
+    'handled_by', 'last_replied_at', 'context' ];
 
   protected $attributes = [
     'status'=>self::STATUS_OPEN,
@@ -37,6 +39,11 @@ class ChatDiscussion extends Model
 
   const STATUS_OPEN = 1;
   const STATUS_CLOSED = -1;
+
+  public function handled_by_user(){
+
+    return $this->belongsTo('Andiwijaya\AppCore\Models\User', 'handled_by');
+  }
 
   public function messages()
   {
@@ -144,6 +151,28 @@ class ChatDiscussion extends Model
           call_user_func_array($callback, [ "Notification to {$discussion->key} sent." ]);
       }
     }
+  }
+
+  public static function detachHandled(Command $cmd = null){
+
+    DB::table('chat_discussion')
+      ->select(DB::raw("`id`, (SELECT updated_at FROM chat_message WHERE discussion_id = chat_discussion.id ORDER BY `id` DESC LIMIT 1) as last_updated_at"))
+      ->where('handled_by', '>', 0)
+      ->get()
+      ->each(function($discussion) use($cmd){
+
+        if(Carbon::create($discussion->last_updated_at)->diffInMinutes() > 5){
+          $cmd->info("Close discussion {$discussion->id}");
+
+          ChatDiscussion::findOrFail($discussion->id)->update([ 'handled_by'=>null ]);
+        }
+
+      });
+  }
+
+  public static function check(Command $command = null){
+
+    self::detachHandled($command);
   }
 
 }

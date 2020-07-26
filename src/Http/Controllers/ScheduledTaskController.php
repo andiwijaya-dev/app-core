@@ -11,6 +11,7 @@ use Illuminate\Support\Facades\Session;
 class ScheduledTaskController extends ListPageController2 {
 
   public $model = ScheduledTask::class;
+  public $model_result = ScheduledTaskResult::class;
 
   public $exportable = false;
 
@@ -23,7 +24,7 @@ class ScheduledTaskController extends ListPageController2 {
 
   public function create(Request $request){
 
-    $task = new ScheduledTask();
+    $task = new $this->model();
     $readonly = false;
 
     return view_modal($this->view_detail, [
@@ -51,7 +52,7 @@ class ScheduledTaskController extends ListPageController2 {
       $instance->fill($request->all());
       $instance->save();
 
-      if($instance->repeat == ScheduledTask::REPEAT_NONE && $instance->count <= 0)
+      if($instance->repeat == $this->model::REPEAT_NONE && $instance->count <= 0)
         $instance->runInBackground();
 
       return view_append([
@@ -82,10 +83,10 @@ class ScheduledTaskController extends ListPageController2 {
 
   public function open(Request $request, $id){
 
-    $task = ScheduledTask::findOrFail($id); //  TODO
+    $task = $this->model::findOrFail($id); //  TODO
     $readonly = $task->flag == 's';
 
-    $results = ScheduledTaskResult::where('task_id', $task->id)
+    $results = $this->model_result::where('task_id', $task->id)
       ->orderBy('created_at', 'desc')
       ->limit(10)
       ->get();
@@ -100,7 +101,7 @@ class ScheduledTaskController extends ListPageController2 {
 
   public function openResultDetail(Request $request){
 
-    $result = ScheduledTaskResult::findOrFail($request->get('id'));
+    $result = $this->model_result::findOrFail($request->get('id'));
 
     return [
       ".scheduled-result-stack-{$result->task_id}"=>'>>' . view('admin.sections.scheduled-task-result', compact('result'))->render(),
@@ -110,7 +111,7 @@ class ScheduledTaskController extends ListPageController2 {
 
   public function run(Request $request, $id){
 
-    $task = ScheduledTask::findOrFail($id); //  TODO
+    $task = $this->model::findOrFail($id); //  TODO
     $task->runInBackground();
 
     return [

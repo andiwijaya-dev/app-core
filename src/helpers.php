@@ -1308,3 +1308,13 @@ if(!function_exists('appcore_boot')){
   }
 
 }
+
+if(!function_exists('checked_if')){
+
+  function checked_if($key, $arr){
+
+    if(is_array($arr))
+      return in_array($key, $arr) ? ' checked' : '';
+    return '';
+  }
+}
