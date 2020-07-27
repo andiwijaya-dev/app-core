@@ -5,6 +5,7 @@ namespace Andiwijaya\AppCore\Http\Controllers;
 use Andiwijaya\AppCore\Events\ChatEvent;
 use Andiwijaya\AppCore\Models\ChatDiscussion;
 use Andiwijaya\AppCore\Models\ChatMessage;
+use App\Models\Customer;
 use Carbon\Carbon;
 use Faker\Factory;
 use Illuminate\Foundation\Auth\Access\AuthorizesRequests;
@@ -414,7 +415,7 @@ class ChatAdminController extends BaseController
 
     if(isset($event->message) && $event->message->direction == ChatMessage::DIRECTION_IN){
 
-      $title = "Pesan baru dari {$event->discussion->key}";
+      $title = "Pesan baru dari " . (Customer::find($event->discussion->key)->name ?? '');
       $description = substr($event->message->text, 0, 30) . '...';
       $target = "/chat-admin/{$event->discussion->id}";
       Redis::publish(

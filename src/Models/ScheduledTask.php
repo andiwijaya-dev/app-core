@@ -133,7 +133,7 @@ class ScheduledTask extends Model
 
     chdir(base_path());
 
-    exec("php artisan scheduled-task:run --id={$this->id} > /Users/andiwijaya/www/kliknss/storage/logs/scheduled-task.log 2>&1 &", $output, $return_var);
+    exec("php artisan scheduled-task:run --id={$this->id} > /dev/null 2>&1 &", $output, $return_var);
   }
 
   public static function check(Command $cmd = null){
