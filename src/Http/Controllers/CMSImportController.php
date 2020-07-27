@@ -200,7 +200,7 @@ class CMSImportController extends BaseController{
               }
 
               if(!($column['optional'] ?? false) && !isset($this->columns[$key]['csv_index']))
-                exc(__('text.import-required-column-not-found'));
+                exc(__('text.import-required-column-not-found', [ 'text'=>$column['text'] ?? '' ]));
             }
           }
 
