@@ -25,7 +25,7 @@
           <h1>{{ $title }}</h1>
         </div>
         <div class="col-lg-8 col-sm-9 align-right">
-          <button class="hidden" name="action" value="search"></button>
+          <button class="hidden" name="action" value="fetch"></button>
 
           @yield('upper-options')
 
@@ -167,7 +167,7 @@
 
         <div class="col-12">
           <div class="vmart-3">
-            <button class="hpad-1 more apply-filter" name="action" value="filter"><label>Apply</label></button>
+            <button class="hpad-1 more apply-filter" name="action" value="view"><label>Apply</label></button>
             <button class="hpad-1" name="action" value="reset"><label>Reset</label></button>
           </div>
         </div>

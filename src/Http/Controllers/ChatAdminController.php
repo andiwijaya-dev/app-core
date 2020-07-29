@@ -209,7 +209,7 @@ class ChatAdminController extends BaseController
     $prev_id = isset($actions[1]) ? $actions[1] : null;
     $last_id = isset($actions[1]) ? $actions[1] : null;
 
-    $discussion = ChatDiscussion::find($id);
+    $discussion = ChatDiscussion::findOrFail($id);
 
     $model = ChatMessage::whereDiscussionId($id)
       ->orderBy('created_at', 'desc')
@@ -254,6 +254,8 @@ class ChatAdminController extends BaseController
     $messages = $messages->splice(0, $item_per_page)->reverse();
     $last_id = $messages->pluck('id')->last();
 
+    $customer_is_online = count(Redis::pubsub('channels', 'customer-discussion-' . $discussion->id)) > 0;
+
     $params = [
       'discussion'=>$discussion,
       'messages'=>$messages,
@@ -261,7 +263,8 @@ class ChatAdminController extends BaseController
       'last_id'=>$last_id,
       'view_message_item'=>$this->view_message_item,
       'view_message_foot'=>$this->view_message_foot,
-      'storage'=>$this->storage
+      'storage'=>$this->storage,
+      'customer_is_online'=>$customer_is_online
     ];
 
     switch($action){
@@ -299,6 +302,16 @@ class ChatAdminController extends BaseController
         ];
 
     }
+  }
+
+  public function checkOnline(Request $request){
+
+    $discussion = ChatDiscussion::findOrFail($request->get('discussion_id'));
+    $customer_is_online = count(Redis::pubsub('channels', 'customer-discussion-' . $request->get('discussion_id'))) > 0;
+
+    return [
+      '.customer-is-online'=>view('andiwijaya::components.chat-admin-online-status', compact('customer_is_online', 'discussion'))->render()
+    ];
   }
 
   public function store(Request $request){

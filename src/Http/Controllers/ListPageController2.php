@@ -148,6 +148,8 @@ class ListPageController2 extends BaseController{
 
     if($action && $request->ajax()){
 
+      $sections = view($this->view, $params)->renderSections();
+
       return [
         '.grid-thead'=>view($this->view_grid_head, [ 'sorts'=>$params['sorts'], 'sortable'=>$params['sortable'] ])->render(),
         '.grid-content-tbody'=>$sections['desktop-list-items'],
@@ -159,6 +161,11 @@ class ListPageController2 extends BaseController{
 
       return view($this->view, $params);
     }
+  }
+
+  public function view(){
+
+    return call_user_func_array([ $this, 'fetch' ], func_get_args());
   }
 
   public function loadMore(Request $request){

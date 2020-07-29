@@ -389,7 +389,7 @@ class ChatController{
       '.chat-popup-body'=>$sections['intro'],
       '.chat-popup-foot'=>'',
       'script'=>implode(';', [
-        "$.chat_popup_close()"
+        "$.chat_popup_close()",
       ])
     ];
 

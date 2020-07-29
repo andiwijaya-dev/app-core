@@ -8,6 +8,6 @@
 
 @if($after_id > 0)
   <div class="load-more">
-    <button class="min block" name="action" value="load-more|{{ $after_id }}"><label class="less">@lang('text.load-more')...</label></button>
+    <button class="min block" name="action" value="load-more|{{ $after_id }}"><label class="less">@lang('text.load-more')</label></button>
   </div>
 @endif
