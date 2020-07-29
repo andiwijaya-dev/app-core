@@ -94,12 +94,13 @@ class ChatDiscussion extends Model
       'discussion_id'=>$this->id,
       'direction'=>ChatMessage::DIRECTION_OUT
     ])
+      ->where('is_system', '<>', 1)
       ->orderBy('created_at', 'desc')
       ->first();
 
     $this->unreplied_count = isset($last_replied->id) ?
-      ChatMessage::whereDiscussionId($this->id)->where('id', '>', $last_replied->id)->where('direction', ChatMessage::DIRECTION_IN)->count() :
-      ChatMessage::whereDiscussionId($this->id)->where('direction', ChatMessage::DIRECTION_IN)->count();
+      ChatMessage::whereDiscussionId($this->id)->where('is_system', '<>', 1)->where('id', '>', $last_replied->id)->where('direction', ChatMessage::DIRECTION_IN)->count() :
+      ChatMessage::whereDiscussionId($this->id)->where('is_system', '<>', 1)->where('direction', ChatMessage::DIRECTION_IN)->count();
 
     parent::save();
   }
@@ -173,6 +174,43 @@ class ChatDiscussion extends Model
   public static function check(Command $command = null){
 
     self::detachHandled($command);
+  }
+
+  public static function sendOfflineMessage($discussion_id){
+
+    $discussion = ChatDiscussion::find($discussion_id);
+
+    if($discussion){
+
+      $offline_message_at = Carbon::createFromTimeString(date('Y-m-d H:i:s', strtotime($discussion->extra['offline_message_at'] ?? null)));
+
+      $offline = self::isOffline();
+      if($offline && config('chat.offline-message') && $offline_message_at->diffInHours() > 2){
+
+        $message = new ChatMessage([
+          'discussion_id'=>$discussion_id,
+          'direction'=>ChatMessage::DIRECTION_OUT,
+          'text'=>config('chat.offline-message'),
+          'is_system'=>1,
+          'extra'=>[ 'name'=>'Tara', 'avatar_url'=>'chat-figure.png' ],
+        ]);
+        $message->save();
+
+        $extra = $discussion->extra;
+        $extra['offline_message_at'] = Carbon::now()->format('Y-m-d H:i:s');
+
+        $discussion->extra = $extra;
+        $discussion->save();
+      }
+    }
+
+  }
+
+  public static function isOffline(){
+
+    return !(in_array(Carbon::now()->format('N'), config('chat.online-days', [])) &&
+      strtotime(Carbon::createFromFormat('H:i', config('chat.online-start'))) <= ($now = Carbon::now()->unix()) &&
+      strtotime(Carbon::createFromFormat('H:i', config('chat.online-end'))) >= $now);
   }
 
 }
