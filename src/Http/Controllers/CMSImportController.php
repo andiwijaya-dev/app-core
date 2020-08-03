@@ -107,7 +107,14 @@ class CMSImportController extends BaseController{
         $csv_path = Storage::disk($this->disk)->path($this->sub_dir) . '/' . $filename;
       }
 
-      $rows = Excel::toArray(new GenericImport, $csv_path);
+      if($request->file('file')->getClientOriginalExtension() == 'csv'){
+
+        $sheets = array_map('str_getcsv', file($csv_path));
+        $rows = [ $sheets ];
+      }
+      else{
+        $rows = Excel::toArray(new GenericImport, $csv_path);
+      }
 
       $csv_columns = array_filter($rows[0][0] ?? []);
 
@@ -153,8 +160,12 @@ class CMSImportController extends BaseController{
         );
 
         $rows = [];
-        foreach($files as $csv_path)
-          $rows = array_merge($rows, Excel::toArray(new GenericImport, $csv_path));
+        foreach($files as $csv_path){
+          if(strpos($csv_path, '.csv') !== false)
+            $rows = array_merge($rows, csv_to_array($csv_path));
+          else
+            $rows = array_merge($rows, Excel::toArray(new GenericImport, $csv_path));
+        }
 
         $files = rglob("{$path}/*.*");
         $_files = [];
@@ -169,7 +180,10 @@ class CMSImportController extends BaseController{
       else{
 
         $csv_path = $path;
-        $rows = Excel::toArray(new GenericImport, $csv_path);
+        if(strpos($csv_path, '.csv') !== false)
+          $rows = csv_to_array($csv_path);
+        else
+          $rows = Excel::toArray(new GenericImport, $csv_path);
       }
 
       // Convert mapped column text to index

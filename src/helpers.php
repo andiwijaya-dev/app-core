@@ -1215,6 +1215,16 @@ if(!function_exists('money_alias')){
 
 }
 
+if(!function_exists('csv_to_array')){
+
+  function csv_to_array($path){
+
+    $sheets = array_map('str_getcsv', file($path));
+    $rows = [ $sheets ];
+    return $rows;
+  }
+}
+
 if(!function_exists('assets_version')){
 
   function assets_version(){

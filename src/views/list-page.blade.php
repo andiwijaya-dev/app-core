@@ -184,7 +184,8 @@
 @section('content')
 
   <form method="get" class="async">
-    <div class="list-page" id="{{ \Illuminate\Support\Str::slug($title) }}-page">
+
+    <div class="list-page" id="{{ $meta['id'] ?? '' }}">
 
       <div>
         @yield('upper')

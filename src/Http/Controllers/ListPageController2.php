@@ -10,6 +10,7 @@ use Illuminate\Support\Collection;
 use Illuminate\Routing\Controller as BaseController;
 use Illuminate\Support\Facades\Log;
 use Illuminate\Support\Facades\Redis;
+use Illuminate\Support\Facades\View;
 use Illuminate\Support\Str;
 
 class ListPageController2 extends BaseController{
@@ -27,6 +28,8 @@ class ListPageController2 extends BaseController{
 
   public $exportable = true;
 
+  protected $meta;
+
   public $sortable = [
     //'name'=>[ 'text'=>'Project Name'],
   ];
@@ -36,6 +39,15 @@ class ListPageController2 extends BaseController{
     //'business_id'=>[ 'text'=>'Business Name', 'type'=>'builder', 'class'=>Business::class, 'item_text_key'=>'name' ],
     //'date'=>'Date|date-range'
   ];
+
+  public function __construct()
+  {
+    $this->meta = [
+      'id'=>Str::slug($this->title) . '-page'
+    ];
+
+    View::share('meta', $this->meta);
+  }
 
   public function index(Request $request){
 
