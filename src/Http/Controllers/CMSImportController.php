@@ -207,7 +207,7 @@ class CMSImportController extends BaseController{
             if(isset($column['mapped_to'])){
 
               foreach($headers as $headeridx=>$text){
-                if($text == $column['mapped_to']){
+                if(trim($text) == $column['mapped_to']){
                   $this->columns[$key]['csv_index'] = $headeridx;
                   break;
                 }
