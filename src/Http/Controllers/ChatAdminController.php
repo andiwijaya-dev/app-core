@@ -26,6 +26,8 @@ class ChatAdminController extends BaseController
   public $path = ''; // Required for message notification onclick target
   public $title = ''; // Required for message notification onclick target
 
+  public $model = ChatDiscussion::class;
+
   public $view = 'andiwijaya::chat-admin';
   public $view_discussion_item = 'andiwijaya::components.chat-admin-discussion-item';
   public $view_discussion_no_item = 'andiwijaya::components.chat-admin-discussion-no-item';
@@ -55,7 +57,7 @@ class ChatAdminController extends BaseController
     $after_id = $actions[1] ?? null;
     $item_per_page = 10;
 
-    $model = ChatDiscussion::
+    $model = $this->model::
     whereExists(function($query){
       $query->select(DB::raw(1))
         ->from('chat_message')
@@ -137,7 +139,7 @@ class ChatAdminController extends BaseController
     $after_id = $actions[1] ?? null;
     $item_per_page = 10;
 
-    $model = ChatDiscussion::
+    $model = $this->model::
     whereExists(function($query){
       $query->select(DB::raw(1))
         ->from('chat_message')
@@ -209,7 +211,7 @@ class ChatAdminController extends BaseController
     $prev_id = isset($actions[1]) ? $actions[1] : null;
     $last_id = isset($actions[1]) ? $actions[1] : null;
 
-    $discussion = ChatDiscussion::findOrFail($id);
+    $discussion = $this->model::findOrFail($id);
 
     $model = ChatMessage::whereDiscussionId($id)
       ->orderBy('created_at', 'desc')
@@ -306,7 +308,7 @@ class ChatAdminController extends BaseController
 
   public function checkOnline(Request $request){
 
-    $discussion = ChatDiscussion::findOrFail($request->get('discussion_id'));
+    $discussion = $this->model::findOrFail($request->get('discussion_id'));
     $customer_is_online = count(Redis::pubsub('channels', 'customer-discussion-' . $request->get('discussion_id'))) > 0;
 
     return [
@@ -368,7 +370,7 @@ class ChatAdminController extends BaseController
 
   public function beginChat(Request $request){
 
-    $discussion = ChatDiscussion::find($request->get('id'));
+    $discussion = $this->model::find($request->get('id'));
 
     if($discussion->handled_by > 0 && $discussion->handled_by != $this->user->id)
       exc(__('text.chat-admin-discussion-unable-to-begin-chat', [
@@ -444,7 +446,7 @@ class ChatAdminController extends BaseController
   public function sendMessage(Request $request){
 
     $discussion_id = $request->get('id');
-    $discussion = ChatDiscussion::where([
+    $discussion = $this->model::where([
       'id'=>$discussion_id
     ])
       ->first();
@@ -489,5 +491,4 @@ class ChatAdminController extends BaseController
     return $obj;
 
   }
-
 }

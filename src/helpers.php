@@ -1030,7 +1030,7 @@ EOL;
         $html .= <<<EOL
       <div class="dropdown block">
         <select name="{$key}[date_range]" onchange="this.value == 'custom' ? $('.lpfdc-{$key}').removeClass('hidden') : $('.lpfdc-{$key}').addClass('hidden')">
-          <option value="" disabled selected>Select...</option>
+          <option value="" selected>Semua Tanggal</option>
           <option value="this-month">This Month</option>
           <option value="this-week">This Week</option>
           <option value="yesterday">Yesterday</option>
@@ -1041,18 +1041,18 @@ EOL;
           <option value="this-year">This Decade</option>
           <option value="custom">Custom</option>
         </select>
-        <span class="icon icon-circle-down icon-caret-down"></span>
+        <span class="icon icon-circle-down fa fa-caret-down"></span>
       </div>
       <div class="lpfdc-{$key} hidden">
         <label class="block vmarb-0">From</label>
         <div class="datepicker">
           <input type="text" name="{$key}[date_range_from]" value="{$custom_from}"/>
-          <span class="icon icon-calendar"></span>
+          <span class="icon icon-calendar fa fa-calendar"></span>
         </div>
         <label class="block vmarb-0">To</label>
         <div class="datepicker">
           <input type="text" name="{$key}[date_range_to]" value="{$custom_to}"/>
-          <span class="icon icon-calendar"></span>
+          <span class="icon icon-calendar fa fa-calendar"></span>
         </div>
       </div>
 EOL;
