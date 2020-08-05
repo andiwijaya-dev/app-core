@@ -7,5 +7,5 @@
   <td><span class="img unloaded rat-88" data-src="/images/"></span></td>
   <td><label>{{ $item->name ?? '' }}</label></td>
   <td></td>
-  <td><label>{{ $item->created_at->diffForHumans() }}</label></td>
+  <td><label>{{ $item->created_at }}</label></td>
 </tr>

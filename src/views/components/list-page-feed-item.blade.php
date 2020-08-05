@@ -6,7 +6,7 @@
       </div>
       <div class="col-10">
         <strong>{{ $item->name ?? '' }}</strong><br />
-        <small class="less">{{ $item->created_at->diffForHumans() ?? '' }}</small>
+        <small class="less">{{ $item->created_at ?? '' }}</small>
       </div>
     </div>
   </a>

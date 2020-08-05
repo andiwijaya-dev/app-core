@@ -43,7 +43,8 @@ class ListPageController2 extends BaseController{
   public function __construct()
   {
     $this->meta = [
-      'id'=>Str::slug($this->title) . '-page'
+      'id'=>Str::slug($this->title) . '-page',
+      'feed_id'=>Str::slug($this->title) . '-feed'
     ];
 
     View::share('meta', $this->meta);
@@ -52,6 +53,15 @@ class ListPageController2 extends BaseController{
   public function index(Request $request){
 
     $action = isset(($actions = explode('|', $request->get('action', 'fetch')))[0]) ? $actions[0] : '';
+
+    $method = action2method($action);
+    if(method_exists($this, $method))
+      return call_user_func_array([ $this, $method ], func_get_args());
+  }
+
+  public function store(Request $request){
+
+    $action = isset(($actions = explode('|', $request->get('action', 'save')))[0]) ? $actions[0] : '';
 
     $method = action2method($action);
     if(method_exists($this, $method))

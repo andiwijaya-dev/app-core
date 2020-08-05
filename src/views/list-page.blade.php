@@ -71,7 +71,7 @@
 @section('mobile-list')
 
   <div class="vpad-1 mobile-content">
-    <div class="feed">
+    <div class="feed" id="{{ $meta['feed_id'] ?? '' }}">
       <div class="feed-content">
         @foreach($items as $idx=>$item)
           @component($view_feed_item, [ 'item'=>$item, 'idx'=>$idx ])@endcomponent
