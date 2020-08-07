@@ -4,12 +4,14 @@
 
 @section('upper-options')
   @if($exportable)
-    <button class="max has-right" type="button" onclick="$.fetch('//{{ \Illuminate\Support\Facades\Request::getHost() . '/' .  \Illuminate\Support\Facades\Request::path() }}/create')"><label><span class="fa fa-plus selectable hmarr-05"></span> New...</label></button><button class="max has-left" type="button" data-click-popup=".action-popup">
-      <label>&nbsp;<span class="fa fa-caret-down selectable"></span>&nbsp;</label>
-    </button>
-    <div class="action-popup popup" data-ref=".has-right">
-      <button class="item min block" name="action" value="export" data-async="0"><span class="fa fa-cloud-download-alt hmarr-05"></span> Export...</button>
-    </div>
+    <span class="relative">
+      <button class="max has-right" type="button" onclick="$.fetch('//{{ \Illuminate\Support\Facades\Request::getHost() . '/' .  \Illuminate\Support\Facades\Request::path() }}/create')"><label><span class="fa fa-plus selectable hmarr-05"></span> New...</label></button><button class="max has-left" type="button" data-click-popup=".action-popup">
+        <label>&nbsp;<span class="fa fa-caret-down selectable"></span>&nbsp;</label>
+      </button>
+      <div class="action-popup popup" data-ref=".has-right">
+        <button class="item min block" name="action" value="export" data-async="0"><span class="fa fa-cloud-download-alt hmarr-05"></span> Export...</button>
+      </div>
+    </span>
   @else
     <button class="max hpad-1" type="button" onclick="$.fetch('//{{ \Illuminate\Support\Facades\Request::getHost() . '/' .  \Illuminate\Support\Facades\Request::path() }}/create')"><label><span class="fa fa-plus hmarr-05"></span>New...</label></button>
   @endif
