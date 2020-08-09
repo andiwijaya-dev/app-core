@@ -64,17 +64,22 @@ class ModelExecute extends Command
 
     try{
 
-      $instance = $model::find($instance_id);
+      if($instance_id > 0){
 
-      if(!$instance) exc("Instance not found: {$instance_id}");
+        $instance = $model::findOrFail($instance_id);
+        call_user_func_array([ $instance, $methodName ], [ $param ]);
+      }
+      else{
 
-      call_user_func_array([ $instance, $methodName ], [ $param ]);
+        call_user_func_array([ $model, $methodName ], [ $param ]);
+      }
 
     }
     catch(\Exception $ex){
 
       $this->error($ex->getMessage());
-
     }
+
+    $this->info('Completed in ' . (microtime(1) - LARAVEL_START) . 's');
   }
 }

@@ -1,7 +1,7 @@
 <tr data-id="{{ $item->id ?? '' }}" data-parent=".grid-content tbody">
   <td>
     <div class="pad-1 align-center">
-      <a href="/{{ \Illuminate\Support\Facades\Request::path() }}/{{ $item->id }}" class="async"><span class="fa fa-ellipsis-h selectable"></span></a>
+      <a href="/{{ \Illuminate\Support\Facades\Request::path() }}/{{ $item->id }}" class="async" data-push-state="0"><span class="fa fa-ellipsis-h selectable"></span></a>
     </div>
   </td>
   <td><label>{{ $item->type_text }}</label></td>

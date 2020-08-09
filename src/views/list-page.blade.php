@@ -41,7 +41,7 @@
     </div>
 
     <div class="hpad-1 vmart-1">
-      <div class="grid" data-grid-content=".grid-content">
+      <div class="grid" data-grid-content=".grid-content" id="{{ $meta['id'] ?? '' }}-grid">
         <table>
           <thead class="grid-thead">
           @component($view_grid_head, [ 'sorts'=>$sorts, 'sortable'=>$sortable ])@endcomponent
@@ -73,7 +73,7 @@
 @section('mobile-list')
 
   <div class="vpad-1 mobile-content">
-    <div class="feed" id="{{ $meta['feed_id'] ?? '' }}">
+    <div class="feed" id="{{ $meta['id'] ?? '' }}-feed">
       <div class="feed-content">
         @foreach($items as $idx=>$item)
           @component($view_feed_item, [ 'item'=>$item, 'idx'=>$idx ])@endcomponent
@@ -187,14 +187,14 @@
 
   <form method="get" class="async">
 
-    <div class="list-page" id="{{ $meta['id'] ?? '' }}">
+    <div class="list-page" id="{{ $meta['id'] ?? '' }}-page">
 
       <div>
         @yield('upper')
 
         <div class="body hidden-sm desktop-list-cont v-scrollable">
           <div class="pad-1">
-            <div class="grid grid-content">
+            <div class="grid grid-content" id="{{ $meta['id'] ?? '' }}-grid-content">
               <table>
                 <thead></thead>
                 <tbody class="grid-content-tbody">

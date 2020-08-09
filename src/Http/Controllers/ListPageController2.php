@@ -43,8 +43,7 @@ class ListPageController2 extends BaseController{
   public function __construct()
   {
     $this->meta = [
-      'id'=>Str::slug($this->title) . '-page',
-      'feed_id'=>Str::slug($this->title) . '-feed'
+      'id'=>Str::slug($this->title),
     ];
 
     View::share('meta', $this->meta);
@@ -173,10 +172,10 @@ class ListPageController2 extends BaseController{
       $sections = view($this->view, $params)->renderSections();
 
       return [
-        '.grid-thead'=>view($this->view_grid_head, [ 'sorts'=>$params['sorts'], 'sortable'=>$params['sortable'] ])->render(),
-        '.grid-content-tbody'=>$sections['desktop-list-items'],
-        '.load-more-cont'=>$sections['desktop-list-load-more'],
-        '.mobile-list-cont'=>$sections['mobile-list'],
+        "#{$this->meta['id']}-grid .grid-thead"=>view($this->view_grid_head, [ 'sorts'=>$params['sorts'], 'sortable'=>$params['sortable'] ])->render(),
+        "#{$this->meta['id']}-grid-content .grid-content-tbody"=>$sections['desktop-list-items'],
+        "#{$this->meta['id']}-grid-content .load-more-cont"=>$sections['desktop-list-load-more'],
+        "#{$this->meta['id']}-feed .mobile-list-cont"=>$sections['mobile-list'],
       ];
     }
     else{
@@ -239,7 +238,7 @@ class ListPageController2 extends BaseController{
           $html[] = view($this->view_feed_item, [ 'item'=>$item, 'idx'=>$idx ]);
         }
 
-        $return['.feed-content'] = '>>' . implode('', $html);
+        $return["#{$this->meta['id']}-feed .feed-content"] = '>>' . implode('', $html);
       }
       else{
         $html = [];
@@ -253,7 +252,7 @@ class ListPageController2 extends BaseController{
       $load_more_html = $next_items_after > 0 ?
         "<div class=\"pad-1 align-center\"><button class=\"min load-more-btn\" name=\"action\" value=\"load-more|{$next_items_after},{$device_type}\"><label class=\"less\">Load More</label></button></div>" :
         '';
-      $return['.load-more-cont'] = $load_more_html;
+      $return["#{$this->meta['id']}-feed .load-more-cont"] = $load_more_html;
 
       return $return;
     }
