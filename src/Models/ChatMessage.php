@@ -78,6 +78,17 @@ class ChatMessage extends Model
 
   public function preSave(){
 
+    $validator = Validator::make(
+      $this->attributes,
+      [
+        'text'=>'required'
+      ],
+      [
+        'text.required'=>'Harap masukkan pesan yang mau dikirim'
+      ]
+    );
+    if($validator->fails()) exc($validator->errors()->first());
+
     if(isset($this->fill_attributes['images'])){
 
       $images = [];

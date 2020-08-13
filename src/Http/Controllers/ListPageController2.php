@@ -197,26 +197,24 @@ class ListPageController2 extends BaseController{
     $row_per_page = 15;
 
     $after_id = ($load_more_params = explode(',', $actions[1]))[0] ?? 0;
+
     $device_type = $load_more_params[1] ?? '';
     $items = collect([]);
-    $should_add_items = false;
-    $builder->chunk(1000, function($rows) use(&$items, $after_id, &$should_add_items, $row_per_page){
+    $builder->chunk(1000, function($rows) use(&$items, $after_id, $row_per_page){
 
       foreach($rows as $row)
       {
-        if($row->id == $after_id){
-          $should_add_items = true;
-          continue;
+        if($after_id > 0){
+          if($after_id == $row->id)
+            $after_id = null;
         }
-
-        if($should_add_items)
+        else
           $items->add($row);
 
         if(count($items) == $row_per_page + 1) break;
       }
 
       if(count($items) == $row_per_page + 1) return false;
-
     });
 
     if(count($items) == $row_per_page + 1){
@@ -253,6 +251,7 @@ class ListPageController2 extends BaseController{
         "<div class=\"pad-1 align-center\"><button class=\"min load-more-btn\" name=\"action\" value=\"load-more|{$next_items_after},{$device_type}\"><label class=\"less\">Load More</label></button></div>" :
         '';
       $return["#{$this->meta['id']}-feed .load-more-cont"] = $load_more_html;
+      $return["#{$this->meta['id']}-grid-content .load-more-cont"] = $load_more_html;
 
       return $return;
     }

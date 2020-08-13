@@ -38,7 +38,7 @@
 
     <div class="col-12">
       <strong>Trace</strong>
-      <pre class="v-scrollable mh-3 bg-light pad-1 mar-0">{!! json_encode($instance->data['traces'], JSON_PRETTY_PRINT) !!}</pre>
+      <pre class="v-scrollable mh-3 bg-light pad-1 mar-0">{!! $instance->data['traces'] !!}</pre>
     </div>
 
   </div>

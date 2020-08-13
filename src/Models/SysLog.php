@@ -2,10 +2,13 @@
 
 namespace Andiwijaya\AppCore\Models;
 
+use Andiwijaya\AppCore\Models\Traits\FilterableTrait;
 use Illuminate\Database\Eloquent\Model;
 
 class SysLog extends Model
 {
+  use FilterableTrait;
+
   const TYPE_ERROR = 1;
   const TYPE_WARNING = 2;
   const TYPE_INFO = 0;
@@ -18,6 +21,10 @@ class SysLog extends Model
     'data'=>'array'
   ];
 
+  protected $filter_searchable = [
+    'id:=',
+    'message:like'
+  ];
 
   public function getTypeTextAttribute(){
 
