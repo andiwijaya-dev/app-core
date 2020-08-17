@@ -29,9 +29,9 @@
     <meta property="og:image"         content="{{ $og['image'] ?? '' }}" />
   @endif
 
-  <style type="text/css">
+  <style type="text/css" id="pre-style">
     .splash{ position: fixed; left:50%; top:50%; transform: translate3d(-50%, -50%, 0); }
-    body .screen{ visibility: hidden; }
+    body>*:not(.splash){ display: none; }
   </style>
 
   <script>
@@ -49,8 +49,8 @@
       this.media = 'all';
     }
     _c = 0;
-
-    window.scriptBuffer = [];
+    window._s = window._s || [];
+    window.scriptBuffer = window.scriptBuffer || [];
 
     @if(config('webhistory.enabled') && ($tracker_url = config('webhistory.hosts', [])[\Illuminate\Support\Facades\Request::getHost()] ?? ''))
       window.__tracker_enabled = 1;

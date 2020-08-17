@@ -37,18 +37,27 @@ class WebCacheService{
 
     $device = $this->agent->isMobile() ? 'm' : ($this->agent->isTablet() ? 't' : 'd');
 
-    $query = $request->query();
-    unset($query['webcache-reload']);
-    $query = http_build_query($query);
+    $fullUrl = $request->fullUrl();
 
-    $fullUrl = $request->url();
-    if(strlen($query) > 0){
+    // If full url has query string, do some manipulation, otherwise just use fullUrl()
+    // due to:
+    // - Issue for web url that append query parameter to not getting cached.
+    //   (kliknss.co.id/beat key become kliknss.co.id/beat?id=7)
+    if(strpos($fullUrl, '?') !== false){
 
-      if($request->path() == '/' && substr($fullUrl, strlen($fullUrl) - 1, 1) != '/')
-        $fullUrl .= '/';
+      $query = $request->query();
+      unset($query['webcache-reload']);
+      $query = http_build_query($query);
 
-      $fullUrl .= '?' . $query;
+      $fullUrl = $request->url();
+      if(strlen($query) > 0){
 
+        if($request->path() == '/' && substr($fullUrl, strlen($fullUrl) - 1, 1) != '/')
+          $fullUrl .= '/';
+
+        $fullUrl .= '?' . $query;
+
+      }
     }
 
     return implode(' ', [
