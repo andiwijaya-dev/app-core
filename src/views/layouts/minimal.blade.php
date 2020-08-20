@@ -31,7 +31,7 @@
 
   <style type="text/css" id="pre-style">
     .splash{ position: fixed; left:50%; top:50%; transform: translate3d(-50%, -50%, 0); }
-    body>*:not(.splash){ display: none; }
+    .screen{ visibility: hidden; }
   </style>
 
   <script>
@@ -58,23 +58,23 @@
     @endif
 
   </script>
-  <script type="text/javascript" src="/js/jquery.min.js" defer></script>
-  <script type="text/javascript" src="/js/exif.js" defer></script>
+  <script type="text/javascript" src="{{ env('APP_CDN_HOST') }}/js/jquery.min.js" defer></script>
+  <script type="text/javascript" src="{{ env('APP_CDN_HOST') }}/js/exif.js" defer></script>
   @if(isset($debug) && $debug)
     @foreach(glob(public_path("/js/" . ($js ?? 'default') . "/*.js")) as $path)
       <script type="text/javascript" src="{{ asset("/js/" . ($js ?? 'default') . "/" . basename($path)) }}?v={{ assets_version() }}" defer></script>
     @endforeach
   @else
-    <script type="text/javascript" src="/js/{{ $js ?? 'default' }}.js?v={{ assets_version() }}" defer></script>
+    <script type="text/javascript" src="{{ env('APP_CDN_HOST') }}/js/{{ $js ?? 'default' }}.js?v={{ assets_version() }}" defer></script>
   @endif
 
-  <link rel="stylesheet" href="/css/all.min.css" media="print" onload="c.apply(this)"/>
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/5.14.0/css/all.min.css" media="print" onload="c.apply(this)"/>
   @if(isset($debug) && $debug)
     @foreach(glob(public_path('/css/' . ($css ?? 'clean') . '/*.css')) as $path)
       <link rel="stylesheet" href="{{ '/css/' . ($css ?? 'clean') . '/' . basename($path) }}?v={{ assets_version () }}" media="print" onload="c.apply(this)"/>
     @endforeach
   @else
-    <link rel="stylesheet" href="{{ asset("/css/" . ($css ?? 'default')) }}.css?v={{ assets_version () }}" media="print" onload="c.apply(this)"/>
+    <link rel="stylesheet" href="{{ env('APP_CDN_HOST') }}/css/{{ $css ?? 'default' }}.css?v={{ assets_version () }}" media="print" onload="c.apply(this)"/>
   @endif
   <noscript>
     @if(isset($debug) && $debug)
@@ -82,7 +82,7 @@
         <link rel="stylesheet" href="{{ '/css/' . ($css ?? 'style') . '/' . basename($path) }}?v={{ assets_version () }}"/>
       @endforeach
     @else
-      <link rel="stylesheet" href="{{ asset("/css/" . ($css ?? 'default')) }}.css?v={{ assets_version () }}"/>
+      <link rel="stylesheet" href="{{ env('APP_CDN_HOST') }}/css/{{ $css ?? 'default' }}.css?v={{ assets_version () }}"/>
     @endif
   </noscript>
 
