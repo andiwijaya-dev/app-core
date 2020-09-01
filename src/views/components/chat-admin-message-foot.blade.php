@@ -1,15 +1,15 @@
 @if($discussion->handled_by == $user->id)
   <div class="srow pad-1">
     <div>
-      <div class="textbox " data-validation="required">
-        <input type="text" name="text" />
+      <div class="textarea" data-validation="required">
+        <textarea rows="1" placeholder="ENTER utk kirim, CTRL+ENTER utk tambahan baris" name="text" onkeydown="chatadmin_keyup.apply(this, arguments)"></textarea>
       </div>
     </div>
     <span>
-    <input type="hidden" name="last_id" />
-    <button type="button" class="hmarl-1" onclick="$('.chat-admin').chatadmin_add_file()"><label><span class="fa fa-image"></span></label></button>
-    <button class="hpad-2"><label>Kirim</label></button>
-  </span>
+      <input type="hidden" name="last_id" />
+      <button type="button" class="hmarl-1" onclick="$('.chat-admin').chatadmin_add_file()"><label><span class="fa fa-image"></span></label></button>
+      <button class="hpad-2"><label>Kirim</label></button>
+    </span>
   </div>
   <div class="images repeater hpad-1">
     <div class="template">

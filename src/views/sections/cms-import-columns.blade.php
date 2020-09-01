@@ -1,15 +1,15 @@
 <form method="post" class="async" action="{{ $path }}">
 
   <div class="head pad-1">
-    <div class="cls">
-
-      <div class="pc-100">
+    <div class="srow">
+      <div class="pad-1">
         <h1>{{ $title ?? '' }}</h1>
-        <p class="less">{{ $description ?? '' }}</p>
-        <input type="hidden" name="_filename" value="{{ $filename }}" />
-        <input type="hidden" name="step" value="2" />
+        <p class="less">{!! $description ?? '' !!}</p>
+        @csrf
       </div>
-
+      <span>
+        <span class="fa fa-times pad-1 selectable" data-action="modal.close"></span>
+      </span>
     </div>
   </div>
 

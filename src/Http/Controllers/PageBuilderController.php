@@ -2,6 +2,7 @@
 
 namespace Andiwijaya\AppCore\Http\Controllers;
 
+use Andiwijaya\AppCore\Facades\WebCache;
 use Andiwijaya\AppCore\Models\Page;
 use Illuminate\Http\Request;
 
@@ -92,6 +93,9 @@ class PageBuilderController extends ListPageController2 {
           break;
 
       }
+
+      WebCache::clearByTag($page->path, 1);
+
       return $return;
     }
 

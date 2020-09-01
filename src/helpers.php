@@ -17,7 +17,7 @@ if (! function_exists('exc')) {
   function exc($message)
   {
     if(is_array($message)) $message = json_encode($message);
-    throw new \Exception($message);
+    throw new \Andiwijaya\AppCore\Exceptions\KnownException($message);
 
   }
 }

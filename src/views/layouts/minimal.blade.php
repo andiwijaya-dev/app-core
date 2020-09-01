@@ -30,7 +30,7 @@
   @endif
 
   <style type="text/css" id="pre-style">
-    .splash{ position: fixed; left:50%; top:50%; transform: translate3d(-50%, -50%, 0); }
+    .splash{ position: fixed; left:50%; top:50%; transform: translate3d(-50%, -50%, 0);display: none; }
     .screen{ visibility: hidden; }
   </style>
 
@@ -57,6 +57,11 @@
       window.__tracker_url = '{{ $tracker_url }}';
     @endif
 
+    window.t = new Date().getTime();
+    window.setTimeout(function(){
+      var splash = document.querySelector('.splash');
+      if(splash) splash.style.display = "block";
+    }, 500);
   </script>
   <script type="text/javascript" src="{{ env('APP_CDN_HOST') }}/js/jquery.min.js" defer></script>
   <script type="text/javascript" src="{{ env('APP_CDN_HOST') }}/js/exif.js" defer></script>

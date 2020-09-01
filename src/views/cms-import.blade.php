@@ -4,7 +4,7 @@
     <div class="srow">
       <div class="pad-1">
         <h1>{{ $title ?? '' }}</h1>
-        <p class="less">{{ $description ?? '' }}</p>
+        <p class="less">{!! $description ?? '' !!}</p>
         @csrf
       </div>
       <span>
