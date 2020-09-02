@@ -103,8 +103,10 @@
   @endif
 
   <div class="screen{{ isset($screen_class) ? ' ' . $screen_class : '' }}">
+
     @yield('screen')
     @yield('screen-post')
+
   </div>
 
   @stack('body-post')
