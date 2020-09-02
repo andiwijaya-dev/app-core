@@ -5,6 +5,8 @@
       <div class="pad-1">
         <h1>{{ $title ?? '' }}</h1>
         <p class="less">{!! $description ?? '' !!}</p>
+        <input type="hidden" name="_filename" value="{{ $filename }}" />
+        <input type="hidden" name="step" value="2" />
         @csrf
       </div>
       <span>

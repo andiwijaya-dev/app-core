@@ -17,8 +17,9 @@ class ScheduledTask extends Model
 
   protected $table = 'scheduled_task';
 
-  protected $fillable = [ 'status', 'description', 'creator', 'creator_id',
-    'command', 'start', 'repeat', 'repeat_custom', 'count', 'error' ];
+  protected $fillable = [ 'status', 'description', 'creator_id',
+    'command', 'start', 'repeat', 'repeat_custom', 'count', 'error',
+    'remove_after_completed' ];
 
   protected $filter_searchable = [
     'id:=',
@@ -48,7 +49,8 @@ class ScheduledTask extends Model
 
   protected $casts = [
     'repeat_custom'=>'array', // { every:{ n:1, unit:"day" }, max_count:10, except:{ dates:[], day:[] } }
-    'updated_at'=>'datetime'
+    'updated_at'=>'datetime',
+    'remove_after_completed'=>0
   ];
 
   public function results(){
@@ -127,6 +129,9 @@ class ScheduledTask extends Model
 
     $this->status = $report->status;
     $this->save();
+
+    if($this->remove_after_completed)
+      $this->delete();
   }
 
   public function runInBackground(){
@@ -193,7 +198,23 @@ class ScheduledTask extends Model
       });
   }
 
+  public static function runOnceThenRemove(array $params, Command $cmd = null){
 
+    $task = new ScheduledTask($params);
+
+    if(!$task->description) $task->description = 'Run ' . $params['command'] . ' once.';
+
+    $task->fill([
+      'repeat'=>self::REPEAT_NONE,
+      'remove_after_completed'=>1
+    ]);
+
+    $task->save();
+
+    $task->runInBackground();
+
+    return $task;
+  }
 
   public function createInstances(){
 
