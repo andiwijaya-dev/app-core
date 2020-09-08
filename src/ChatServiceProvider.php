@@ -3,7 +3,10 @@
 namespace Andiwijaya\AppCore;
 
 
+use Andiwijaya\AppCore\Console\Commands\ChatDiscussionCheck;
+use Andiwijaya\AppCore\Console\Commands\ChatDiscussionGreeting;
 use Andiwijaya\AppCore\Console\Commands\ChatDiscussionNotifyUnsent;
+use Andiwijaya\AppCore\Console\Commands\ChatDiscussionSendNotification;
 use Illuminate\Support\ServiceProvider;
 
 class ChatServiceProvider extends ServiceProvider
@@ -16,7 +19,10 @@ class ChatServiceProvider extends ServiceProvider
   public function register()
   {
     $this->commands([
-      ChatDiscussionNotifyUnsent::class
+      ChatDiscussionCheck::class,
+      ChatDiscussionGreeting::class,
+      ChatDiscussionNotifyUnsent::class,
+      ChatDiscussionSendNotification::class
     ]);
   }
 

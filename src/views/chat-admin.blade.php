@@ -34,7 +34,7 @@
     <div class="chat-admin-body">
 
       <div class="chat-list">
-        <form method="get" class="async">
+        <form method="get" class="async" data-onbeforesend="chatadmin_view.apply(this, arguments)">
           <div class="chat-list-head">
             <div class="row0 unread-or-all">
               <div class="col-6">
@@ -49,9 +49,23 @@
 
             <div class="pad-1">
               <button class="block hidden" name="action" value="view"></button>
-              <div class="textbox">
-                <input type="text" class="list-search" name="search" placeholder="@lang('text.search')..." value="{{ $search ?? '' }}"/>
-                <span class="icon fa fa-search"></span>
+              <div class="srow">
+                <span>
+                  <div class="dropdown">
+                    <select name="customer_source" onchange="$('button[value=view]', $(this).closest('form')).click()">
+                      <option value="" selected>Semua</option>
+                      <option value="internal">Internal</option>
+                      <option value="external">Eksternal</option>
+                    </select>
+                    <span class="icon fa fa-caret-down"></span>
+                  </div>
+                </span>
+                <div>
+                  <div class="textbox hmarl-1">
+                    <input type="text" class="list-search" name="search" placeholder="@lang('text.search')..." value="{{ $search ?? '' }}"/>
+                    <span class="icon fa fa-search"></span>
+                  </div>
+                </div>
               </div>
             </div>
           </div>
@@ -92,6 +106,26 @@
   </div>
 
   <script>
+
+    function chatadmin_view(){
+
+      var data = arguments[0];
+
+      switch(data.get('customer_source')){
+
+        case 'internal':
+          $('.chat-list-body').removeClass('external').addClass('internal');
+          break;
+
+        case 'external':
+          $('.chat-list-body').removeClass('internal').addClass('external');
+          break;
+
+        default:
+          $('.chat-list-body').addClass('internal').addClass('external');
+          break;
+      }
+    }
 
     function chatadmin_keyup(e){
 

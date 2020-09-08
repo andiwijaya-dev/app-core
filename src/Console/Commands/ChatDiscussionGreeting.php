@@ -5,21 +5,21 @@ namespace Andiwijaya\AppCore\Console\Commands;
 use Andiwijaya\AppCore\Models\ChatDiscussion;
 use Illuminate\Console\Command;
 
-class ChatDiscussionNotifyUnsent extends Command
+class ChatDiscussionGreeting extends Command
 {
     /**
      * The name and signature of the console command.
      *
      * @var string
      */
-    protected $signature = 'chat-discussion:notify-unsent';
+    protected $signature = 'chat-discussion:greeting {id} {--delay=0}';
 
     /**
      * The console command description.
      *
      * @var string
      */
-    protected $description = 'Send notification for unsent chat message';
+    protected $description = 'Command description';
 
     /**
      * Create a new command instance.
@@ -38,6 +38,6 @@ class ChatDiscussionNotifyUnsent extends Command
      */
     public function handle()
     {
-      ChatDiscussion::notifyUnsent($this);
+      ChatDiscussion::findOrFail($this->argument('id'))->greeting($this->option('delay'));
     }
 }

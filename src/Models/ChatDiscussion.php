@@ -6,12 +6,14 @@ use Andiwijaya\AppCore\Models\Traits\FilterableTrait;
 use Andiwijaya\AppCore\Models\Traits\LoggedTraitV3;
 use Andiwijaya\AppCore\Events\ChatEvent;
 use App\Mail\ChatDiscussionCustomerNotification;
+use App\Models\Customer;
 use Carbon\Carbon;
 use Illuminate\Console\Command;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Mail;
 use Illuminate\Support\Facades\Redis;
+use Illuminate\Support\Traits\Macroable;
 
 class ChatDiscussion extends Model
 {
@@ -48,6 +50,13 @@ class ChatDiscussion extends Model
   public function messages()
   {
     return $this->hasMany('Andiwijaya\AppCore\Models\ChatMessage', 'discussion_id', 'id');
+  }
+
+  public function customer(){
+
+    if(substr($this->key, 0, 1) == '+')
+      return $this->belongsTo('App\Models\Customer', 'key', 'whatsapp_number');
+    return $this->belongsTo('App\Models\Customer', 'key');
   }
 
   public function getLatestMessagesAttribute(){
@@ -107,37 +116,57 @@ class ChatDiscussion extends Model
 
   public function sendEmailNotification(){
 
-    if(filter_var($this->key, FILTER_VALIDATE_EMAIL)){
+    if(preg_match('/\d+/', $this->key)){
 
-      if(isset($this->latest_message->id) && $this->latest_message->direction == ChatMessage::DIRECTION_OUT){
-
-        Mail::to($this->key)
-          ->bcc(env('MAIL_BCC'))
-          ->queue(new ChatDiscussionCustomerNotification($this->id));
+      $customer = Customer::find($this->key);
+      if(isset($customer->id) && filter_var($customer->email, FILTER_VALIDATE_EMAIL)){
+        $email = $customer->email;
       }
+    }
+    else if(filter_var($this->key, FILTER_VALIDATE_EMAIL))
+      $email = $this->key;
+
+    if(filter_var($email, FILTER_VALIDATE_EMAIL)){
+
+      Mail::to($email)
+        ->queue(new ChatDiscussionCustomerNotification($this->id));
     }
 
   }
 
+  public function greeting($delay = 0){
 
-  public static function notifyUnsent($callback = null){
+    if(!config('chat.greeting')) return;
+
+    if($delay > 0) sleep($delay);
+
+    $message = new ChatMessage([
+      'direction'=>ChatMessage::DIRECTION_OUT,
+      'text'=>config('chat.greeting'),
+      'is_system'=>1,
+      'discussion_id'=>$this->id
+    ]);
+    $message->save();
+  }
+
+  public static function notifyUnsent($cmd = null){
 
     $discussions = ChatDiscussion::whereExists(function($query){
       $query->select(DB::raw(1))
         ->from('chat_message')
-        ->whereRaw('chat_message.discussion_id = chat_discussion.id AND unsent = 1 AND notified <> 1');
+        ->whereRaw('chat_message.discussion_id = chat_discussion.id 
+          AND direction = 2 
+          AND unsent = 1 
+          AND notified <> 1 
+          AND TIMESTAMPDIFF(MINUTE, created_at, NOW()) BETWEEN 5 AND 10080');
     })
       ->get();
 
-    if(is_callable($callback))
-      call_user_func_array($callback, [ "Discussions require notification: " . count($discussions) ]);
+    if($cmd) $cmd->info("Discussions require notification: " . count($discussions));
 
     foreach($discussions as $discussion){
 
       $offline = count(Redis::pubsub('channels', "customer-discussion-{$discussion->id}")) <= 0;
-
-      if(is_callable($callback))
-        call_user_func_array($callback, [ "{$discussion->key}, " . ($offline ? 'offline' : 'online') ]);
 
       if($offline){
         $discussion->sendEmailNotification();
@@ -148,8 +177,9 @@ class ChatDiscussion extends Model
         ])
           ->update([ 'notified'=>1 ]);
 
-        if(is_callable($callback))
-          call_user_func_array($callback, [ "Notification to {$discussion->key} sent." ]);
+        $discussion->update([ 'last_notified_at'=>Carbon::now()->toDateTimeString() ]);
+
+        if($cmd) $cmd->info("Notification to {$discussion->key} sent.");
       }
     }
   }
@@ -205,6 +235,7 @@ class ChatDiscussion extends Model
     }
 
   }
+
 
   public static function isOffline(){
 

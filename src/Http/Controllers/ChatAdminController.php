@@ -396,7 +396,7 @@ class ChatAdminController extends BaseController
 
         $online = count(Redis::pubsub('channels', $this->channel_discussion)) > 0;
 
-        if ($online) {
+        if ($online){
 
           $updates[] = [
             'type' => 'element',
