@@ -126,7 +126,7 @@
       @endif
 
       @if(count($sortable) > 0)
-        <div class="row vmart-1 hidden-lg">
+        <div class="row vmart-1 hidden-lgx">
           <div class="col-12">
 
             <div class="pad-1 vmarb-2 bordered-bottom">
@@ -138,11 +138,11 @@
                 <strong class="hpad-1">{{ $value['text'] ?? $key }}</strong>
                 <div class="vmarb-1">
                 <span class="choice">
-                  <input id="list-sc-{{ $key }}-asc" class="sort-control" type="radio" name="sorts[]" value="{{ $key }},asc" onchange="$(this).closest('form').submit();"/>
+                  <input id="list-sc-{{ $key }}-asc" class="sort-control" type="radio" name="sorts[]" value="{{ $key }},asc" onchange="$('button[value=view]', $(this).closest('form')).click();"/>
                   <label for="list-sc-{{ $key }}-asc"><span class="checker"><span></span></span> Asc</label>
                 </span>
                   <span class="choice">
-                  <input id="list-sc-{{ $key }}-desc" class="sort-control" type="radio" name="sorts[]" value="{{ $key }},desc" onchange="$(this).closest('form').submit();"/>
+                  <input id="list-sc-{{ $key }}-desc" class="sort-control" type="radio" name="sorts[]" value="{{ $key }},desc" onchange="$('button[value=view]', $(this).closest('form')).click();"/>
                   <label for="list-sc-{{ $key }}-desc"><span class="checker"><span></span></span> Desc</label>
                 </span>
                 </div>
@@ -150,11 +150,11 @@
                 <strong class="hpad-1">{{ $value }}</strong>
                 <div class="vmarb-1">
                 <span class="choice">
-                  <input id="list-sc-{{ $value }}-asc" class="sort-control" type="radio" name="sorts[]" value="{{ $value }},asc" onchange="$(this).closest('form').submit();"/>
+                  <input id="list-sc-{{ $value }}-asc" class="sort-control" type="radio" name="sorts[]" value="{{ $value }},asc" onchange="$('button[value=view]', $(this).closest('form')).click();"/>
                   <label for="list-sc-{{ $value }}-asc"><span class="checker"><span></span></span> Asc</label>
                 </span>
                   <span class="choice">
-                  <input id="list-sc-{{ $value }}-desc" class="sort-control" type="radio" name="sorts[]" value="{{ $value }},desc" onchange="$(this).closest('form').submit();"/>
+                  <input id="list-sc-{{ $value }}-desc" class="sort-control" type="radio" name="sorts[]" value="{{ $value }},desc" onchange="$('button[value=view]', $(this).closest('form')).click();"/>
                   <label for="list-sc-{{ $value }}-desc"><span class="checker"><span></span></span> Desc</label>
                 </span>
                 </div>
@@ -169,7 +169,7 @@
 
         <div class="col-12">
           <div class="vmart-3">
-            <button class="hpad-1 more apply-filter" name="action" value="view"><label>Apply</label></button>
+            <button class="hpad-1 max apply-filter" name="action" value="view"><label>Apply</label></button>
             <button class="hpad-1" name="action" value="reset"><label>Reset</label></button>
           </div>
         </div>
@@ -208,7 +208,7 @@
           </div>
         </div>
 
-        <div class="body hidden-lg after-header mobile-list-cont">
+        <div class="body hidden-lg hidden-xl after-header mobile-list-cont">
           @yield('mobile-list')
         </div>
 

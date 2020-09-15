@@ -1,8 +1,6 @@
 @section('splash')
   @if(!request()->ajax())
-  <div class="splash">
-    <h5>Loading...</h5>
-  </div>
+@component('andiwijaya::components.splash-1')@endcomponent
   @endif
 @endsection
 

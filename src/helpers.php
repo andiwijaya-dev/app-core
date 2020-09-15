@@ -993,7 +993,7 @@ EOL;
                 this.value == 'between' ? $('.lpfnc-{$key}-0').removeClass('col-6').addClass('col-12') : $('.lpfnc-{$key}-0').removeClass('col-12').addClass('col-6');
                 this.value == 'between' ? $('.lpfnc-{$key}').removeClass('hidden') : $('.lpfnc-{$key}').addClass('hidden');
               ">
-              <option value="" disabled selected>...</option>
+              <option value="" disabled selected>Select</option>
               <option value="="> = </option>
               <option value=">="> >= </option>
               <option value=">"> > </option>

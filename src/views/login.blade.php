@@ -2,7 +2,7 @@
 
 @section('content')
 
-  <div class="pad-2 bordered centered w-320 mw-lg-40v mw-sm-90v bg-white">
+  <div class="pad-2 bordered centered xmw-320 bg-white">
     <form method="post" class="async">
       <div class="row">
         <div class="col-12 align-center">
