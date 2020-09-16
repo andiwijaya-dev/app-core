@@ -152,9 +152,7 @@ class ChatController{
 
   protected function sendMessage($request){
 
-    $discussion_id = Session::get('chat.id');
-    $discussion = ChatDiscussion::whereId($discussion_id)
-      ->first();
+    $discussion = ChatDiscussion::whereId(Session::get('chat.id'))->first();
 
     if(!$discussion){
 

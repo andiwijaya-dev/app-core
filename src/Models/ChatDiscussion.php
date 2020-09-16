@@ -62,11 +62,11 @@ class ChatDiscussion extends Model
   public function getLatestMessagesAttribute(){
 
     return ChatMessage::whereDiscussionId($this->id)
+      ->where('created_at', '>=', Carbon::now()->addHour(-6)->format('Y-m-d H:i:s'))
       ->orderBy('created_at', 'desc')
       ->limit(5)
       ->get()
       ->reverse();
-
   }
 
   public function getLatestMessageAttribute(){
