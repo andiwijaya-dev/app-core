@@ -113,7 +113,7 @@ class WebCacheService{
     }
     else{
 
-      Log::warning("Unable to create cache from response type of " . get_class($response));
+      //Log::warning("Unable to create cache from response type of " . get_class($response));
 
     }
 

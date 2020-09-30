@@ -30,11 +30,21 @@ class ActionableController extends BaseController{
       return call_user_func_array([ $this, $method ], func_get_args());
   }
 
-  public function show(Request $request){
+  public function show(Request $request, $id){
 
     $this->request = $request;
 
     $action = isset(($actions = explode('|', $request->input('action', 'open')))[0]) ? $actions[0] : '';
+    $method = action2method($action);
+    if(method_exists($this, $method))
+      return call_user_func_array([ $this, $method ], func_get_args());
+  }
+
+  public function patch(Request $request){
+
+    $this->request = $request;
+
+    $action = isset(($actions = explode('|', $request->input('action', 'patch')))[0]) ? $actions[0] : '';
     $method = action2method($action);
     if(method_exists($this, $method))
       return call_user_func_array([ $this, $method ], func_get_args());

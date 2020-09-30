@@ -2,9 +2,10 @@
 
 namespace Andiwijaya\AppCore\Models;
 
+use Andiwijaya\AppCore\Interfaces\VerboseOutputInterface;
 use Illuminate\Database\Eloquent\Model;
 
-class ScheduledTaskResult extends Model{
+class ScheduledTaskResult extends Model  implements VerboseOutputInterface{
 
   protected $table = 'scheduled_task_result';
 
@@ -26,6 +27,13 @@ class ScheduledTaskResult extends Model{
       case ScheduledTask::STATUS_COMPLETED: return 'Completed';
       case ScheduledTask::STATUS_ERROR: return 'Error';
     }
+  }
+
+  public function info($text)
+  {
+    $this->verbose .= $text . PHP_EOL;
+
+    $this->save();
   }
 
 }

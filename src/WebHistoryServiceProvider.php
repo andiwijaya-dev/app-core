@@ -65,7 +65,8 @@ class WebHistoryServiceProvider extends ServiceProvider
 
     $queries = $params = [];
 
-    $session_id = Crypt::decrypt($request->cookies->get(strtolower(env('APP_NAME')) . '_session'), false);
+    $session_cookie_value = $request->cookies->get(strtolower(env('APP_NAME')) . '_session');
+    $session_id = $session_cookie_value ? Crypt::decrypt($session_cookie_value, false) : 'N/A';
 
     if(is_assoc($data)) $data = [ $data ];
 

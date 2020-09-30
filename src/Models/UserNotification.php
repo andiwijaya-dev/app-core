@@ -7,6 +7,9 @@ use Illuminate\Support\Facades\Redis;
 
 class UserNotification extends Model{
 
+  const TARGET_ALL = -1;
+  const TARGET_ALL_ONLINE = -2;
+
   protected $table = 'user_notification';
 
   protected $fillable = [ 'status', 'title', 'body', 'target', 'user_id' ];
@@ -29,37 +32,34 @@ class UserNotification extends Model{
   {
     $return = parent::save($options);
 
-    $this->pushNotification();
-
     return $return;
   }
 
-  public function pushNotification(){
+
+  public static function notify($user_id, $title, $description = '', $target = '', $timing = null, $persist = false){
+
+    $title = str_replace('"', '', $title);
+    $description = str_replace('"', '', $description);
+    $target = str_replace('"', '', $target);
 
     if(redis_available()) {
 
-      $currentCursor = '0';
-      $k = [];
-      do {
-        $response = Redis::scan($currentCursor, 'MATCH', 'notification*', 'COUNT', 100);
-        $currentCursor = $response[0];
-        $k = array_merge($k, $response[1]);
-      } while ($currentCursor !== '0');
-      exc($k);
-
-
-      Redis::publish('notification-1', json_encode($this));
-
-      /*$keys = Redis::keys('name');
-
-      foreach ($keys as $key){
-        \Illuminate\Support\Facades\Log::info("Push notification to {$key}, title: {$this->title}");
-
-        Redis::publish($key, json_encode($this));
-      }*/
-
+      Redis::publish('user-notif-' . $user_id, json_encode([
+        'script'=>"$.notify({ title:\"{$title}\", description:\"{$description}\", target:\"{$target}\" });"
+      ]));
     }
 
+    if($persist){
+
+      $instance = new UserNotification([
+        'user_id'=>$user_id,
+        'title'=>$title,
+        'description'=>$description,
+        'target'=>$target
+      ]);
+
+      $instance->save();
+    }
   }
 
 }

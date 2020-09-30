@@ -4,11 +4,14 @@ namespace Andiwijaya\AppCore\Models;
 
 use Andiwijaya\AppCore\Models\Traits\FilterableTrait;
 use Andiwijaya\AppCore\Models\Traits\LoggedTraitV3;
+use Andiwijaya\AppCore\Providers\ScheduledTaskSecurityProvider;
 use Carbon\Carbon;
 use Illuminate\Console\Command;
 use Illuminate\Database\Eloquent\Model;
+use Illuminate\Queue\SerializableClosure;
 use Illuminate\Support\Facades\Artisan;
 use Illuminate\Support\Facades\DB;
+use Illuminate\Support\Str;
 use Symfony\Component\Process\Process;
 
 class ScheduledTask extends Model
@@ -60,28 +63,31 @@ class ScheduledTask extends Model
 
   public function preSave()
   {
-    if(in_array(($name = explode(':', explode(' ', $this->command)[0])[0]), [
-      'app',
-      'migrate',
-      'make',
-      'event',
-      'config',
-      'data',
-      'cache',
-      'list',
-      'optimize',
-      'down',
-      'up',
-      'clear-compiled',
-      'dump-server',
-      'db',
-      'queue',
-      'redis',
-      'route',
-      'schedule',
-      'vendor'
-    ]))
-      exc('Unable to use this command');
+    if(is_string($this->command)){
+
+      if(in_array(($name = explode(':', explode(' ', $this->command)[0])[0]), [
+        'app',
+        'migrate',
+        'make',
+        'event',
+        'config',
+        'data',
+        'cache',
+        'list',
+        'optimize',
+        'down',
+        'up',
+        'clear-compiled',
+        'dump-server',
+        'db',
+        'queue',
+        'redis',
+        'route',
+        'schedule',
+        'vendor'
+      ]))
+        exc('Unable to use this command');
+    }
 
   }
 
@@ -112,33 +118,60 @@ class ScheduledTask extends Model
     $this->status = self::STATUS_RUNNING;
     $this->save();
 
-    $report = $this->results()->create([
+    $result = $this->results()->create([
       'status'=>self::STATUS_RUNNING,
       'started_at'=>Carbon::now()->format('Y-m-d H:i:s'),
       'pid'=>getmypid()
     ]);
 
-    $exitCode = Artisan::call($this->command);
-    $output = Artisan::output();
+    if(strpos($this->command, 'SerializableClosure') !== false){
 
-    $report->status = $exitCode > 0 ? self::STATUS_ERROR : self::STATUS_COMPLETED;
-    $report->verbose = $output;
-    $report->ellapsed = microtime(1) - $t1;
-    $report->completed_at = Carbon::now()->format('Y-m-d H:i:s');
-    $report->save();
+      if (null !== $securityProvider = SerializableClosure::getSecurityProvider()) {
+        SerializableClosure::removeSecurityProvider();
+      }
 
-    $this->status = $report->status;
-    $this->save();
+      $command = unserialize($this->command)->getClosure();
+
+      if ($securityProvider !== null) {
+        SerializableClosure::addSecurityProvider($securityProvider);
+      }
+
+      try{
+        $output = call_user_func_array($command, [ $result ]);
+        $exitCode = 0;
+      }
+      catch(\Exception $ex){
+        $exitCode = 1;
+        $output = $ex->getMessage() . "@" . $ex->getFile() . ":" . $ex->getLine();
+      }
+    }
+    else{
+      $exitCode = Artisan::call($this->command);
+      $output = Artisan::output();
+    }
 
     if($this->remove_after_completed)
       $this->delete();
+    else{
+      $result->status = $exitCode > 0 ? self::STATUS_ERROR : self::STATUS_COMPLETED;
+      $result->verbose .= $output . PHP_EOL;
+      $result->ellapsed = microtime(1) - $t1;
+      $result->completed_at = Carbon::now()->format('Y-m-d H:i:s');
+      $result->save();
+
+      $this->status = $result->status;
+
+      $this->save();
+    }
   }
 
   public function runInBackground(){
 
     chdir(base_path());
 
-    exec("php artisan scheduled-task:run --id={$this->id} > /dev/null 2>&1 &", $output, $return_var);
+    $log_path = storage_path('logs/laravel.log');
+
+    exec("php artisan scheduled-task:run --id={$this->id} > {$log_path} 2>&1 &", $output, $return_var);
   }
 
   public static function check(Command $cmd = null){
@@ -216,103 +249,36 @@ class ScheduledTask extends Model
     return $task;
   }
 
-  public function createInstances(){
+  public static function runOnce($command, $description = ''){
 
-    if($this->status != self::STATUS_ACTIVE) return;
+    if($command instanceof \Closure){
 
-    //\Illuminate\Support\Facades\Log::info("create instance: {$this->id}");
+      if (null !== $securityProvider = SerializableClosure::getSecurityProvider()) {
+        SerializableClosure::removeSecurityProvider();
+      }
 
-    switch($this->repeat){
+      $command = serialize(new SerializableClosure($command));
 
-      case self::REPEAT_NONE:
-        if(count($this->instances) <= 0){
-          $this->instances()->create([
-            'command'=>$this->command,
-            'start'=>$this->start
-          ]);
-        }
-        break;
-
-      case self::REPEAT_MINUTELY:
-        if($this->instances->where('status', ScheduledTaskInstance::STATUS_SCHEDULED)->count() <= 0){
-
-          $instances = [];
-          for($i = 1 ; $i <= 10 ; $i++){
-            $instances[] = new ScheduledTaskInstance([
-              'command'=>$this->command,
-              'start'=>Carbon::now()->addMinutes($i)->format('Y-m-d H:i:00')
-            ]);
-          }
-          $this->instances()->saveMany($instances);
-        }
-        break;
-
-      case self::REPEAT_EVERY_FIVE_MINUTE:
-        if($this->instances->where('status', ScheduledTaskInstance::STATUS_SCHEDULED)->count() <= 0){
-
-          $instances = [];
-          $currentMinute = Carbon::now()->minute;
-          $addMinute = ((floor($currentMinute / 5) * 5) + 5) - $currentMinute;
-          for($i = 1 ; $i <= 10 ; $i++){
-            $instances[] = new ScheduledTaskInstance([
-              'command'=>$this->command,
-              'start'=>Carbon::now()->addMinutes($addMinute)->format('Y-m-d H:i:00')
-            ]);
-            $addMinute += 5;
-          }
-
-          $this->instances()->saveMany($instances);
-        }
-        break;
-
-      case self::REPEAT_EVERY_TEN_MINUTE:
-        if($this->instances->where('status', ScheduledTaskInstance::STATUS_SCHEDULED)->count() <= 0){
-
-          $instances = [];
-          $currentMinute = Carbon::now()->minute;
-          $addMinute = ((floor($currentMinute / 10) * 10) + 10) - $currentMinute;
-          for($i = 1 ; $i <= 10 ; $i++){
-            $instances[] = new ScheduledTaskInstance([
-              'command'=>$this->command,
-              'start'=>Carbon::now()->addMinutes($addMinute)->format('Y-m-d H:i:00')
-            ]);
-            $addMinute += 10;
-          }
-
-          $this->instances()->saveMany($instances);
-        }
-        break;
-
-      case self::REPEAT_HOURLY:
-        if($this->instances->where('status', ScheduledTaskInstance::STATUS_SCHEDULED)->count() <= 0){
-
-          $instances = [];
-          for($i = 1 ; $i <= 10 ; $i++){
-            $instances[] = new ScheduledTaskInstance([
-              'command'=>$this->command,
-              'start'=>Carbon::now()->addHours($i)->format('Y-m-d H:00:00')
-            ]);
-          }
-          $this->instances()->saveMany($instances);
-        }
-        break;
-
-      case self::REPEAT_DAILY:
-        if($this->instances->where('status', ScheduledTaskInstance::STATUS_SCHEDULED)->count() <= 0){
-
-          $instances = [];
-          for($i = 1 ; $i <= 10 ; $i++){
-            $instances[] = new ScheduledTaskInstance([
-              'command'=>$this->command,
-              'start'=>Carbon::now()->addDays($i)->format('Y-m-d 00:00:00')
-            ]);
-          }
-          $this->instances()->saveMany($instances);
-        }
-        break;
-
+      if ($securityProvider !== null) {
+        SerializableClosure::addSecurityProvider($securityProvider);
+      }
     }
 
+    if(!$description)
+      $description = "Scheduled task - " . Str::random(5);
+
+    $task = new ScheduledTask([
+      'command'=>$command,
+      'description'=>$description,
+      'repeat'=>self::REPEAT_NONE,
+      'remove_after_completed'=>0
+    ]);
+
+    $task->save();
+
+    $task->runInBackground();
+
+    return $task;
   }
 
 

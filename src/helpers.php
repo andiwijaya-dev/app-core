@@ -5,6 +5,8 @@
  * Check if variable is assosiative array
  */
 
+use Illuminate\Support\Str;
+
 if(!function_exists('is_assoc')){
   function is_assoc($array) {
     if(gettype($array) == "array")
@@ -14,7 +16,7 @@ if(!function_exists('is_assoc')){
 }
 
 if (! function_exists('exc')) {
-  function exc($message)
+  function exc($message = '')
   {
     if(is_array($message)) $message = json_encode($message);
     throw new \Andiwijaya\AppCore\Exceptions\KnownException($message);
@@ -400,40 +402,54 @@ if(!function_exists('array_index')){
     if(!is_array($arr)) return null;
     $result = array();
 
+    $indexes_is_callback = is_callable($indexes);
+
     for($i = 0 ; $i < count($arr) ; $i++){
       $obj = $arr[$i];
 
-      switch(count($indexes)){
-        case 1 :
-          $idx0 = $indexes[0];
-          if(!isset($obj[$idx0])) continue;
-          if(!isset($result[$obj[$idx0]])) $result[$obj[$idx0]] = array();
-          $result[$obj[$idx0]][] = $obj;
-          break;
-        case 2 :
-          $idx0 = $indexes[0];
-          $idx1 = $indexes[1];
-          if(!isset($obj[$idx0]) || !isset($obj[$idx1])) continue;
-          $key0 = $obj[$idx0];
-          $key1 = $obj[$idx1];
-          if(!isset($result[$key0])) $result[$key0] = array();
-          if(!isset($result[$key0][$key1])) $result[$key0][$key1] = array();
-          $result[$key0][$key1][] = $obj;
-          break;
-        case 3 :
-          $idx0 = $indexes[0];
-          $idx1 = $indexes[1];
-          $idx2 = $indexes[2];
-          if(!isset($obj[$idx0]) || !isset($obj[$idx1]) || !isset($obj[$idx2])) continue;
-          $key0 = $obj[$idx0];
-          $key1 = $obj[$idx1];
-          $key2 = $obj[$idx2];
-          if(!isset($result[$key0])) $result[$key0] = array();
-          if(!isset($result[$key0][$key1])) $result[$key0][$key1] = array();
-          $result[$key0][$key1][$key2] = $obj;
-          break;
-        default:
-          throw new Exception("Unsupported index level.");
+      if($indexes_is_callback){
+
+        $key = call_user_func_array($indexes, [ $obj ]);
+        if(!isset($result[$key])) $result[$key] = [];
+        $result[$key][] = $obj;
+      }
+      else{
+
+        switch(count($indexes)){
+          case 1 :
+            $idx0 = $indexes[0];
+            if(isset($obj[$idx0])){
+              if(!isset($result[$obj[$idx0]])) $result[$obj[$idx0]] = array();
+              $result[$obj[$idx0]][] = $obj;
+            }
+            break;
+          case 2 :
+            $idx0 = $indexes[0];
+            $idx1 = $indexes[1];
+            if(isset($obj[$idx0]) && isset($obj[$idx1])){
+              $key0 = $obj[$idx0];
+              $key1 = $obj[$idx1];
+              if(!isset($result[$key0])) $result[$key0] = array();
+              if(!isset($result[$key0][$key1])) $result[$key0][$key1] = array();
+              $result[$key0][$key1][] = $obj;
+            }
+            break;
+          case 3 :
+            $idx0 = $indexes[0];
+            $idx1 = $indexes[1];
+            $idx2 = $indexes[2];
+            if(isset($obj[$idx0]) && !isset($obj[$idx1]) && !isset($obj[$idx2])){
+              $key0 = $obj[$idx0];
+              $key1 = $obj[$idx1];
+              $key2 = $obj[$idx2];
+              if(!isset($result[$key0])) $result[$key0] = array();
+              if(!isset($result[$key0][$key1])) $result[$key0][$key1] = array();
+              $result[$key0][$key1][$key2] = $obj;
+            }
+            break;
+          default:
+            throw new Exception("Unsupported index level.");
+        }
       }
     }
 
@@ -476,32 +492,35 @@ if(!function_exists('array_index')){
       switch (count($indexes)) {
         case 1 :
           $idx0 = $indexes[0];
-          if (!isset($obj->{$idx0})) continue;
-          if (!isset($result[$obj->{$idx0}])) $result[$obj->{$idx0}] = array();
-          $result[$obj->{$idx0}][] = $obj;
+          if (isset($obj->{$idx0})) {
+            if (!isset($result[$obj->{$idx0}])) $result[$obj->{$idx0}] = array();
+            $result[$obj->{$idx0}][] = $obj;
+          }
           break;
         case 2 :
           $idx0 = $indexes[0];
           $idx1 = $indexes[1];
-          if (!isset($obj->{$idx0}) || !isset($obj->{$idx1})) continue;
-          $key0 = $obj->{$idx0};
-          $key1 = $obj->{$idx1};
-          if (!isset($result[$key0])) $result[$key0] = array();
-          if (!isset($result[$key0][$key1])) $result[$key0][$key1] = array();
-          $result[$key0][$key1][] = $obj;
+          if (isset($obj->{$idx0}) && isset($obj->{$idx1})){
+            $key0 = $obj->{$idx0};
+            $key1 = $obj->{$idx1};
+            if (!isset($result[$key0])) $result[$key0] = array();
+            if (!isset($result[$key0][$key1])) $result[$key0][$key1] = array();
+            $result[$key0][$key1][] = $obj;
+          }
           break;
         case 3 :
           $idx0 = $indexes[0];
           $idx1 = $indexes[1];
           $idx2 = $indexes[2];
-          if (!isset($obj->{$idx0}) || !isset($obj->{$idx1}) || !isset($obj->{$idx2})) continue;
-          $key0 = $obj->{$idx0};
-          $key1 = $obj->{$idx1};
-          $key2 = $obj->{$idx2};
+          if (isset($obj->{$idx0}) && !isset($obj->{$idx1}) && !isset($obj->{$idx2})){
+            $key0 = $obj->{$idx0};
+            $key1 = $obj->{$idx1};
+            $key2 = $obj->{$idx2};
 
-          if (!isset($result[$key0])) $result[$key0] = array();
-          if (!isset($result[$key0][$key1])) $result[$key0][$key1] = array();
-          $result[$key0][$key1][$key2][] = $obj;
+            if (!isset($result[$key0])) $result[$key0] = array();
+            if (!isset($result[$key0][$key1])) $result[$key0][$key1] = array();
+            $result[$key0][$key1][$key2][] = $obj;
+          }
           break;
         default:
           throw new Exception("Unsupported index level.");
@@ -1026,6 +1045,7 @@ EOL;
 
         $custom_from = \Carbon\Carbon::now()->addDays(-7)->format('j M Y');
         $custom_to = \Carbon\Carbon::now()->format('j M Y');
+        $key = Str::slug($key);
 
         $html .= <<<EOL
       <div class="dropdown block">
@@ -1309,16 +1329,6 @@ if(!function_exists('imgresizer')){
   }
 }
 
-if(!function_exists('appcore_boot')){
-
-  function appcore_boot($provider){
-
-
-
-  }
-
-}
-
 if(!function_exists('checked_if')){
 
   function checked_if($key, $arr){
@@ -1328,3 +1338,115 @@ if(!function_exists('checked_if')){
     return '';
   }
 }
+
+if(!function_exists('action_route')){
+
+  function action_route($namespace){
+
+    $f = function(\Illuminate\Http\Request $request) use($namespace){
+
+      $namespace = 'Admin';
+      if(!empty($namespace)) $namespace .= '\\';
+
+      $method = $request->method();
+      $path = $request->path();
+      $paths = $path != '/' ? explode('/', $path) : [];
+      $key = null;
+      $action = explode('|', $request->input('action'))[0] ?? null;
+
+      if(preg_match('/^\d+$/', end($paths)) || in_array(end($paths), [ 'create' ])){
+        $key = end($paths);
+        $paths = array_splice($paths, 0, count($paths) - 1);
+      }
+
+      $controller = "App\\Http\\Controllers\\{$namespace}" . Str::ucfirst(Str::camel(count($paths) > 0 ? implode('-', $paths) : 'index') . 'Controller');
+
+      if(class_exists($controller)){
+
+        $controller = new $controller();
+
+        if(!$key){
+
+          switch($method){
+
+            case 'GET':
+              $method = Str::camel($action ? $action : 'view');
+
+              return call_user_func_array([ $controller, $method ], [ $request ]);
+
+            case 'POST':
+              $method = Str::camel($action ? $action : 'save');
+
+              return call_user_func_array([ $controller, $method ], [ $request ]);
+
+            case 'PATCH':
+              $method = Str::camel($action ? $action : 'update');
+
+              return call_user_func_array([ $controller, $method ], [ $request ]);
+          }
+
+        }
+        else{
+
+          switch($method){
+
+            case 'GET':
+              $method = Str::camel($action ? $action : ($key == 'create' ? 'create' : 'open'));
+
+              return call_user_func_array([ $controller, $method ], [ $request, $key ]);
+
+            case 'DELETE':
+              $method = Str::camel($action ? $action : 'destroy');
+
+              return call_user_func_array([ $controller, $method ], [ $request, $key ]);
+
+          }
+        }
+
+
+      }
+
+      else{
+
+        return json_encode([
+          $namespace,
+          $method,
+          $path,
+          $controller,
+          class_exists($controller)
+        ]);
+      }
+
+    };
+
+    return function() use($f){
+
+      \Illuminate\Support\Facades\Route::any('', $f);
+      \Illuminate\Support\Facades\Route::any('{p1}', $f);
+      \Illuminate\Support\Facades\Route::any('{p1}/{p2}', $f);
+      \Illuminate\Support\Facades\Route::any('{p1}/{p2}/{p3}', $f);
+    };
+  };
+}
+
+if(!function_exists('greeting')){
+
+  function greeting($name = ''){
+
+    $hour = \Carbon\Carbon::now()->format('H');
+    if($hour >= 5 && $hour < 11)
+      $greeting = __('Good morning');
+    elseif($hour >= 11 && $hour < 15)
+      $greeting = __('Good afternoon');
+    elseif($hour >= 15 && $hour  < 19)
+      $greeting = __('Good evening');
+    else
+      $greeting = __('Good night');
+
+    $greeting .= !empty($name) ? ', ' . $name : '';
+
+    return $greeting;
+  }
+
+}
+

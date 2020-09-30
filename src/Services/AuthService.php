@@ -70,6 +70,8 @@ class AuthService{
 
       $this->user = $user;
     }
+
+    return $this->user;
   }
 
   public function user()

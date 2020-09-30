@@ -3,6 +3,7 @@
 namespace Andiwijaya\AppCore\Models\Traits;
 
 
+use App\Models\Session;
 use Carbon\Carbon;
 
 trait FilterableTrait{
@@ -98,46 +99,51 @@ trait FilterableTrait{
 
       if(is_null($value)) continue;
       if(in_array($key, [ 'columns', 'filters', 'search' ])) continue;
-      if(!in_array($key, array_merge($this->getFillable(), $this->getHidden(), $this->getGuarded(), [ 'created_at', 'updated_at' ]))) continue;
+      if(!in_array($key, array_merge($this->getFillable(), $this->getHidden(), $this->getGuarded(), [ 'created_at', 'updated_at' ]))){
+
+        if(strpos($key, '_created_at') !== false) $key = str_replace('_created_at', '.created_at', $key);
+        else if(strpos($key, '_updated_at') !== false) $key = str_replace('_updated_at', '.updated_at', $key);
+        else continue;
+      }
 
       if(isset($value['date_range'])){
 
         switch($value['date_range']){
 
-          case 'today': $model->whereRaw("DATE(`$key`) = ?", [ Carbon::now()->format('Y-m-d') ]); break;
-          case 'yesterday': $model->whereRaw("DATE(`$key`) = ?", [ Carbon::now()->addDays(-1)->format('Y-m-d') ]); break;
-          case 'tomorrow': $model->whereRaw("DATE(`$key`) = ?", [ Carbon::now()->addDays(1)->format('Y-m-d') ]); break;
+          case 'today': $model->whereRaw("DATE($key) = ?", [ Carbon::now()->format('Y-m-d') ]); break;
+          case 'yesterday': $model->whereRaw("DATE($key) = ?", [ Carbon::now()->addDays(-1)->format('Y-m-d') ]); break;
+          case 'tomorrow': $model->whereRaw("DATE($key) = ?", [ Carbon::now()->addDays(1)->format('Y-m-d') ]); break;
 
           case 'this-week':
-            $model->whereRaw("DATE(`$key`) BETWEEN ? AND ?", [
+            $model->whereRaw("DATE($key) BETWEEN ? AND ?", [
               Carbon::now()->startOfWeek()->format('Y-m-d'),
               Carbon::now()->endOfWeek()->format('Y-m-d'),
             ]);
             break;
 
           case 'this-month':
-            $model->whereRaw("DATE(`$key`) BETWEEN ? AND ?", [
+            $model->whereRaw("DATE({$key}) BETWEEN ? AND ?", [
               Carbon::now()->startOfMonth()->format('Y-m-d'),
               Carbon::now()->endOfMonth()->format('Y-m-d'),
             ]);
             break;
 
           case 'this-quarter':
-            $model->whereRaw("DATE(`$key`) BETWEEN ? AND ?", [
+            $model->whereRaw("DATE($key) BETWEEN ? AND ?", [
               Carbon::now()->startOfQuarter()->format('Y-m-d'),
               Carbon::now()->endOfQuarter()->format('Y-m-d'),
             ]);
             break;
 
           case 'this-year':
-            $model->whereRaw("DATE(`$key`) BETWEEN ? AND ?", [
+            $model->whereRaw("DATE($key) BETWEEN ? AND ?", [
               Carbon::now()->startOfYear()->format('Y-m-d'),
               Carbon::now()->endOfYear()->format('Y-m-d'),
             ]);
             break;
 
           case 'this-decade':
-            $model->whereRaw("DATE(`$key`) BETWEEN ? AND ?", [
+            $model->whereRaw("DATE($key) BETWEEN ? AND ?", [
               Carbon::now()->startOfDecade()->format('Y-m-d'),
               Carbon::now()->endOfDecade()->format('Y-m-d'),
             ]);
@@ -147,7 +153,7 @@ trait FilterableTrait{
             $custom_from = date('Y-m-d', strtotime($value['date_range_from']));
             $custom_to = date('Y-m-d', strtotime($value['date_range_to']));
 
-            $model->whereRaw("DATE(`$key`) BETWEEN ? AND ?", [
+            $model->whereRaw("DATE($key) BETWEEN ? AND ?", [
               $custom_from,
               $custom_to,
             ]);

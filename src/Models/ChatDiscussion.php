@@ -7,6 +7,7 @@ use Andiwijaya\AppCore\Models\Traits\LoggedTraitV3;
 use Andiwijaya\AppCore\Events\ChatEvent;
 use App\Mail\ChatDiscussionCustomerNotification;
 use App\Models\Customer;
+use App\Models\FAQ;
 use Carbon\Carbon;
 use Illuminate\Console\Command;
 use Illuminate\Database\Eloquent\Model;
@@ -215,12 +216,25 @@ class ChatDiscussion extends Model
       $offline_message_at = Carbon::createFromTimeString(date('Y-m-d H:i:s', strtotime($discussion->extra['offline_message_at'] ?? null)));
 
       $offline = self::isOffline();
+
       if($offline && config('chat.offline-message') && $offline_message_at->diffInHours() > 2){
+
+        $message = config('chat.offline-message');
+        $faqs = config('chat.offline-message-faqs', []);
+        if(count($faqs) > 0){
+          $message .= "<div class='vmar-1'><label>Apakah yang anda cari terdapat dibawah ini:</label><ol class='vmart-05'>";
+          foreach($faqs as $faq_topic){
+
+            $faq = FAQ::where('topic', $faq_topic)->first();
+            $message .= "<li><a href='" . env('APP_URL') . "/faq/{$faq->seo_url}' target='_blank'>{$faq->topic}</a></li>";
+          }
+          $message .= "</ol></div>";
+        }
 
         $message = new ChatMessage([
           'discussion_id'=>$discussion_id,
           'direction'=>ChatMessage::DIRECTION_OUT,
-          'text'=>config('chat.offline-message'),
+          'text'=>$message,
           'is_system'=>1,
           'extra'=>[ 'name'=>'Tara', 'avatar_url'=>'chat-figure.png' ],
         ]);

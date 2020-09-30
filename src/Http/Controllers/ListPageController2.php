@@ -7,13 +7,13 @@ use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Http\Request;
 use Illuminate\Support\Collection;
-use Illuminate\Routing\Controller as BaseController;
 use Illuminate\Support\Facades\Log;
 use Illuminate\Support\Facades\Redis;
+use Illuminate\Support\Facades\Session;
 use Illuminate\Support\Facades\View;
 use Illuminate\Support\Str;
 
-class ListPageController2 extends BaseController{
+class ListPageController2 extends ActionableController{
 
   public $model = null;
 
@@ -47,24 +47,6 @@ class ListPageController2 extends BaseController{
     ];
 
     View::share('meta', $this->meta);
-  }
-
-  public function index(Request $request){
-
-    $action = isset(($actions = explode('|', $request->get('action', 'fetch')))[0]) ? $actions[0] : '';
-
-    $method = action2method($action);
-    if(method_exists($this, $method))
-      return call_user_func_array([ $this, $method ], func_get_args());
-  }
-
-  public function store(Request $request){
-
-    $action = isset(($actions = explode('|', $request->get('action', 'save')))[0]) ? $actions[0] : '';
-
-    $method = action2method($action);
-    if(method_exists($this, $method))
-      return call_user_func_array([ $this, $method ], func_get_args());
   }
 
   public function applySorts($builder, array $sorts)
