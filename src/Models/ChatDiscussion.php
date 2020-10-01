@@ -218,7 +218,7 @@ class ChatDiscussion extends Model
 
       $offline = self::isOffline();
 
-      if($offline && config('chat.offline-message') && $offline_message_at->diffInHours() > 2){
+      if($offline && config('chat.offline-message') && $offline_message_at->diffInHours() >= 0){
 
         $message = config('chat.offline-message');
         $faqs = config('chat.offline-message-faqs', []);
@@ -227,7 +227,7 @@ class ChatDiscussion extends Model
           foreach($faqs as $faq_topic){
 
             $faq = FAQ::where('topic', $faq_topic)->first();
-            $message .= "<li><a href='" . env('APP_URL') . "/faq/{$faq->seo_url}' target='_blank'>{$faq->topic}</a></li>";
+            $message .= "<li><a href='/faq/{$faq->seo_url}' target='_blank'>{$faq->topic}</a></li>";
           }
           $message .= "</ol></div>";
         }
