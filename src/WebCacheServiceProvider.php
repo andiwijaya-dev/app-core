@@ -45,25 +45,7 @@ class WebCacheServiceProvider extends ServiceProvider
    */
   public function boot(Request $request){
 
-    if(config('webcache.enabled') &&
-      in_array($request->getHttpHost(), config('webcache.hosts', [])) &&
-      !$this->app->runningInConsole() &&
-      $request->method() == 'GET' &&
-      !$request->has('webcache-reload')){
-
-      if(Cache::has(WebCache::getKey($request))){
-
-        global $kernel;
-
-        $response = Response::create(Cache::get(WebCache::getKey($this->app->request)));
-        $response->send();
-
-        $kernel->terminate($request, $response);
-
-        exit();
-
-      }
-    }
+    $this->handle($request);
 
     $this->app['router']->aliasMiddleware('web-cache-excluded', WebCacheExcludedMiddleware::class);
 
@@ -76,6 +58,29 @@ class WebCacheServiceProvider extends ServiceProvider
       ],
       'webcache'
     );
+  }
+
+  public function handle(Request $request){
+
+    if(config('webcache.enabled') &&
+      in_array($request->getHttpHost(), config('webcache.hosts', [])) &&
+      !$this->app->runningInConsole() &&
+      $request->method() == 'GET' &&
+      !$request->has('webcache-reload')){
+
+      if(Cache::has(WebCache::getKey($request))){
+
+        global $kernel;
+
+        $response = Response::create(Cache::get(WebCache::getKey($this->app->request)));
+
+        $response->send();
+
+        $kernel->terminate($request, $response);
+
+        exit();
+      }
+    }
   }
 
 }

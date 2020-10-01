@@ -11,17 +11,16 @@ class WebCacheMiddleware{
 
     $response = $next($request);
 
-    if(env('WEB_CACHE') &&
-      env('WEB_CACHE_HOST') == $request->getHttpHost() &&
+    if(config('webcache.enabled') &&
+      in_array($request->getHttpHost(), config('webcache.hosts', [])) &&
       $request->method() == 'GET' &&
       isset(($route = $request->route())->action['middleware']) && is_array($route->action['middleware']) &&
-      !in_array('web-cache-excluded', $route->action['middleware']))
-    {
+      !in_array('web-cache-excluded', $route->action['middleware'])){
+
       WebCache::store($request, $response);
     }
 
     return $response;
-
   }
 
 }

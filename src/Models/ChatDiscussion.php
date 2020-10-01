@@ -218,12 +218,12 @@ class ChatDiscussion extends Model
 
       $offline = self::isOffline();
 
-      if($offline && config('chat.offline-message') && $offline_message_at->diffInHours() >= 0){
+      if($offline && config('chat.offline-message') && $offline_message_at->diffInHours() > 2){
 
         $message = config('chat.offline-message');
         $faqs = config('chat.offline-message-faqs', []);
         if(count($faqs) > 0){
-          $message .= "<div class='vmar-1'><label>Apakah yang anda cari terdapat dibawah ini:</label><ol class='vmart-05'>";
+          $message .= "<div class='vmar-1'><label>Mungkin artikel dibawah ini dapat membantu anda:</label><ol class='vmart-05'>";
           foreach($faqs as $faq_topic){
 
             $faq = FAQ::where('topic', $faq_topic)->first();

@@ -1450,3 +1450,11 @@ if(!function_exists('greeting')){
 
 }
 
+if(!function_exists('uf_byte_size')){
+  function uf_byte_size($size)
+  {
+    $unit=array('B','KB','MB','Bb','TB','PB');
+    return @round($size/pow(1024,($i=floor(log($size,1024)))),2).$unit[$i];
+  }
+}
+
