@@ -14,6 +14,7 @@ use Illuminate\Database\Eloquent\Model;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Mail;
 use Illuminate\Support\Facades\Redis;
+use Illuminate\Support\Str;
 use Illuminate\Support\Traits\Macroable;
 
 class ChatDiscussion extends Model
@@ -167,7 +168,7 @@ class ChatDiscussion extends Model
 
     foreach($discussions as $discussion){
 
-      $offline = count(Redis::pubsub('channels', "customer-discussion-{$discussion->id}")) <= 0;
+      $offline = count(Redis::pubsub('channels', Str::slug(env('APP_NAME')) . '-' . "customer-discussion-{$discussion->id}")) <= 0;
 
       if($offline){
         $discussion->sendEmailNotification();

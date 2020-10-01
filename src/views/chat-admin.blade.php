@@ -156,7 +156,7 @@
 
     window.scriptBuffer.push(function(){
 
-      $.wsListen('{{ $channel_discussion }}', '{{ env('UPDATER_HOST') }}');
+      $.wsListen('{{ Str::slug(env('APP_NAME')) . '-' . $channel_discussion }}', '{{ env('UPDATER_HOST') }}');
     });
 
   </script>

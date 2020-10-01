@@ -18,6 +18,7 @@ use Illuminate\Support\Facades\Log;
 use Illuminate\Support\Facades\Redis;
 use Illuminate\Support\Facades\Session;
 use Illuminate\Support\Facades\Storage;
+use Illuminate\Support\Str;
 use Symfony\Component\HttpFoundation\StreamedResponse;
 
 class ChatAdminController extends BaseController
@@ -256,7 +257,7 @@ class ChatAdminController extends BaseController
     $messages = $messages->splice(0, $item_per_page)->reverse();
     $last_id = $messages->pluck('id')->last();
 
-    $customer_is_online = count(Redis::pubsub('channels', 'customer-discussion-' . $discussion->id)) > 0;
+    $customer_is_online = count(Redis::pubsub('channels', Str::slug(env('APP_NAME')) . '-' . 'customer-discussion-' . $discussion->id)) > 0;
 
     $params = [
       'discussion'=>$discussion,
@@ -424,22 +425,22 @@ class ChatAdminController extends BaseController
     ];
 
     Redis::publish(
-      $this->channel_discussion,
+      Str::slug(env('APP_NAME')) . '-' . $this->channel_discussion,
       json_encode($updates)
     );
 
-    if(isset($event->message) && $event->message->direction == ChatMessage::DIRECTION_IN){
+    /*if(isset($event->message) && $event->message->direction == ChatMessage::DIRECTION_IN){
 
       $title = "Pesan baru dari " . (Customer::find($event->discussion->key)->name ?? '');
       $description = substr($event->message->text, 0, 30) . '...';
       $target = "/chat-admin/{$event->discussion->id}";
       Redis::publish(
-        'global-notification',
+        Str::slug(env('APP_NAME')) . '-' . 'global-notification',
         json_encode([
           ['type' => 'script', 'script' => "$.notify({ title:\"{$title}\", description:\"{$description}\", target:\"{$target}\" })"]
         ])
       );
-    }
+    }*/
 
   }
 

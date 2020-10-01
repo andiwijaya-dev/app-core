@@ -106,7 +106,7 @@ class ListPageController2 extends ActionableController{
         }
 
         Redis::publish(
-          $this->channel,
+          Str::slug(env('APP_NAME')) . '-' . $this->channel,
           json_encode($updates)
         );
       }
