@@ -271,7 +271,7 @@ class ScheduledTask extends Model
       'command'=>$command,
       'description'=>$description,
       'repeat'=>self::REPEAT_NONE,
-      'remove_after_completed'=>0
+      'remove_after_completed'=>1
     ]);
 
     $task->save();

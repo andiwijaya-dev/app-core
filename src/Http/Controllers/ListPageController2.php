@@ -80,8 +80,8 @@ class ListPageController2 extends ActionableController{
           $updates[] = [
             'type'=>'script',
             'script'=>implode(';', [
-              "$('#" . Str::slug($this->title) . " .grid-content-tbody tr[data-id={$event->id}]').remove()",
-              "$('#" . Str::slug($this->title) . " .feed-content .item[data-id={$event->id}]').remove()",
+              "$('#" . Str::slug($this->title) . "-page .grid-content-tbody tr[data-id={$event->id}]').remove()",
+              "$('#" . Str::slug($this->title) . "-page .feed-content .item[data-id={$event->id}]').remove()",
             ])
           ];
         }
@@ -93,14 +93,14 @@ class ListPageController2 extends ActionableController{
           $updates[] = [
             'type' => 'element',
             'html' => view($this->view_grid_item, ['item' => $model ])->render(),
-            'parent' => '#' . Str::slug($this->title) . ' .grid-content-tbody',
+            'parent' => '#' . Str::slug($this->title) . '-page .grid-content-tbody',
             'mode' => 'prepend'
           ];
 
           $updates[] = [
             'type' => 'element',
             'html' => view($this->view_feed_item, ['item' => $model ])->render(),
-            'parent' => '#' . Str::slug($this->title) . ' .feed-content',
+            'parent' => '#' . Str::slug($this->title) . '-page .feed-content',
             'mode' => 'prepend'
           ];
         }

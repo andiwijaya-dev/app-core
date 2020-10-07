@@ -43,17 +43,16 @@ trait LoggedTraitV3{
    * @return bool|null
    * @throws \Exception
    */
-  public function delete($options = []){
+  public function delete(array $options = []){
 
     if(in_array(debug_backtrace()[1]['function'], [ 'preDelete', 'postDelete' ]))
       return Model::delete($options);
 
     try{
-
       DB::beginTransaction();
 
       if(!isset($options['pre-delete']) || $options['pre-delete'])
-        $this->preDelete();
+        $this->preDelete($options);
 
       if($this->log && (!isset($options['log']) || $options['log'])){
 
@@ -68,33 +67,26 @@ trait LoggedTraitV3{
           'data'=>$this->attributes,
           'user_id'=>$user_id
         ]);
-
       }
 
       $return = parent::delete();
 
       DB::commit();
-
     }
     catch(\Exception $ex){
 
       DB::rollBack();
 
       throw $ex;
-
     }
 
     if(!isset($options['post-delete']) || $options['post-delete'])
-      $this->postDelete();
+      $this->postDelete($options);
 
-    if(!isset($options['notify']) || $options['notify']){
-
+    if(!isset($options['notify']) || $options['notify'])
       event(new ModelEvent(ModelEvent::TYPE_REMOVE, self::class, $this->id));
 
-    }
-
     return $return;
-
   }
 
   /**
