@@ -227,7 +227,8 @@ class ChatDiscussion extends Model
           foreach($faqs as $faq_topic){
 
             $faq = FAQ::where('topic', $faq_topic)->first();
-            $message .= "<li><a href=" . env('APP_URL') . "'/faq/{$faq->seo_url}' target='_blank'>{$faq->topic}</a></li>";
+            if(isset($faq->id))
+              $message .= "<li><a href=" . env('APP_URL') . "'/faq/{$faq->seo_url}' target='_blank'>{$faq->topic}</a></li>";
           }
           $message .= "</ol></div>";
         }
