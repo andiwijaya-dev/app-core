@@ -10,6 +10,7 @@ use Illuminate\Foundation\Bus\DispatchesJobs;
 use Illuminate\Foundation\Validation\ValidatesRequests;
 use Illuminate\Http\Request;
 use Illuminate\Routing\Controller as BaseController;
+use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Storage;
 use Maatwebsite\Excel\Facades\Excel;
 use PhpOffice\PhpSpreadsheet\Shared\Date;
@@ -295,6 +296,31 @@ class CMSImportController extends BaseController{
           'script'=>"$('#" . md5($this->path) . "').modal_resize()"
         ];
 
+    }
+  }
+
+
+  protected function insertBatch($query, $obj){
+
+    $queries = $params = [];
+    foreach($obj as $arr){
+
+      $queries[] = $arr[0];
+      foreach($arr[1] as $value)
+        $params[] = $value;
+
+      if(count($params) > 60000) {
+
+        $currentQuery = str_replace('{QUERIES}', implode(',', $queries), $query);
+        DB::statement($currentQuery, $params);
+
+        $queries = $params = [];
+      }
+    }
+
+    if(count($queries) > 0){
+      $currentQuery = str_replace('{QUERIES}', implode(',', $queries), $query);
+      DB::statement($currentQuery, $params);
     }
   }
 

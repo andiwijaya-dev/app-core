@@ -14,7 +14,7 @@
   <meta name="csrf-token" content="{{ csrf_token() }}">
   <meta http-equiv=”Content-Type” content=”text/html;charset=UTF-8″>
   <meta name="description" content="{!! $meta_description ?? ($seo['description'] ?? '') !!}">
-  <meta http-equiv="Content-Security-Policy" content="script-src 'self' @stack('script-src')">
+  <meta http-equiv="Content-Security-Policy" content="default-src 'self';script-src 'self' @stack('script-src');style-src 'self' 'unsafe-inline'">
   <meta name="ad-tracking" content="{{ config('webhistory.hosts', [])[\Illuminate\Support\Facades\Request::getHost()] ?? '' }}">
   <meta name="keywords" content="{!! $meta_keywords ?? ($seo['keyword'] ?? '') !!}">
   @if(isset($meta_canonical) || isset($seo->canonical))<link rel="canonical" href="{!! $meta_canonical ?? ($seo['canonical'] ?? '') !!}" />@endif
@@ -46,7 +46,7 @@
     <script type="text/javascript" src="{{ env('APP_CDN_HOST') }}/js/{{ $js ?? 'default' }}.js?v={{ assets_version() }}" defer></script>
   @endif
 
-  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/5.14.0/css/all.min.css" media="print"/>
+  <link rel="stylesheet" href="/css/all.min.css" media="print"/>
   @if(isset($debug) && $debug)
     @foreach(glob(public_path('/css/' . ($css ?? 'clean') . '/*.css')) as $idx=>$path)
       <link id="link{{ $idx }}" rel="stylesheet" href="{{ '/css/' . ($css ?? 'clean') . '/' . basename($path) }}?v={{ assets_version () }}" media="print"/>

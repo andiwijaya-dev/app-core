@@ -5,6 +5,7 @@
  * Check if variable is assosiative array
  */
 
+use Andiwijaya\AppCore\Responses\HTMLResponse;
 use Illuminate\Support\Str;
 
 if(!function_exists('is_assoc')){
@@ -1455,6 +1456,14 @@ if(!function_exists('uf_byte_size')){
   {
     $unit=array('B','KB','MB','Bb','TB','PB');
     return @round($size/pow(1024,($i=floor(log($size,1024)))),2).$unit[$i];
+  }
+}
+
+if(!function_exists('htmlresponse')){
+
+  function htmlresponse($data = [], $status = 200, array $headers = []){
+
+    return new HTMLResponse($data, $status, $headers);
   }
 }
 

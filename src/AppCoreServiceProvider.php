@@ -7,6 +7,8 @@ use Andiwijaya\AppCore\Console\Commands\ModelExecute;
 use Andiwijaya\AppCore\Console\Commands\Ping;
 use Andiwijaya\AppCore\Console\Commands\ScheduledTaskRun;
 use Andiwijaya\AppCore\Console\Commands\TestEmail;
+use Andiwijaya\AppCore\Responses\HTMLResponse;
+use Illuminate\Routing\ResponseFactory;
 use Illuminate\Support\Facades\Blade;
 use Illuminate\Support\Facades\Log;
 use Illuminate\Support\ServiceProvider;
