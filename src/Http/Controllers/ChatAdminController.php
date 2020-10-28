@@ -59,11 +59,11 @@ class ChatAdminController extends BaseController
     $item_per_page = 10;
 
     $model = $this->model::
-    whereExists(function($query){
-      $query->select(DB::raw(1))
-        ->from('chat_message')
-        ->whereRaw('chat_message.discussion_id = chat_discussion.id');
-    })
+      whereExists(function($query){
+        $query->select(DB::raw(1))
+          ->from('chat_message')
+          ->whereRaw('chat_message.discussion_id = chat_discussion.id');
+      })
       ->orderBy('updated_at', 'desc')
       ->orderBy('id', 'desc');
 

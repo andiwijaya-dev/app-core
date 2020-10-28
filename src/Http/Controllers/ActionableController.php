@@ -5,6 +5,7 @@ namespace Andiwijaya\AppCore\Http\Controllers;
 use Andiwijaya\AppCore\Exceptions\KnownException;
 use Illuminate\Http\Request;
 use Illuminate\Routing\Controller as BaseController;
+use function foo\func;
 
 class ActionableController extends BaseController{
 

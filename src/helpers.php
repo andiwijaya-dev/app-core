@@ -745,9 +745,10 @@ if(!function_exists('save_image')){
 
     if(!is_file($image) && !filter_var($image, FILTER_VALIDATE_URL)) exc('Invalid file');
 
-    $ext = '';
     if(is_object($image) && get_class($image) == \Illuminate\Http\UploadedFile::class)
       $ext = $image->getClientOriginalExtension();
+    else
+      $ext = pathinfo($image, PATHINFO_EXTENSION);
 
     $file_md5 = implode('.', [
       md5_file($image),

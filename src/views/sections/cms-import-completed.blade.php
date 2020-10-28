@@ -20,15 +20,21 @@
       @if(isset($results['summary']))
       <div class="pc-100">
         <div class="cls">
-          <div class="pc-33 pad-1 bg-light">
+          <div class="pc-25 pad-1 bg-light">
             <strong>New</strong><br />
             <h5>{{ $results['summary']['new'] ?? 'N/A' }}</h5>
           </div>
-          <div class="pc-33 pad-1 bg-light">
+          <div class="pc-25 pad-1 bg-light">
             <strong>Update</strong><br />
             <h5>{{ $results['summary']['update'] ?? 'N/A' }}</h5>
           </div>
-          <div class="pc-33 pad-1 bg-light">
+          @if(($results['summary']['delete'] ?? 0) > 0)
+          <div class="pc-25 pad-1 bg-light">
+            <strong>Delete</strong><br />
+            <h5>{{ $results['summary']['delete'] ?? 'N/A' }}</h5>
+          </div>
+          @endif
+          <div class="pc-25 pad-1 bg-light">
             <strong>Warning</strong><br />
             <h5>{{ $results['summary']['warning'] ?? 'N/A' }}</h5>
           </div>

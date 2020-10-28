@@ -324,6 +324,33 @@ class CMSImportController extends BaseController{
     }
   }
 
+  protected function insertBatchItems($query, $obj){
+
+    $queries = $params = [];
+    foreach($obj as $key=>$arr){
+
+      foreach($arr as $obj){
+
+        $queries[] = $obj[0];
+        foreach($obj[1] as $value)
+          $params[] = $value;
+
+        if(count($params) > 60000) {
+
+          $currentQuery = str_replace('{QUERIES}', implode(',', $queries), $query);
+          DB::statement($currentQuery, $params);
+
+          $queries = $params = [];
+        }
+      }
+    }
+
+    if(count($queries) > 0){
+      $currentQuery = str_replace('{QUERIES}', implode(',', $queries), $query);
+      DB::statement($currentQuery, $params);
+    }
+  }
+
 
   private function castDate($value){
 

@@ -11,7 +11,6 @@
   <title>{{ $title ?? ($seo['title'] ?? env('APP_NAME')) }}</title>
 
   <meta name="viewport" content="width=device-width, user-scalable=no" />
-  <meta name="csrf-token" content="{{ csrf_token() }}">
   <meta http-equiv=”Content-Type” content=”text/html;charset=UTF-8″>
   <meta name="description" content="{!! $meta_description ?? ($seo['description'] ?? '') !!}">
   <meta http-equiv="Content-Security-Policy" content="default-src 'self';script-src 'self' @stack('script-src');style-src 'self' 'unsafe-inline'">
@@ -29,12 +28,24 @@
     <meta property="og:image"         content="{{ $og['image'] ?? '' }}" />
   @endif
 
-  <style id="pre-style" type="text/css">
+  {{--<link rel="prefetch" href="/css/preload.css" as="style" />
+  <link rel="stylesheet" class="preload" href="/css/preload.css"/>--}}
+
+  <style type="text/css" class="preload">
     @media screen{
       .splash{ position: fixed; left:50%; top:50%; transform: translate3d(-50%, -50%, 0); }
       .screen{ visibility: hidden; }
     }
   </style>
+
+  <link rel="stylesheet" href="/css/all.min.css" media="print"/>
+  @if(isset($debug) && $debug)
+    @foreach(glob(public_path('/css/' . ($css ?? 'clean') . '/*.css')) as $idx=>$path)
+      <link id="link{{ $idx }}" rel="stylesheet" href="{{ '/css/' . ($css ?? 'clean') . '/' . basename($path) }}?v={{ assets_version () }}" media="print"/>
+    @endforeach
+  @else
+    <link rel="stylesheet" href="{{ env('APP_CDN_HOST') }}/css/{{ $css ?? 'default' }}.css?v={{ assets_version () }}" media="print"/>
+  @endif
 
   <script type="text/javascript" src="{{ env('APP_CDN_HOST') }}/js/jquery.min.js" defer></script>
   <script type="text/javascript" src="{{ env('APP_CDN_HOST') }}/js/exif.js" defer></script>
@@ -44,15 +55,6 @@
     @endforeach
   @else
     <script type="text/javascript" src="{{ env('APP_CDN_HOST') }}/js/{{ $js ?? 'default' }}.js?v={{ assets_version() }}" defer></script>
-  @endif
-
-  <link rel="stylesheet" href="/css/all.min.css" media="print"/>
-  @if(isset($debug) && $debug)
-    @foreach(glob(public_path('/css/' . ($css ?? 'clean') . '/*.css')) as $idx=>$path)
-      <link id="link{{ $idx }}" rel="stylesheet" href="{{ '/css/' . ($css ?? 'clean') . '/' . basename($path) }}?v={{ assets_version () }}" media="print"/>
-    @endforeach
-  @else
-    <link rel="stylesheet" href="{{ env('APP_CDN_HOST') }}/css/{{ $css ?? 'default' }}.css?v={{ assets_version () }}" media="print"/>
   @endif
 
   @stack('head')

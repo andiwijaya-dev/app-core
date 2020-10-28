@@ -67,6 +67,14 @@ class ChatMessage extends Model
       ->count() > 0 ? true : false;
   }
 
+  public function getPreviousMessageAttribute(){
+
+    return ChatMessage::whereDiscussionId($this->discussion_id)
+      ->where('id', '<', $this->id)
+      ->orderBy('created_at', 'desc')
+      ->first();
+  }
+
   public function getPreviousMessagesAttribute(){
 
     return ChatMessage::whereDiscussionId($this->discussion_id)
