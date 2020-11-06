@@ -337,6 +337,7 @@ class ChatAdminController extends BaseController
           'Date',
           'Type',
           'Message',
+          'Pesan Otomatis'
         ]);
 
         ChatMessage::orderBy('discussion_id', 'asc')
@@ -349,7 +350,8 @@ class ChatAdminController extends BaseController
                 $message->discussion->title,
                 $message->created_at,
                 $message->direction == ChatMessage::DIRECTION_IN ? 'In' : 'Out',
-                $message->text
+                $message->text,
+                $message->is_system ? 'Ya' : 'Tidak'
               ];
 
               fputcsv($handle, $obj);

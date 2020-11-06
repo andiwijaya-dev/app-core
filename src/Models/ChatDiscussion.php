@@ -15,7 +15,6 @@ use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Mail;
 use Illuminate\Support\Facades\Redis;
 use Illuminate\Support\Str;
-use Illuminate\Support\Traits\Macroable;
 
 class ChatDiscussion extends Model
 {
@@ -136,20 +135,58 @@ class ChatDiscussion extends Model
 
   }
 
-  public function greeting($delay = 0){
+  public function sendGreeting(){
 
     if(!config('chat.greeting')) return;
 
-    if($delay > 0) sleep($delay);
-
     $message = new ChatMessage([
+      'discussion_id'=>$this->id,
       'direction'=>ChatMessage::DIRECTION_OUT,
       'text'=>config('chat.greeting'),
       'is_system'=>1,
-      'discussion_id'=>$this->id
+      'extra'=>[ 'name'=>'Tara', 'avatar_url'=>'chat-figure.png' ],
     ]);
     $message->save();
   }
+
+  public function sendOfflineMessage(){
+
+    $offline_message_at = Carbon::createFromTimeString(date('Y-m-d H:i:s', strtotime($discussion->extra['offline_message_at'] ?? null)));
+
+    if(config('chat.offline-message') && $offline_message_at->diffInHours() > 2){
+
+      $extra = $discussion->extra;
+
+      $text = config('chat.offline-message');
+      $faqs = config('chat.offline-message-faqs', []);
+      if(count($faqs) > 0){
+        $text .= "<div class='vmar-1'><label>Mungkin artikel dibawah ini dapat membantu anda:</label><ol class='vmart-05'>";
+        foreach($faqs as $faq_topic){
+
+          $faq = FAQ::where('topic', $faq_topic)->first();
+          if(isset($faq->id))
+            $text .= "<li><a href=\"/faq/{$faq->seo_url}\" target=\"_blank\">{$faq->topic}</a></li>";
+        }
+        $text .= "</ol></div>";
+      }
+
+      $message = new ChatMessage([
+        'discussion_id'=>$this->id,
+        'direction'=>ChatMessage::DIRECTION_OUT,
+        'text'=>$text,
+        'is_system'=>1,
+        'extra'=>[ 'name'=>'Tara', 'avatar_url'=>'chat-figure.png' ],
+      ]);
+      $message->save();
+
+      $extra['offline_message_at'] = Carbon::now()->format('Y-m-d H:i:s');
+
+      $discussion->extra = $extra;
+      $discussion->save();
+    }
+  }
+
+
 
   public static function notifyUnsent($cmd = null){
 
@@ -206,58 +243,6 @@ class ChatDiscussion extends Model
   public static function check(Command $command = null){
 
     self::detachHandled($command);
-  }
-
-  public static function sendOfflineMessage($discussion_id){
-
-    $discussion = ChatDiscussion::find($discussion_id);
-
-    if($discussion){
-
-      $offline_message_at = Carbon::createFromTimeString(date('Y-m-d H:i:s', strtotime($discussion->extra['offline_message_at'] ?? null)));
-
-      $offline = self::isOffline();
-
-      if($offline && config('chat.offline-message') && $offline_message_at->diffInHours() > 2){
-
-        $message = config('chat.offline-message');
-        $faqs = config('chat.offline-message-faqs', []);
-        if(count($faqs) > 0){
-          $message .= "<div class='vmar-1'><label>Mungkin artikel dibawah ini dapat membantu anda:</label><ol class='vmart-05'>";
-          foreach($faqs as $faq_topic){
-
-            $faq = FAQ::where('topic', $faq_topic)->first();
-            if(isset($faq->id))
-              $message .= "<li><a href=\"/faq/{$faq->seo_url}\" target=\"_blank\">{$faq->topic}</a></li>";
-          }
-          $message .= "</ol></div>";
-        }
-
-        $message = new ChatMessage([
-          'discussion_id'=>$discussion_id,
-          'direction'=>ChatMessage::DIRECTION_OUT,
-          'text'=>$message,
-          'is_system'=>1,
-          'extra'=>[ 'name'=>'Tara', 'avatar_url'=>'chat-figure.png' ],
-        ]);
-        $message->save();
-
-        $extra = $discussion->extra;
-        $extra['offline_message_at'] = Carbon::now()->format('Y-m-d H:i:s');
-
-        $discussion->extra = $extra;
-        $discussion->save();
-      }
-    }
-
-  }
-
-
-  public static function isOffline(){
-
-    return !(in_array(Carbon::now()->format('N'), config('chat.online-days', [])) &&
-      strtotime(Carbon::createFromFormat('H:i', config('chat.online-start'))) <= ($now = Carbon::now()->unix()) &&
-      strtotime(Carbon::createFromFormat('H:i', config('chat.online-end'))) >= $now);
   }
 
 }

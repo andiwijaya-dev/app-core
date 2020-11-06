@@ -8,7 +8,7 @@
     </div>
     <div class="pc-60 align-left">
       <h5>{{ $discussion->name ?? $discussion->key }}</h5>
-      <div>
+      <div class="block ellipsis">
         @if(isset($discussion->extra['phone_number']))
           <a href="tel:{{ $discussion->extra['phone_number'] }}"><span class="fa fa-mobile-alt"></span> {{ $discussion->extra['phone_number'] }}</a>
         @endif
