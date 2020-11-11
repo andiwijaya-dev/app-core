@@ -969,14 +969,24 @@ EOL;
         $items = isset($param['items']) && is_array($param['items']) ? $param['items'] : [];
 
         $idx = 0;
-        foreach($items as $item_value=>$item_text){
-          $html .= <<<EOL
+        if(count($items) <= 5){
+          foreach($items as $item_value=>$item_text){
+            $html .= <<<EOL
     <div class="choice">
       <input type="checkbox" id="{$key}-{$idx}" name="{$key}[]" value="{$item_value}" onchange="$('.apply-filter').click()"/>
       <label for="{$key}-{$idx}"><span class="checker"><span></span></span> {$item_text}</label>
     </div>
 EOL;
-          $idx++;
+            $idx++;
+          }
+        }
+        else{
+          $html .= "<div class='dropdown'><select name='{$key}[]' onchange=\"$('.apply-filter').click()\">";
+          $html .= "<option value=''>-</option>";
+          foreach($items as $item_value=>$item_text) {
+            $html .= "<option value=\"{$item_value}\">{$item_text}</option>";
+          }
+          $html .= "</select><span class='fa fa-caret-down icon'></span></div>";
         }
 
         break;
@@ -987,18 +997,32 @@ EOL;
 
         if(class_exists($class)){
 
-          $class::all()->each(function($row) use(&$html, $key, $item_text_key){
+          $items = $class::all();
 
-            $item_text = $row->{$item_text_key};
+          if(count($items) < 5){
 
-            $html .= <<<EOL
+            foreach($items as $idx=>$item){
+
+              $item_text = $item->{$item_text_key};
+
+              $html .= <<<EOL
     <div class="choice">
-      <input type="checkbox" id="{$key}-{$row->id}" name="{$key}[]" value="{$row->id}" onchange="$('.apply-filter').click()"/>
-      <label for="{$key}-{$row->id}"><span class="checker"><span></span></span> {$item_text}</label>
+      <input type="checkbox" id="{$key}-{$item->id}" name="{$key}[]" value="{$item->id}" onchange="$('.apply-filter').click()"/>
+      <label for="{$key}-{$item->id}"><span class="checker"><span></span></span> {$item_text}</label>
     </div>
 EOL;
+            }
+          }
+          else{
 
-          });
+            $html .= "<div class='dropdown'><select name='{$key}[]' onchange=\"$('.apply-filter').click()\">";
+            $html .= "<option value=''>-</option>";
+            foreach($items as $idx=>$item) {
+              $item_text = $item->{$item_text_key};
+              $html .= "<option value=\"{$item->id}\">{$item_text}</option>";
+            }
+            $html .= "</select><span class='fa fa-caret-down icon'></span></div>";
+          }
 
         }
 

@@ -22,11 +22,11 @@
   <div class="hidden-sm head">
 
     <div class="pad-2">
-      <div class="rowc valign-middle">
-        <div class="col-lg-4 col-sm-3 hpadl-1">
+      <div class="srow valign-middle">
+        <span class="hpadl-1">
           <h1>{{ $title }}</h1>
-        </div>
-        <div class="col-lg-8 col-sm-9 align-right">
+        </span>
+        <div class="align-right">
           <button class="hidden" name="action" value="fetch"></button>
 
           @yield('upper-options')
