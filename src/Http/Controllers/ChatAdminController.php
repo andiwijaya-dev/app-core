@@ -332,7 +332,8 @@ class ChatAdminController extends BaseController
         $handle = fopen('php://output', 'w');
 
         fputcsv($handle, [
-          'Email',
+          'Id',
+          'Nama Pelanggan',
           'Topic',
           'Date',
           'Type',
@@ -347,6 +348,7 @@ class ChatAdminController extends BaseController
 
               $obj = [
                 $message->discussion->key,
+                $message->discussion->customer->name ?? $message->discussion->name,
                 $message->discussion->title,
                 $message->created_at,
                 $message->direction == ChatMessage::DIRECTION_IN ? 'In' : 'Out',
