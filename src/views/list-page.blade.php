@@ -56,9 +56,15 @@
 
 @section('desktop-list-items')
 
-  @foreach($items as $idx=>$item)
-    @component($view_grid_item, [ 'item'=>$item, 'idx'=>$idx ])@endcomponent
-  @endforeach
+  @if(count($items) > 0)
+    @foreach($items as $idx=>$item)
+      @component($view_grid_item, [ 'item'=>$item, 'idx'=>$idx ])@endcomponent
+    @endforeach
+  @else
+    <tr>
+      <th colspan="100" class="align-center"><strong>Tidak ada data</strong></th>
+    </tr>
+  @endif
 
 @endsection
 

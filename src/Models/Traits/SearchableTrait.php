@@ -49,14 +49,19 @@ trait SearchableTrait{
    * @param string $term
    * @return \Illuminate\Database\Eloquent\Builder
    */
-  public function scopeSearch($query, $term)
+  public function scopeSearch($query, $term, $callback = null)
   {
     if(isset($this->searchable) && is_array($this->searchable) && count($this->searchable) > 0){
 
       $columns = implode(',',$this->searchable);
 
-      //$query->whereRaw("MATCH ({$columns}) AGAINST (?)" , $this->fullTextWildcards($term));
+      $filters = [];
+      $term = $this->extractFilterFromTerm($term, $filters);
+
       $query->whereRaw("MATCH ({$columns}) AGAINST (? IN BOOLEAN MODE)", $this->fullTextWildcards($term));
+
+      if(count($filters) > 0 && is_callable($callback))
+        call_user_func_array($callback, [ $filters ]);
 
       return $query;
 
@@ -105,6 +110,28 @@ trait SearchableTrait{
 
     }
 
+  }
+
+  function extractFilterFromTerm($term, &$filters){
+
+    preg_match_all('/(\w+)([\:\>\<\~]+)((\".*?(?=\")\")|(\'.*?(?=\')\')|(\w+))/', $term, $matches);
+
+    if(isset($matches[0][0])){
+      foreach($matches[0] as $idx=>$text){
+
+        $key = $matches[1][$idx];
+        $operator = $matches[2][$idx];
+        $value = str_replace([ '"', "'" ], '', $matches[3][$idx]);
+
+        $filters[$key] = [ 'key'=>$key, 'operator'=>$operator, 'value'=>$value ];
+
+        $term = str_replace($text, '', $term);
+      }
+    }
+
+    $term = trim($term);
+
+    return $term;
   }
 
 }

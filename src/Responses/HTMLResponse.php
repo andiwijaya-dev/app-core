@@ -20,28 +20,33 @@ class HTMLResponse implements Responsable {
     $this->headers['Content-Type'] = 'application/json';
   }
 
-  public function append($view, $expr, array $data = []){
+  public function append($target, $html){
 
-    $this->data[] = [ 'type'=>'html', 'html'=>view($view, $data)->render(), 'mode'=>'append', 'parent'=>$expr ];
+    $this->data[] = [ 'type'=>'html', 'html'=>$html, 'mode'=>'append', 'target'=>$target ];
     return $this;
   }
 
-  public function prepend($view, $expr, array $data = []){
+  public function prepend($target, $html){
 
-    $this->data[] = [ 'type'=>'html', 'html'=>view($view, $data)->render(), 'mode'=>'prepend', 'parent'=>$expr ];
+    $this->data[] = [ 'type'=>'html', 'html'=>$html, 'mode'=>'prepend', 'target'=>$target ];
     return $this;
   }
 
-  public function html($view, $expr, array $data = []){
+  public function html($target, $html){
 
-    $html = View::exists($view) ? view($view, $data)->render() : $view;
-    $this->data[] = [ 'type'=>'html', 'html'=>$html, 'parent'=>$expr ];
+    $this->data[] = [ 'type'=>'html', 'html'=>$html, 'target'=>$target ];
+    return $this;
+  }
+
+  public function replace($target, $html){
+
+    $this->data[] = [ 'type'=>'html', 'html'=>$html, 'mode'=>'replace', 'target'=>$target ];
     return $this;
   }
 
   public function text($text, $expr, array $data = []){
 
-    $this->data[] = [ 'type'=>'text', 'text'=>$text, 'parent'=>$expr ];
+    $this->data[] = [ 'type'=>'text', 'text'=>$text, 'target'=>$expr ];
     return $this;
   }
 
@@ -83,12 +88,6 @@ class HTMLResponse implements Responsable {
     return $this;
   }
 
-  public function replace($view, $expr, array $data = []){
-
-    $this->data[] = [ 'type'=>'html', 'html'=>view($view, $data)->render(), 'mode'=>'replace', 'parent'=>$expr ];
-    return $this;
-  }
-
   public function modal($id, $view, array $data = [], array $options = [ 'init'=>1 ]){
 
     if(View::exists($view)) $view = view($view, $data)->render();
@@ -105,20 +104,6 @@ class HTMLResponse implements Responsable {
 
 
 
-
-  public function repeater($items, $view){
-
-    $html = [];
-
-    $html[] = "<div class=\"popup\">";
-    foreach($items as $key=>$item){
-
-      $html[] .= "<div class=\"item\">";
-      $html[] = view($view, compact('item', 'key'))->render();
-      $html[] = "</div>";
-    }
-    $html[] = "</div>";
-  }
 
 
 
