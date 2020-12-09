@@ -165,13 +165,13 @@ class ScheduledTask extends Model
     }
   }
 
-  public function runInBackground(){
+  public function runInBackground($delay = 0){
 
     chdir(base_path());
 
     $log_path = storage_path('logs/laravel.log');
 
-    exec("php artisan scheduled-task:run --id={$this->id} > {$log_path} 2>&1 &", $output, $return_var);
+    exec("php artisan scheduled-task:run --id={$this->id} --delay={$delay} > {$log_path} 2>&1 &", $output, $return_var);
   }
 
   public static function check(Command $cmd = null){
@@ -249,7 +249,7 @@ class ScheduledTask extends Model
     return $task;
   }
 
-  public static function runOnce($command, $description = ''){
+  public static function runOnce($command, $description = '', $delay = 0){
 
     if($command instanceof \Closure){
 
@@ -276,7 +276,7 @@ class ScheduledTask extends Model
 
     $task->save();
 
-    $task->runInBackground();
+    $task->runInBackground($delay);
 
     return $task;
   }

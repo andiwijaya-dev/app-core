@@ -58,7 +58,8 @@ trait SearchableTrait{
       $filters = [];
       $term = $this->extractFilterFromTerm($term, $filters);
 
-      $query->whereRaw("MATCH ({$columns}) AGAINST (? IN BOOLEAN MODE)", $this->fullTextWildcards($term));
+      if(strlen($term) > 0)
+        $query->whereRaw("MATCH ({$columns}) AGAINST (? IN BOOLEAN MODE)", $this->fullTextWildcards($term));
 
       if(count($filters) > 0 && is_callable($callback))
         call_user_func_array($callback, [ $filters ]);

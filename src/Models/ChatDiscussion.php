@@ -139,14 +139,27 @@ class ChatDiscussion extends Model
 
     if(!config('chat.greeting')) return;
 
-    $message = new ChatMessage([
-      'discussion_id'=>$this->id,
-      'direction'=>ChatMessage::DIRECTION_OUT,
-      'text'=>config('chat.greeting'),
-      'is_system'=>1,
-      'extra'=>[ 'name'=>'Tara', 'avatar_url'=>'chat-figure.png' ],
-    ]);
-    $message->save();
+    if(!$this->handled_by){
+
+      $text = config('chat.greeting');
+      preg_match_all('/(\[\w+\])+/', $text, $matches);
+      if(isset($matches[0][0])){
+        foreach($matches[0] as $match){
+          $key = substr($match, 1, strlen($match) - 2);
+          $value = $this->{$key} ?? '';
+          $text = str_replace($match, $value, $text);
+        }
+      }
+
+      $message = new ChatMessage([
+        'discussion_id'=>$this->id,
+        'direction'=>ChatMessage::DIRECTION_OUT,
+        'text'=>$text,
+        'is_system'=>1,
+        'extra'=>[ 'name'=>'Tara', 'avatar_url'=>'chat-figure.png' ],
+      ]);
+      $message->save();
+    }
   }
 
   public function sendOfflineMessage(){
@@ -154,8 +167,6 @@ class ChatDiscussion extends Model
     $offline_message_at = Carbon::createFromTimeString(date('Y-m-d H:i:s', strtotime($discussion->extra['offline_message_at'] ?? null)));
 
     if(config('chat.offline-message') && $offline_message_at->diffInHours() > 2){
-
-      $extra = $discussion->extra;
 
       $text = config('chat.offline-message');
       $faqs = config('chat.offline-message-faqs', []);
@@ -179,10 +190,10 @@ class ChatDiscussion extends Model
       ]);
       $message->save();
 
+      $extra = $this->extra;
       $extra['offline_message_at'] = Carbon::now()->format('Y-m-d H:i:s');
-
-      $discussion->extra = $extra;
-      $discussion->save();
+      $this->extra = $extra;
+      $this->save();
     }
   }
 
