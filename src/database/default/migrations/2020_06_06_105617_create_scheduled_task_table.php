@@ -13,27 +13,27 @@ class CreateScheduledTaskTable extends Migration
      */
     public function up()
     {
-        Schema::create('scheduled_task', function (Blueprint $table) {
+      Schema::create('scheduled_task', function (Blueprint $table) {
 
-          $table->bigIncrements('id');
+        $table->bigIncrements('id');
 
-          $table->smallInteger('status'); // scheduled, running, completed, failed
+        $table->smallInteger('status');
+        $table->string('description', 100);
+        $table->bigInteger('creator_id')->unsigned()->nullable()->default(0);
+        $table->string('command');
+        $table->smallInteger('repeat');
 
-          $table->string('creator')->nullable();
-          $table->bigInteger('creator_id')->unsigned()->nullable();
+        $table->dateTime('start')->nullable();
+        $table->text('repeat_custom')->nullable();
 
-          $table->string('description');
-          $table->string('command');
+        $table->integer('count')->nullable()->default(0);
+        $table->integer('error')->nullable()->default(0);
+        $table->boolean('remove_after_completed')->nullable()->default(0);
 
-          $table->dateTime('start')->nullable();
+        $table->timestamps();
 
-          $table->smallInteger('repeat'); // once, hourly, daily, weekly, monthly, every n-unit
-          $table->text('repeat_options')->nullable();
-
-          $table->string('flag', 1)->nullable();
-
-          $table->timestamps();
-        });
+        $table->unique([ 'command', 'start' ], 'scheduled_task_uq1');
+      });
     }
 
     /**

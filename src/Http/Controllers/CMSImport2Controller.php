@@ -15,16 +15,16 @@ use Illuminate\Support\Facades\Storage;
 use Maatwebsite\Excel\Facades\Excel;
 use PhpOffice\PhpSpreadsheet\Shared\Date;
 
-class CMSImportController extends BaseController{
+class CMSImport2Controller extends BaseController{
   use AuthorizesRequests, DispatchesJobs, ValidatesRequests;
 
   protected $columns = [];
 
   protected $path = '';
 
-  protected $view = 'andiwijaya::cms-import';
-  protected $view_column_section = 'andiwijaya::sections.cms-import-columns';
-  protected $view_completed_section = 'andiwijaya::sections.cms-import-completed';
+  protected $view = 'andiwijaya::cms-import-2';
+  protected $view_column_section = 'andiwijaya::sections.cms-import-2-columns';
+  protected $view_completed_section = 'andiwijaya::sections.cms-import-2-completed';
 
   protected $title = 'Import';
   protected $description = '';
@@ -60,17 +60,19 @@ class CMSImportController extends BaseController{
   public function view(Request $request){
 
     if($request->ajax()){
-      return view_modal($this->view, [
-        'id'=>md5($this->path),
-        'width'=>600,
-        'height'=>600,
-        'data'=>[
+      return htmlresponse()->modal(
+        md5($this->path),
+        view($this->view, [
           'path'=>$this->path,
           'title'=>$this->title,
           'description'=>$this->description,
           'sample_url'=>$this->sample_url
-        ],
-      ]);
+        ])->render(),
+        [
+          'width'=>'600px',
+          'height'=>'800px',
+        ]
+      );
     }
     abort(404);
   }
@@ -101,13 +103,13 @@ class CMSImportController extends BaseController{
       else{
 
         if(!in_array($request->file('file')->getClientOriginalExtension(), [ 'csv', 'xls', 'xlsx' ]))
-          throw new AppException(__('text.import-csv-invalid-ext'));
+          exc('Invalid file extension: ' . $request->file('file')->getClientOriginalExtension());
 
         $filename = md5_file($request->file('file')->getRealPath()) . '.' . $request->file('file')->getClientOriginalExtension();
 
-        Storage::putFileAs($this->disk, $request->file('file'), ($this->sub_dir ? $this->sub_dir . '/' : '') . $filename);
+        Storage::putFileAs($this->disk, $request->file('file'), $filename);
 
-        $csv_path = Storage::disk($this->disk)->path($this->sub_dir) . '/' . $filename;
+        $csv_path = Storage::disk($this->disk)->path($filename);
       }
 
       if($request->file('file')->getClientOriginalExtension() == 'csv'){
@@ -121,26 +123,20 @@ class CMSImportController extends BaseController{
 
       $csv_columns = array_filter($rows[0][0] ?? []);
 
-      return [
-        '#' . md5($this->path)=>view($this->view_column_section, [
+      return htmlresponse()
+        ->html('#' . md5($this->path), view($this->view_column_section, [
           'title'=>$this->column_section_title,
           'description'=>$this->column_section_description,
           'path'=>$this->path,
           'columns'=>$this->columns,
           'csv_columns'=>$csv_columns,
           'filename'=>$filename
-        ])->render(),
-        'script'=>"$('#" . md5($this->path) . "').modal_resize()"
-      ];
-    }
-    catch(AppException $ex){
-
-      exc($ex->getMessage());
+        ])->render())
+        ->script("ui('#" . md5($this->path) . "').modal_resize()");
     }
     catch(\Exception $ex){
 
-      exc($ex);
-      exc(__('text.general-error'));
+      throw $ex;
     }
   }
 
@@ -233,7 +229,7 @@ class CMSImportController extends BaseController{
               $optional = $column['optional'] ?? 0;
 
               if(!isset($column['csv_index'])){
-                if(!$optional) throw new AppException("Kolom " . ($column['text'] ?? '') . " harus diisi");
+                if(!$optional) exc("Kolom " . ($column['text'] ?? '') . " harus diisi");
                 else continue;
               }
 
@@ -259,16 +255,16 @@ class CMSImportController extends BaseController{
 
       $this->process($data, $request);
 
-      return [
-        '#' . md5($this->path)=>view($this->view_completed_section, [
-          'title'=>$this->completed_section_title,
-          'description'=>$this->completed_section_description,
-          'path'=>$this->path,
-          'results'=>$this->results,
-          'ellapsed'=>round(microtime(1) - $t1, 3)
-        ])->render(),
-        'script'=>"$('#" . md5($this->path) . "').modal_resize()"
-      ];
+      return htmlresponse()->html('#' . md5($this->path),
+          view($this->view_completed_section, [
+            'title'=>$this->completed_section_title,
+            'description'=>$this->completed_section_description,
+            'path'=>$this->path,
+            'results'=>$this->results,
+            'ellapsed'=>round(microtime(1) - $t1, 3)
+          ])->render()
+        )
+          ->script("ui('#" . md5($this->path) . "').modal_resize()");
     }
     catch(AppException $ex){
 
@@ -289,15 +285,14 @@ class CMSImportController extends BaseController{
     switch($request->get('step')){
 
       case 2:
-        return [
-          '#' . md5($this->path)=>view($this->view, [
+        return htmlresponse()->html(
+          '#' . md5($this->path),
+          view($this->view, [
             'path'=>$this->path,
             'title'=>$this->title,
             'description'=>$this->description
-          ])->render(),
-          'script'=>"$('#" . md5($this->path) . "').modal_resize()"
-        ];
-
+          ])->render()
+        );
     }
   }
 

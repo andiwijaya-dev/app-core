@@ -1,8 +1,8 @@
 <form method="post" class="async" action="{{ $path }}">
 
-  <div class="head pad-1">
-    <div class="srow">
-      <div class="pad-1">
+  <div class="modal-head p-2">
+    <div class="clf">
+      <div class="p-1">
         <h1>{{ $title ?? '' }}</h1>
         <p class="less">{!! $description ?? '' !!}</p>
         @if(strlen(($sample_url ?? '')) > 0)
@@ -12,18 +12,18 @@
         @csrf
       </div>
       <span>
-        <span class="fa fa-times pad-1 selectable" data-action="modal.close"></span>
+        <span class="fa fa-times p-1 cl-gray-300 modal-close"></span>
       </span>
     </div>
   </div>
 
-  <div class="body pad-1">
+  <div class="modal-body p-2">
 
     <div class="cls">
-      <div class="pc-100">
-        <div class="bg-light bordered pad-1">
-          <label>@lang('text.cms-import-section1-text1')</label>
-          <div class="vmart-1">
+      <div class="w-100p">
+        <div class="bg-light bordered p-1">
+          <label>Select file to import</label>
+          <div class="mt-1">
             <input type="file" name="file" class="import-file"/>
           </div>
         </div>
@@ -32,8 +32,8 @@
 
   </div>
 
-  <div class="foot pad-2 align-right">
-    <button name="action" value="analyse" class="max hpad-1"><label>@lang('text.upload')</label></button>
+  <div class="modal-foot p-2 align-right">
+    <button name="action" value="analyse" class="max hp-1"><label>Upload</label></button>
   </div>
 
 </form>

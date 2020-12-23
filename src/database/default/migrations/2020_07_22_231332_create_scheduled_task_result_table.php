@@ -13,24 +13,24 @@ class CreateScheduledTaskResultTable extends Migration
      */
     public function up()
     {
-        Schema::create('scheduled_task_result', function (Blueprint $table) {
+      Schema::create('scheduled_task_result', function (Blueprint $table) {
 
-          $table->bigIncrements('id');
+        $table->bigIncrements('id');
 
-          $table->bigInteger('task_id')->unsigned();
+        $table->bigInteger('task_id')->unsigned();
 
-          $table->smallInteger('status');
+        $table->smallInteger('status');
 
-          $table->longText('verbose')->nullable();
+        $table->longText('verbose')->nullable();
 
-          $table->timestamps();
-          $table->dateTime('started_at')->nullable();
-          $table->dateTime('completed_at')->nullable();
-          $table->double('ellapsed', 6, 3)->nullable();
-          $table->integer('pid')->nullable();
+        $table->timestamps();
+        $table->dateTime('started_at')->nullable();
+        $table->dateTime('completed_at')->nullable();
+        $table->double('ellapsed', 6, 3)->nullable();
+        $table->integer('pid')->nullable();
 
-          $table->foreign('task_id')->references('id')->on('scheduled_task')->onDelete('cascade')->onUpdate('cascade');
-        });
+        $table->foreign('task_id')->references('id')->on('scheduled_task')->onDelete('cascade')->onUpdate('cascade');
+      });
     }
 
     /**

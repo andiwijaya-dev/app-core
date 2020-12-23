@@ -1143,6 +1143,63 @@ if(!function_exists('view_modal')){
     ];
   }
 
+  function view_chart($type, $labels, $data, array $options = []){
+
+    $colors = [
+      '#4A89DC',
+      '#3BAFDA',
+      '#37BC9B',
+      '#8CC152',
+      '#F6BB42',
+      '#E9573F',
+      '#DA4453',
+      '#967ADC',
+      '#D770AD',
+      '#434A54'
+    ];
+
+    $datasets = [];
+    foreach($data as $idx=>$arr){
+      $dataset = [
+        'data'=>$arr,
+        'fill'=>false,
+        'borderColor'=>$colors[$idx] ?? 'rgba(0, 0, 0, 1)'
+      ];
+      $datasets[] = $dataset;
+    }
+
+    $params = [
+      'type'=>$type,
+      'data'=>[
+        'labels'=>$labels,
+        'datasets'=>$datasets
+      ],
+      'options'=>[
+        'scales'=>[
+          'yAxes'=>[
+            [
+              'ticks'=>[
+                'beginAtZero'=>true,
+                'display'=>false
+              ]
+            ]
+          ]
+        ]
+      ]
+    ];
+
+    $id = 'chart' . uniqid();
+
+    $html[] = "<div>";
+    $html[] = "<canvas id='{$id}'></canvas>";
+    $html[] = "<script>
+      new Chart('{$id}', " . json_encode($params) . ");
+      </script>";
+    $html[] = "</div>";
+
+    return implode('', $html);
+  }
+
 }
 
 if(!function_exists('view_async')){
@@ -1490,5 +1547,18 @@ if(!function_exists('htmlresponse')){
 
     return new HTMLResponse($data, $status, $headers);
   }
+}
+
+if(!function_exists('round500')){
+
+  function round500($amount){
+
+    $mod = round($amount) % 1000;
+    $round = $mod < 250 ? 0 : ($mod < 500 ? 500 : ($mod < 750 ? 500 : 1000));
+    $amount = ($amount - $mod) + $round;
+
+    return $amount;
+  }
+
 }
 

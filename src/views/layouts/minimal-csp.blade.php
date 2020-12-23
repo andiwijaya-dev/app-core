@@ -13,9 +13,10 @@
   <meta name="viewport" content="width=device-width, user-scalable=no" />
   <meta http-equiv=”Content-Type” content=”text/html;charset=UTF-8″>
   <meta name="description" content="{!! $meta_description ?? ($seo['description'] ?? '') !!}">
-  <meta http-equiv="Content-Security-Policy" content="default-src 'self' {{ $default_src ?? '' }};script-src 'self' {{ $script_src ?? '' }};style-src 'self' 'unsafe-inline' {{ $style_src ?? '' }};img-src 'self' @stack('img-src');font-src 'self' {{ $font_src ?? '' }}">
+{{--  <meta http-equiv="Content-Security-Policy" content="default-src 'self' {{ $default_src ?? '' }};script-src 'self' {{ $script_src ?? '' }};style-src 'self' 'unsafe-inline' {{ $style_src ?? '' }};img-src 'self' @stack('img-src');font-src 'self' {{ $font_src ?? '' }}">--}}
   <meta name="ad-tracking" content="{{ config('webhistory.hosts', [])[\Illuminate\Support\Facades\Request::getHost()] ?? '' }}">
   <meta name="keywords" content="{!! $meta_keywords ?? ($seo['keyword'] ?? '') !!}">
+  <meta name="csrf-token" content="{{ csrf_token() }}">
   @if(isset($meta_canonical) || isset($seo->canonical))<link rel="canonical" href="{!! $meta_canonical ?? ($seo['canonical'] ?? '') !!}" />@endif
   @if(env('GOOGLE_CLIENT_ID'))<meta name="google-signin-client_id" content="{{ env('GOOGLE_CLIENT_ID') }}">@endif
   @if(isset($noindex))<meta name="robots" content="noindex">@endif
