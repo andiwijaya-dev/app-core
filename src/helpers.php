@@ -5,9 +5,6 @@
  * Check if variable is assosiative array
  */
 
-use Andiwijaya\AppCore\Responses\HTMLResponse;
-use Illuminate\Support\Str;
-
 if(!function_exists('is_assoc')){
   function is_assoc($array) {
     if(gettype($array) == "array")
@@ -1071,7 +1068,7 @@ EOL;
 
         $custom_from = \Carbon\Carbon::now()->addDays(-7)->format('j M Y');
         $custom_to = \Carbon\Carbon::now()->format('j M Y');
-        $key = Str::slug($key);
+        $key = Illuminate\Support\Str::slug($key);
 
         $html .= <<<EOL
       <div class="dropdown block">
@@ -1442,7 +1439,7 @@ if(!function_exists('action_route')){
         $paths = array_splice($paths, 0, count($paths) - 1);
       }
 
-      $controller = "App\\Http\\Controllers\\{$namespace}" . Str::ucfirst(Str::camel(count($paths) > 0 ? implode('-', $paths) : 'index') . 'Controller');
+      $controller = "App\\Http\\Controllers\\{$namespace}" . Illuminate\Support\Str::ucfirst(Illuminate\Support\Str::camel(count($paths) > 0 ? implode('-', $paths) : 'index') . 'Controller');
 
       if(class_exists($controller)){
 
@@ -1453,17 +1450,17 @@ if(!function_exists('action_route')){
           switch($method){
 
             case 'GET':
-              $method = Str::camel($action ? $action : 'view');
+              $method = Illuminate\Support\Str::camel($action ? $action : 'view');
 
               return call_user_func_array([ $controller, $method ], [ $request ]);
 
             case 'POST':
-              $method = Str::camel($action ? $action : 'save');
+              $method = Illuminate\Support\Str::camel($action ? $action : 'save');
 
               return call_user_func_array([ $controller, $method ], [ $request ]);
 
             case 'PATCH':
-              $method = Str::camel($action ? $action : 'update');
+              $method = Illuminate\Support\Str::camel($action ? $action : 'update');
 
               return call_user_func_array([ $controller, $method ], [ $request ]);
           }
@@ -1474,12 +1471,12 @@ if(!function_exists('action_route')){
           switch($method){
 
             case 'GET':
-              $method = Str::camel($action ? $action : ($key == 'create' ? 'create' : 'open'));
+              $method = Illuminate\Support\Str::camel($action ? $action : ($key == 'create' ? 'create' : 'open'));
 
               return call_user_func_array([ $controller, $method ], [ $request, $key ]);
 
             case 'DELETE':
-              $method = Str::camel($action ? $action : 'destroy');
+              $method = Illuminate\Support\Str::camel($action ? $action : 'destroy');
 
               return call_user_func_array([ $controller, $method ], [ $request, $key ]);
 
@@ -1545,7 +1542,7 @@ if(!function_exists('htmlresponse')){
 
   function htmlresponse($data = [], $status = 200, array $headers = []){
 
-    return new HTMLResponse($data, $status, $headers);
+    return new Andiwijaya\AppCore\Responses\HTMLResponse($data, $status, $headers);
   }
 }
 
@@ -1560,5 +1557,70 @@ if(!function_exists('round500')){
     return $amount;
   }
 
+}
+
+if(!function_exists('memory_get_usage_text')){
+
+  function memory_get_usage_text(){
+
+    $size = memory_get_usage(true);
+    $unit = array('B','KB','MB','GB','TB','PB');
+    return @round($size/pow(1024,($i=floor(log($size,1024)))),2).' '.$unit[$i];
+  }
+}
+
+if(!function_exists('db_insert_batch')){
+  
+  function db_insert_batch($query, $obj){
+
+    $queries = $params = [];
+    foreach($obj as $arr){
+
+      $queries[] = $arr[0];
+      foreach($arr[1] as $value)
+        $params[] = $value;
+
+      if(count($params) > 60000) {
+
+        $currentQuery = str_replace('{QUERIES}', implode(',', $queries), $query);
+        \Illuminate\Support\Facades\DB::statement($currentQuery, $params);
+
+        $queries = $params = [];
+      }
+    }
+
+    if(count($queries) > 0){
+      $currentQuery = str_replace('{QUERIES}', implode(',', $queries), $query);
+      \Illuminate\Support\Facades\DB::statement($currentQuery, $params);
+    }
+  }
+
+  function db_insert_batch_items($query, $obj){
+
+    $queries = $params = [];
+    foreach($obj as $key=>$arr){
+
+      foreach($arr as $obj){
+
+        $queries[] = $obj[0];
+        foreach($obj[1] as $value)
+          $params[] = $value;
+
+        if(count($params) > 60000) {
+
+          $currentQuery = str_replace('{QUERIES}', implode(',', $queries), $query);
+          \Illuminate\Support\Facades\DB::statement($currentQuery, $params);
+
+          $queries = $params = [];
+        }
+      }
+    }
+
+    if(count($queries) > 0){
+      $currentQuery = str_replace('{QUERIES}', implode(',', $queries), $query);
+      \Illuminate\Support\Facades\DB::statement($currentQuery, $params);
+    }
+  }
+  
 }
 

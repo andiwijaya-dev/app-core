@@ -5,6 +5,7 @@ namespace Andiwijaya\AppCore\Models;
 use Andiwijaya\AppCore\Models\Traits\FilterableTrait;
 use Carbon\Carbon;
 use Illuminate\Database\Eloquent\Model;
+use Illuminate\Support\Facades\Session;
 
 class Log extends Model{
 
@@ -13,7 +14,7 @@ class Log extends Model{
   protected $table = 'log';
 
   protected $fillable = [
-    'loggable_type', 'loggable_id', 'type', 'data', 'user_agent', 'remote_ip', 'user_id', 'created_at', 'updated_at'
+    'loggable_type', 'loggable_id', 'type', 'data', 'user_agent', 'remote_ip', 'user_id', 'session_id'
   ];
 
   protected $casts = [
@@ -49,8 +50,9 @@ class Log extends Model{
   public function __construct(array $attributes = []){
 
     if(!app()->runningInConsole()){
-      if(!isset($attributes['user_agent'])) $attributes['user_agent'] = $_SERVER['HTTP_USER_AGENT'];
-      if(!isset($attributes['remote_ip'])) $attributes['remote_ip'] = $_SERVER['REMOTE_ADDR'];
+      if(!isset($attributes['user_agent'])) $attributes['user_agent'] = $_SERVER['HTTP_USER_AGENT'] ?? '';
+      if(!isset($attributes['remote_ip'])) $attributes['remote_ip'] = $_SERVER['REMOTE_ADDR'] ?? '';
+      if(!isset($attributes['session_id'])) $attributes['session_id'] = Session::getId();
     }
 
     parent::__construct($attributes);

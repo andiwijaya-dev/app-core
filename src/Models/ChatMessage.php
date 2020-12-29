@@ -16,7 +16,7 @@ class ChatMessage extends Model
 
   protected $table = 'chat_message';
 
-  protected $fillable = [ 'discussion_id', 'initial', 'first_reply_at', 'first_reply_after',
+  protected $fillable = [ 'discussion_id', 'session_id', 'initial', 'first_reply_at', 'first_reply_after',
     'unread', 'direction', 'text', 'images', 'extra', 'notified', 'unsent',
     'context', 'is_bot', 'is_system', 'notified_at' ];
 

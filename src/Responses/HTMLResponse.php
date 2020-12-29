@@ -22,44 +22,52 @@ class HTMLResponse implements Responsable {
 
   public function append($target, $html){
 
-    $this->data[] = [ 'type'=>'html', 'html'=>$html, 'mode'=>'append', 'target'=>$target ];
+    $this->data[] = [ '_type'=>'html', 'html'=>$html, 'mode'=>'append', 'target'=>$target ];
     return $this;
   }
 
   public function prepend($target, $html){
 
-    $this->data[] = [ 'type'=>'html', 'html'=>$html, 'mode'=>'prepend', 'target'=>$target ];
+    $this->data[] = [ '_type'=>'html', 'html'=>$html, 'mode'=>'prepend', 'target'=>$target ];
     return $this;
   }
 
   public function html($target, $html){
 
-    $this->data[] = [ 'type'=>'html', 'html'=>$html, 'target'=>$target ];
+    $this->data[] = [ '_type'=>'html', 'html'=>$html, 'target'=>$target ];
     return $this;
   }
 
   public function replace($target, $html){
 
-    $this->data[] = [ 'type'=>'html', 'html'=>$html, 'mode'=>'replace', 'target'=>$target ];
+    $this->data[] = [ '_type'=>'html', 'html'=>$html, 'mode'=>'replace', 'target'=>$target ];
     return $this;
   }
 
   public function text($text, $expr, array $data = []){
 
-    $this->data[] = [ 'type'=>'text', 'text'=>$text, 'target'=>$expr ];
+    $this->data[] = [ '_type'=>'text', 'text'=>$text, 'target'=>$expr ];
     return $this;
   }
 
   public function script($script, $id = ''){
 
-    $this->data[] = [ 'type'=>'script', 'script'=>$script, 'id'=>$id ];
+    $this->data[] = [ '_type'=>'script', 'script'=>$script, 'id'=>$id ];
     return $this;
   }
 
 
-  public function alert($text, $type = 'error'){
+  public function alert($text, $type = 'error', $options = []){
 
-    $this->data[] = [ 'type'=>$type, 'message'=>$text ];
+    $title = $text['title'] ?? $text;
+    $description = $text['description'] ?? '';
+
+    $this->data[] = [
+      '_type'=>'alert',
+      'type'=>$type,
+      'text'=>[ 'title'=>$title, 'description'=>$description ],
+      'options'=>$options
+    ];
     return $this;
   }
 
@@ -93,7 +101,7 @@ class HTMLResponse implements Responsable {
     }
 
     $params = [
-      'type'=>$type,
+      '_type'=>$type,
       'data'=>[
         'labels'=>$labels,
         'datasets'=>$datasets
@@ -114,8 +122,8 @@ class HTMLResponse implements Responsable {
 
     $id = 'chart' . uniqid();
     $html[] = "<canvas id='{$id}'></canvas>";
-    $this->data[] = [ 'type'=>'html', 'html'=>implode('', $html), 'target'=>$target ];
-    $this->data[] = [ 'type'=>'script', 'script'=>"new Chart('{$id}', " . json_encode($params) . ");" ];
+    $this->data[] = [ '_type'=>'html', 'html'=>implode('', $html), 'target'=>$target ];
+    $this->data[] = [ '_type'=>'script', 'script'=>"new Chart('{$id}', " . json_encode($params) . ");" ];
 
     return $this;
   }
@@ -177,7 +185,7 @@ class HTMLResponse implements Responsable {
       </div>
 EOT;
 
-    $this->data[] = [ 'type'=>'html', 'html'=>$html, 'target'=>$target ];
+    $this->data[] = [ '_type'=>'html', 'html'=>$html, 'target'=>$target ];
 
     return $this;
   }
@@ -190,7 +198,7 @@ EOT;
     $html[] = $content;
     $html[] = "</div>";
 
-    $this->data[] = [ 'type'=>'popup', 'ref'=>$ref, 'html'=>implode('', $html) ];
+    $this->data[] = [ '_type'=>'popup', 'ref'=>$ref, 'html'=>implode('', $html) ];
 
     return $this;
   }
@@ -203,19 +211,19 @@ EOT;
    */
   public function notify($title, $target, array $options = [ 'description' => '' ]){
 
-    $this->data[] = [ 'type'=>'notify', 'title'=>$title, 'target'=>$target, 'options'=>$options ];
+    $this->data[] = [ '_type'=>'notify', 'title'=>$title, 'target'=>$target, 'options'=>$options ];
     return $this;
   }
 
   public function modal($id, $html, array $options = [ 'init'=>1 ]){
 
-    $this->data[] = [ 'type'=>'modal', 'html'=>$html, 'id'=>$id, 'options'=>$options ];
+    $this->data[] = [ '_type'=>'modal', 'html'=>$html, 'id'=>$id, 'options'=>$options ];
     return $this;
   }
 
   public function redirect($url){
 
-    $this->data[] = [ 'type'=>'redirect', 'target'=>$url ];
+    $this->data[] = [ '_type'=>'redirect', 'target'=>$url ];
     return $this;
   }
 
