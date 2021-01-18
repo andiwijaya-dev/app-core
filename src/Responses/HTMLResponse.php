@@ -65,7 +65,7 @@ class HTMLResponse implements Responsable {
     $this->data[] = [
       '_type'=>'alert',
       'type'=>$type,
-      'text'=>[ 'title'=>$title, 'description'=>$description ],
+      'text'=>[ 'title'=>nl2br($title), 'description'=>$description ],
       'options'=>$options
     ];
     return $this;
@@ -124,6 +124,27 @@ class HTMLResponse implements Responsable {
     $html[] = "<canvas id='{$id}'></canvas>";
     $this->data[] = [ '_type'=>'html', 'html'=>implode('', $html), 'target'=>$target ];
     $this->data[] = [ '_type'=>'script', 'script'=>"new Chart('{$id}', " . json_encode($params) . ");" ];
+
+    return $this;
+  }
+
+  public function consoleError($text){
+
+    $this->data[] = [ '_type'=>'console.error', 'text'=>$text ];
+
+    return $this;
+  }
+
+  public function consoleInfo($text){
+
+    $this->data[] = [ '_type'=>'console.info', 'text'=>$text ];
+
+    return $this;
+  }
+
+  public function consoleWarn($text){
+
+    $this->data[] = [ '_type'=>'console.warn', 'text'=>$text ];
 
     return $this;
   }

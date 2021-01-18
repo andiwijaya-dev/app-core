@@ -52,6 +52,8 @@
 
     </div>
 
+    @yield('columns-ext')
+
   </div>
 
   <div class="foot pad-2 align-right">

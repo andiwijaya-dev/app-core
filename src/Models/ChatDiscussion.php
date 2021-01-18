@@ -164,7 +164,7 @@ class ChatDiscussion extends Model
 
   public function sendOfflineMessage(){
 
-    $offline_message_at = Carbon::createFromTimeString(date('Y-m-d H:i:s', strtotime($discussion->extra['offline_message_at'] ?? null)));
+    $offline_message_at = Carbon::createFromTimeString(date('Y-m-d H:i:s', strtotime($this->extra['offline_message_at'] ?? null)));
 
     if(config('chat.offline-message') && $offline_message_at->diffInHours() > 2){
 

@@ -5,6 +5,7 @@ namespace Andiwijaya\AppCore\Http\Controllers;
 use Andiwijaya\AppCore\Exceptions\KnownException;
 use Illuminate\Http\Request;
 use Illuminate\Routing\Controller as BaseController;
+use Illuminate\Support\Facades\View;
 use function foo\func;
 
 class ActionableController extends BaseController{
@@ -61,5 +62,13 @@ class ActionableController extends BaseController{
     return true;
   }
 
+  public function __construct()
+  {
+    View::share(get_object_vars($this));
+  }
 
+  public function alertRequest(Request $request){
+
+    return htmlresponse()->alert(json_encode($request->all(), JSON_PRETTY_PRINT));
+  }
 }
