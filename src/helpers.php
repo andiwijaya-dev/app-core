@@ -22,6 +22,11 @@ if (! function_exists('exc')) {
     throw new \Andiwijaya\AppCore\Exceptions\KnownException(($debug != false ? $message . ' ' : '') . $text);
 
   }
+
+  function exs($message, $vars){
+
+    throw new \Exception($message . ": " . json_encode($vars, JSON_PRETTY_PRINT));
+  }
 }
 
 if(! function_exists('is_zip')){

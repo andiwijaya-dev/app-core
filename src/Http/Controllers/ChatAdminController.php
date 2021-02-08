@@ -338,7 +338,8 @@ class ChatAdminController extends BaseController
           'Date',
           'Type',
           'Message',
-          'Pesan Otomatis'
+          'Context',
+          'Otomatis'
         ]);
 
         ChatMessage::orderBy('discussion_id', 'asc')
@@ -353,6 +354,7 @@ class ChatAdminController extends BaseController
                 $message->created_at,
                 $message->direction == ChatMessage::DIRECTION_IN ? 'In' : 'Out',
                 $message->text,
+                __('models.chat-context-' . ($message->context ?? '')),
                 $message->is_system ? 'Ya' : 'Tidak'
               ];
 

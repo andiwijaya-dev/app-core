@@ -249,9 +249,18 @@ EOT;
   }
 
 
+  public function merge(array $data){
+
+    $this->data = array_merge($this->data, $data);
+
+    return $this;
+  }
 
 
+  public function getData(){
 
+    return $this->data;
+  }
 
   public function toResponse($request)
   {

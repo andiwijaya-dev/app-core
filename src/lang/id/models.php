@@ -134,6 +134,15 @@ return [
   'chat-discussion-error'=>'Terjadi kesalahan',
   'chat-message-unable-to-send-message'=>'Tidak dapat mengirim pesan.',
 
+  'chat-context-'=>'',
+  'chat-context-1'=>'Umum',
+  'chat-context-11'=>'Sepeda Motor Honda - Cash',
+  'chat-context-12'=>'Sepeda Motor Honda - Kredit',
+  'chat-context-3'=>'Pinjaman Multiguna Motor',
+  'chat-context-4'=>'Pinjaman Multiguna Mobil',
+  'chat-context-2'=>'Sparepart',
+  'chat-context-9'=>'Distributor Parts',
+
   'log-type--3'=>'Pengajuan Ditolak',
   'log-type--4'=>'Pengajuan Ditolak (*)',
   'log-type--1'=>'Pengajuan Dihapus',

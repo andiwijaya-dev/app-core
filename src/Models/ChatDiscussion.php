@@ -139,27 +139,24 @@ class ChatDiscussion extends Model
 
     if(!config('chat.greeting')) return;
 
-    if(!$this->handled_by){
-
-      $text = config('chat.greeting');
-      preg_match_all('/(\[\w+\])+/', $text, $matches);
-      if(isset($matches[0][0])){
-        foreach($matches[0] as $match){
-          $key = substr($match, 1, strlen($match) - 2);
-          $value = $this->{$key} ?? '';
-          $text = str_replace($match, $value, $text);
-        }
+    $text = config('chat.greeting');
+    preg_match_all('/(\[\w+\])+/', $text, $matches);
+    if(isset($matches[0][0])){
+      foreach($matches[0] as $match){
+        $key = substr($match, 1, strlen($match) - 2);
+        $value = $this->{$key} ?? '';
+        $text = str_replace($match, $value, $text);
       }
-
-      $message = new ChatMessage([
-        'discussion_id'=>$this->id,
-        'direction'=>ChatMessage::DIRECTION_OUT,
-        'text'=>$text,
-        'is_system'=>1,
-        'extra'=>[ 'name'=>'Tara', 'avatar_url'=>'chat-figure.png' ],
-      ]);
-      $message->save();
     }
+
+    $message = new ChatMessage([
+      'discussion_id'=>$this->id,
+      'direction'=>ChatMessage::DIRECTION_OUT,
+      'text'=>$text,
+      'is_system'=>1,
+      'extra'=>[ 'name'=>'Tara', 'avatar_url'=>'chat-figure.png' ],
+    ]);
+    $message->save();
   }
 
   public function sendOfflineMessage(){
