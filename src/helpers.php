@@ -940,7 +940,7 @@ EOL;
         $items = isset($param['items']) && is_array($param['items']) ? $param['items'] : [];
 
         $idx = 0;
-        if(count($items) <= 5){
+        if(count($items) <= 10){
           foreach($items as $item_value=>$item_text){
             $html .= <<<EOL
     <div class="choice">

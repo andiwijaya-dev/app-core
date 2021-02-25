@@ -20,21 +20,21 @@ class HTMLResponse implements Responsable {
     $this->headers['Content-Type'] = 'application/json';
   }
 
-  public function append($target, $html){
+  public function append($target, $html, $options = []){
 
-    $this->data[] = [ '_type'=>'html', 'html'=>$html, 'mode'=>'append', 'target'=>$target ];
+    $this->data[] = [ '_type'=>'html', 'html'=>$html, 'mode'=>'append', 'target'=>$target, 'options'=>$options ];
     return $this;
   }
 
-  public function prepend($target, $html){
+  public function prepend($target, $html, $options = []){
 
-    $this->data[] = [ '_type'=>'html', 'html'=>$html, 'mode'=>'prepend', 'target'=>$target ];
+    $this->data[] = [ '_type'=>'html', 'html'=>$html, 'mode'=>'prepend', 'target'=>$target, 'options'=>$options ];
     return $this;
   }
 
-  public function html($target, $html){
+  public function html($target, $html, $options = []){
 
-    $this->data[] = [ '_type'=>'html', 'html'=>$html, 'target'=>$target ];
+    $this->data[] = [ '_type'=>'html', 'html'=>$html, 'target'=>$target, 'options'=>$options ];
     return $this;
   }
 

@@ -185,7 +185,7 @@ class ScheduledTask extends Model
           switch($task->repeat){
 
             case self::REPEAT_NONE:
-              if($task->count <= 0){
+              if($task->count <= 0 && ($task->start == null || ($task->start != null && Carbon::now()->format('YmdHis') >= $task->start))){
                 if($cmd) $cmd->info("Run in background {$task->id}");
 
                 $task->runInBackground();
@@ -277,6 +277,39 @@ class ScheduledTask extends Model
     $task->save();
 
     $task->runInBackground($delay);
+
+    return $task;
+  }
+
+  public static function runAt($command, $at, $description){
+
+    if($command instanceof \Closure){
+
+      if (null !== $securityProvider = SerializableClosure::getSecurityProvider()) {
+        SerializableClosure::removeSecurityProvider();
+      }
+
+      $command = serialize(new SerializableClosure($command));
+
+      if ($securityProvider !== null) {
+        SerializableClosure::addSecurityProvider($securityProvider);
+      }
+    }
+
+    if(!$description)
+      $description = "Scheduled task - " . Str::random(5);
+
+    $task = new ScheduledTask([
+      'command'=>$command,
+      'description'=>$description,
+      'start'=>$at,
+      'repeat'=>self::REPEAT_NONE,
+      'remove_after_completed'=>1
+    ]);
+
+    $task->save();
+
+    if(!$at) $task->runInBackground();
 
     return $task;
   }
