@@ -185,9 +185,8 @@ class ScheduledTask extends Model
           switch($task->repeat){
 
             case self::REPEAT_NONE:
-              if($task->count <= 0 && ($task->start == null || ($task->start != null && Carbon::now()->format('YmdHis') >= $task->start))){
+              if($task->count <= 0 && ($task->start == null || ($task->start != null && Carbon::now()->format('YmdHis') >= date('YmdHis', strtotime($task->start))))){
                 if($cmd) $cmd->info("Run in background {$task->id}");
-
                 $task->runInBackground();
               }
               break;
