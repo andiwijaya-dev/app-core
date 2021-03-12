@@ -1598,3 +1598,44 @@ if(!function_exists('db_insert_batch')){
   
 }
 
+if(!function_exists('money_split')){
+
+  function money_split($amount, array $ratios, $precision = null){
+
+    if($amount < 0) return false;
+
+    if(!$precision){
+      if($amount > 1000) $precision = -2;
+      else if($amount > 100) $precision = -1;
+      else $precision = 0;
+    }
+
+    $total_ratio = 0;
+    foreach($ratios as $ratio)
+      $total_ratio += $ratio;
+
+    $splits = [];
+    $total_amount = 0;
+    foreach($ratios as $ratio){
+
+      $current_amount = round(($ratio / $total_ratio) * $amount, $precision);
+      $splits[] = $current_amount;
+      $total_amount += $current_amount;
+    }
+
+    $remaining_amount = $amount - $total_amount;
+    if($remaining_amount > 0)
+      $splits[count($splits) - 1] += $remaining_amount;
+    else if($remaining_amount < 0){
+      $remaining_amount *= -1;
+      for($i = count($splits) - 1 ; $i >= 0 ; $i--){
+        $current_amount = $remaining_amount > $splits[$i] ? $splits[$i] : $remaining_amount;
+        $splits[$i] -= $current_amount;
+        $remaining_amount -= $current_amount;
+        if($remaining_amount <= 0) break;
+      }
+    }
+
+    return $splits;
+  }
+}

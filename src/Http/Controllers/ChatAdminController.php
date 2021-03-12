@@ -379,10 +379,17 @@ class ChatAdminController extends BaseController
 
     $discussion = $this->model::find($request->get('id'));
 
-    if($discussion->handled_by > 0 && $discussion->handled_by != $this->user->id)
-      exc(__('text.chat-admin-discussion-unable-to-begin-chat', [
+    if($discussion->handled_by > 0 && $discussion->handled_by != $this->user->id && !$request->input('begin-chat-confirmed')){
+
+      $text = __('text.chat-admin-discussion-unable-to-begin-chat', [
         'name'=>ucwords(strtolower($discussion->handled_by_user->name ?? ''))
-      ]));
+      ]);
+      return [
+        'script'=>implode(';', [
+          "$.confirm('{$text}', function(){ $('[value=begin-chat]').parent().append('<input type=hidden name=begin-chat-confirmed value=1/>'); $('[value=begin-chat]').click() })"
+        ])
+      ];
+    }
 
     $discussion->handled_by = $this->user->id;
     $discussion->save();
