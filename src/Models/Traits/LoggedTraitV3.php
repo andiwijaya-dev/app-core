@@ -9,6 +9,7 @@ use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\QueryException;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Session;
+use Illuminate\Support\Facades\Validator;
 
 trait LoggedTraitV3{
 
@@ -159,6 +160,17 @@ trait LoggedTraitV3{
 
       if($ex instanceof QueryException){
         switch($ex->getCode()){
+          case 23000:
+            if(strpos($ex->getMessage(), 'Integrity constraint violation: 1062 Duplicate entry') !== false){
+              preg_match("/for key \'(.+?(?=\'))\'/", $ex->getMessage(), $matches);
+              if(isset($matches[1]) && strpos($matches[1], '|') !== false){
+                exc(__('validation.unique', [ 'attribute'=>collect(explode('|', $matches[1]))->last() ]));
+              }
+              else
+                exc(__('validation.unique', [ 'attribute'=>'Nilai kolom' ]));
+            }
+
+            break;
           default:
             throw $ex;
         }

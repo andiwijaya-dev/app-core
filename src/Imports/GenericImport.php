@@ -9,7 +9,14 @@ use Maatwebsite\Excel\Facades\Excel;
 
 class GenericImport{
 
-  public static function import($path, array $headers, $readerType = null){
+  /**
+   * @param $path
+   * @param $headers array|int can be header columns or header index
+   * @param null $readerType
+   * @return array
+   * @throws \Exception
+   */
+  public static function import($path, $headers, $readerType = null){
 
     $rows = Excel::toArray(new GenericImport, $path, null, $readerType);
 
@@ -20,28 +27,39 @@ class GenericImport{
 
     // Looking for headers
     $header_idx = -1;
-    foreach($rows as $row_idx=>$row){
+    if(is_array($headers)){
+      foreach($rows as $row_idx=>$row){
 
-      foreach($row as $col_idx=>$col){
-        foreach($headers as $header_key=>$header_cols){
-          if(in_array(strtoupper(trim($col)), $header_cols['headers'])){
-            $header_idx = $row_idx;
-            break;
+        foreach($row as $col_idx=>$col){
+          foreach($headers as $header_key=>$header_cols){
+            if(in_array(strtoupper(trim($col)), $header_cols['headers'])){
+              $header_idx = $row_idx;
+              break;
+            }
           }
         }
-      }
 
-      if($header_idx >= 0){
-        foreach($headers as $header_key=>$header_cols) {
-          foreach($row as $col_idx=>$col){
-            if(in_array(strtoupper(trim($col)), $header_cols['headers'])){
-              $headers[$header_key]['index'] = $col_idx;
+        if($header_idx >= 0){
+          foreach($headers as $header_key=>$header_cols) {
+            foreach($row as $col_idx=>$col){
+              if(in_array(strtoupper(trim($col)), $header_cols['headers'])){
+                $headers[$header_key]['index'] = $col_idx;
+              }
             }
           }
         }
       }
-
     }
+    else{
+      $header_idx = $headers;
+
+      $headers = [];
+      $header_row = $rows[$header_idx] ?? [];
+      foreach($header_row as $col_idx=>$col){
+        $headers[$col] = [ 'index'=>$col_idx ];
+      }
+    }
+
 
     // Validate required columns
     $column_not_founds = [];
@@ -75,7 +93,6 @@ class GenericImport{
     }
 
     return $data;
-
   }
 
 }

@@ -20,7 +20,7 @@ class CreateScheduledTaskTable extends Migration
         $table->smallInteger('status');
         $table->string('description', 100);
         $table->bigInteger('creator_id')->unsigned()->nullable()->default(0);
-        $table->string('command');
+        $table->text('command');
         $table->smallInteger('repeat');
 
         $table->dateTime('start')->nullable();
