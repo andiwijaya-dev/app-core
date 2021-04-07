@@ -1639,3 +1639,18 @@ if(!function_exists('money_split')){
     return $splits;
   }
 }
+
+if(!function_exists('normalize_phone_number')){
+
+  function normalize_phone_number($number, $country_code = '+62'){
+
+    $number = preg_replace('/[^0-9\+]/', '', $number);
+
+    if(strlen($number) >= 6){
+      if(substr($number, 0, 1) == '0') $number = $country_code . substr($number, 1);
+      if(substr($number, 0, 1) != '+') $number = $country_code . $number;
+    }
+
+    return $number;
+  }
+}

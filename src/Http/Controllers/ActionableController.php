@@ -14,6 +14,8 @@ class ActionableController extends BaseController{
 
   public function index(Request $request){
 
+    $this->preload($request);
+
     $this->request = $request;
 
     $action = isset(($actions = explode('|', $request->input('action', 'view')))[0]) ? $actions[0] : '';
@@ -23,6 +25,8 @@ class ActionableController extends BaseController{
   }
 
   public function store(Request $request){
+
+    $this->preload($request);
 
     $this->request = $request;
 
@@ -34,6 +38,8 @@ class ActionableController extends BaseController{
 
   public function show(Request $request, $id){
 
+    $this->preload($request);
+
     $this->request = $request;
 
     $action = isset(($actions = explode('|', $request->input('action', 'open')))[0]) ? $actions[0] : '';
@@ -43,6 +49,8 @@ class ActionableController extends BaseController{
   }
 
   public function patch(Request $request){
+
+    $this->preload($request);
 
     $this->request = $request;
 
@@ -66,6 +74,8 @@ class ActionableController extends BaseController{
   {
     View::share(get_object_vars($this));
   }
+
+  public function preload(Request $request){}
 
   public function alertRequest(Request $request){
 

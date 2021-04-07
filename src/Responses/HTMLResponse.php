@@ -56,6 +56,18 @@ class HTMLResponse implements Responsable {
     return $this;
   }
 
+  public function table_append($target, $params){
+
+    $this->data[] = [ '_type'=>'method', 'target'=>$target, 'method'=>'table_append', 'params'=>$params ];
+    return $this;
+  }
+
+  public function form_errors($target, $errors, $options = []){
+
+    $this->data[] = [ '_type'=>'method', 'target'=>$target, 'method'=>'form_errors', 'params'=>[ $errors ] ];
+    return $this;
+  }
+
 
   public function alert($text, $type = 'error', $options = []){
 
@@ -242,9 +254,15 @@ EOT;
     return $this;
   }
 
-  public function redirect($url){
+  public function open($url){
 
-    $this->data[] = [ '_type'=>'redirect', 'target'=>$url ];
+    $this->data[] = [ '_type'=>'open', 'target'=>$url ];
+    return $this;
+  }
+
+  public function redirect($url, $options = []){
+
+    $this->data[] = [ '_type'=>'redirect', 'target'=>$url, 'options'=>$options ];
     return $this;
   }
 

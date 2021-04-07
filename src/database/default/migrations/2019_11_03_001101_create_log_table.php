@@ -24,6 +24,8 @@ class CreateLogTable extends Migration
           $table->string('remote_ip', 50)->nullable();
           $table->bigInteger('user_id')->unsigned()->nullable();
 
+          $table->string('session_id')->nullable();
+
           $table->bigInteger('loggable_id')->unsigned()->nullable();
           $table->string('loggable_type')->nullable();
 
