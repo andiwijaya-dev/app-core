@@ -98,7 +98,7 @@ class ScheduledTask extends Model
         " then 1 else 0 end) as `error`"));
     //exc($model->toSql());
     $res = $model->first();
-    
+
     $this->count = $res->count ?? 0;
     $this->error = $res->error ?? 0;
     parent::save();
@@ -106,7 +106,7 @@ class ScheduledTask extends Model
 
   public function run(){
 
-    if(in_array($this->status, [ self::STATUS_DISABLED ])) return;
+    if(in_array($this->status, [ self::STATUS_DISABLED, self::STATUS_RUNNING ])) return;
 
     if($this->status == self::STATUS_RUNNING){
       foreach($this->results->where('status', ScheduledTask::STATUS_RUNNING) as $result)
@@ -142,7 +142,7 @@ class ScheduledTask extends Model
       }
       catch(\Exception $ex){
         $exitCode = 1;
-        $output = $ex->getMessage() . "@" . $ex->getFile() . ":" . $ex->getLine();
+        $output = $ex->getMessage() . "@" . $ex->getFile() . ":" . $ex->getLine() . PHP_EOL;
       }
     }
     else{
@@ -150,11 +150,11 @@ class ScheduledTask extends Model
       $output = Artisan::output();
     }
 
-    if($this->remove_after_completed)
+    if($exitCode == 0 && $this->remove_after_completed)
       $this->delete();
     else{
       $result->status = $exitCode > 0 ? self::STATUS_ERROR : self::STATUS_COMPLETED;
-      $result->verbose .= $output . PHP_EOL;
+      $result->verbose .= $output;
       $result->ellapsed = microtime(1) - $t1;
       $result->completed_at = Carbon::now()->format('Y-m-d H:i:s');
       $result->save();
@@ -168,10 +168,10 @@ class ScheduledTask extends Model
   public function runInBackground($delay = 0){
 
     chdir(base_path());
-
-    $log_path = storage_path('logs/laravel.log');
-
-    exec("php artisan scheduled-task:run --id={$this->id} --delay={$delay} > {$log_path} 2>&1 &", $output, $return_var);
+    $log_path = storage_path('logs/scheduled-task.log');
+    exec("php artisan scheduled-task:run --id={$this->id} --delay={$delay} >> {$log_path} 2>&1 &", $output, $return_var);
+    if($output) file_put_contents("[" . Carbon::now()->format('Y-m-d H:i:s') . "] output:" . json_encode($output) . "\n", FILE_APPEND);
+    if($return_var) file_put_contents("[" . Carbon::now()->format('Y-m-d H:i:s') . "] return:" . json_encode($return_var) . "\n", FILE_APPEND);
   }
 
   public static function check(Command $cmd = null){

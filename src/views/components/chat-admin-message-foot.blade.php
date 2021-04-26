@@ -1,14 +1,25 @@
 @if($discussion->handled_by == $user->id)
-  <div class="srow pad-1">
+
+  @php $chat_message_templates = App\Models\ChatMessageTemplate::whereDirection(\Andiwijaya\AppCore\Models\ChatMessage::DIRECTION_OUT)->orderBy('id')->get() @endphp
+
+  @if(count($chat_message_templates) > 0)
+    <div class="chat-message-templates nowrap hmar-1">
+      @foreach($chat_message_templates as $chat_message_template)
+        <span class="chat-message-template" onclick="chatadmin_set_template.apply(this)">{{ $chat_message_template->text }}</span>
+      @endforeach
+    </div>
+  @endif
+
+  <div class="srow pad-1 vpadt-0">
     <div>
-      <div class="textarea" data-validation="required">
-        <textarea rows="1" placeholder="ENTER utk kirim, CTRL+ENTER utk tambahan baris" name="text" onkeydown="chatadmin_keyup.apply(this, arguments)"></textarea>
+      <div class="textarea" style="height:2.78rem">
+        <textarea rows="1" name="text"></textarea>
       </div>
     </div>
     <span>
       <input type="hidden" name="last_id" />
-      <button type="button" class="hmarl-1" onclick="$('.chat-admin').chatadmin_add_file()"><label><span class="fa fa-image"></span></label></button>
-      <button class="hpad-2"><label>Kirim</label></button>
+      <button type="button" class="hmarl-05" onclick="$('.chat-admin').chatadmin_add_file()"><label><span class="fa fa-image"></span></label></button>
+      <button class="hpad-1 btn-send-message"><label>Kirim</label></button><button class="hpad-1 btn-send-whatsapp" name="action" value="send-whatsapp"><label><span class="fab fa-whatsapp"></span></label></button>
     </span>
   </div>
   <div class="images repeater hpad-1">

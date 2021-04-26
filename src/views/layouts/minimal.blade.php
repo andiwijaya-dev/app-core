@@ -71,7 +71,7 @@
     <script type="text/javascript" src="{{ env('APP_CDN_HOST') }}/js/{{ $js ?? 'default' }}.js?v={{ assets_version() }}" defer></script>
   @endif
 
-  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/5.14.0/css/all.min.css" media="print" onload="c.apply(this)"/>
+  <link rel="stylesheet" href="/css/all.min.css" media="print" onload="c.apply(this)"/>
   @if(isset($debug) && $debug)
     @foreach(glob(public_path('/css/' . ($css ?? 'clean') . '/*.css')) as $path)
       <link rel="stylesheet" href="{{ '/css/' . ($css ?? 'clean') . '/' . basename($path) }}?v={{ assets_version () }}" media="print" onload="c.apply(this)"/>

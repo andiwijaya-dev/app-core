@@ -336,7 +336,8 @@ class ChatAdminController extends BaseController
           'Nama Pelanggan',
           'Topic',
           'Date',
-          'Type',
+          'Tipe',
+          'Channel',
           'Message',
           'Context',
           'Otomatis'
@@ -353,6 +354,7 @@ class ChatAdminController extends BaseController
                 $message->discussion->title,
                 $message->created_at,
                 $message->direction == ChatMessage::DIRECTION_IN ? 'In' : 'Out',
+                $message->type == ChatMessage::TYPE_WHATSAPP ? 'WhatsApp' : 'Web',
                 $message->text,
                 __('models.chat-context-' . ($message->context ?? '')),
                 $message->is_system ? 'Ya' : 'Tidak'

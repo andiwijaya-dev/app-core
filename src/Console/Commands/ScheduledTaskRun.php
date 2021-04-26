@@ -29,6 +29,6 @@ class ScheduledTaskRun extends Command
     else
       ScheduledTask::check($this);
 
-    $this->info("Completed in " . (microtime(1) - LARAVEL_START));
+    //$this->info("Completed in " . (microtime(1) - LARAVEL_START));
   }
 }
