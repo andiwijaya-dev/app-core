@@ -106,7 +106,7 @@ class ScheduledTask extends Model
 
   public function run(){
 
-    if(in_array($this->status, [ self::STATUS_DISABLED, self::STATUS_RUNNING ])) return;
+    if(in_array($this->status, [ self::STATUS_DISABLED, self::STATUS_ERROR, self::STATUS_RUNNING ])) return;
 
     if($this->status == self::STATUS_RUNNING){
       foreach($this->results->where('status', ScheduledTask::STATUS_RUNNING) as $result)
@@ -168,10 +168,7 @@ class ScheduledTask extends Model
   public function runInBackground($delay = 0){
 
     chdir(base_path());
-    $log_path = storage_path('logs/scheduled-task.log');
-    exec("php artisan scheduled-task:run --id={$this->id} --delay={$delay} >> {$log_path} 2>&1 &", $output, $return_var);
-    if($output) file_put_contents("[" . Carbon::now()->format('Y-m-d H:i:s') . "] output:" . json_encode($output) . "\n", FILE_APPEND);
-    if($return_var) file_put_contents("[" . Carbon::now()->format('Y-m-d H:i:s') . "] return:" . json_encode($return_var) . "\n", FILE_APPEND);
+    exec("php artisan scheduled-task:run --id={$this->id} --delay={$delay} >> /dev/null 2>&1 &");
   }
 
   public static function check(Command $cmd = null){
