@@ -143,6 +143,7 @@ class ScheduledTask extends Model
       catch(\Exception $ex){
         $exitCode = 1;
         $output = $ex->getMessage() . "@" . $ex->getFile() . ":" . $ex->getLine() . PHP_EOL;
+        report($ex);
       }
     }
     else{

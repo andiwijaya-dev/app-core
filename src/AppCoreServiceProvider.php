@@ -7,7 +7,9 @@ use Andiwijaya\AppCore\Console\Commands\ModelExecute;
 use Andiwijaya\AppCore\Console\Commands\Ping;
 use Andiwijaya\AppCore\Console\Commands\ScheduledTaskRun;
 use Andiwijaya\AppCore\Console\Commands\TestEmail;
+use Andiwijaya\AppCore\Exceptions\Handler;
 use Andiwijaya\AppCore\Responses\HTMLResponse;
+use Illuminate\Contracts\Debug\ExceptionHandler;
 use Illuminate\Routing\ResponseFactory;
 use Illuminate\Support\Facades\Blade;
 use Illuminate\Support\Facades\Log;
@@ -29,6 +31,11 @@ class AppCoreServiceProvider extends ServiceProvider
       Ping::class,
       ScheduledTaskRun::class
     ]);
+
+    $this->app->singleton(
+      ExceptionHandler::class,
+      Handler::class
+    );
   }
 
   /**
@@ -44,10 +51,7 @@ class AppCoreServiceProvider extends ServiceProvider
     $this->publishes(
       [
         __DIR__.'/database/default/' => database_path(),
-        __DIR__.'/assets/' => public_path(),
-        __DIR__.'/views/default/' => resource_path('views'),
         __DIR__.'/lang/' => resource_path('lang'),
-        __DIR__.'/Exceptions/' => app_path('Exceptions'),
         __DIR__.'/websocket/' => base_path(),
       ]
     );

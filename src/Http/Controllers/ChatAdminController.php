@@ -319,7 +319,8 @@ class ChatAdminController extends BaseController
 
   public function store(Request $request){
 
-    $method = action2method($request->get('action', 'send-message'));
+    $action = isset(($actions = explode('|', $request->get('action', 'send-message')))[0]) ? $actions[0] : '';
+    $method = action2method($action);
     if(method_exists($this, $method))
       return call_user_func_array([ $this, $method ], func_get_args());
   }

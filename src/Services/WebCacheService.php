@@ -90,7 +90,12 @@ class WebCacheService{
 
       if(strlen($key) <= 1000){
 
-        Cache::forever($key, $response->content());
+        Cache::forever($key, [
+          'headers'=>[
+            'Content-Type'=>$response->headers->get('content-type')
+          ],
+          'content'=>$response->content()
+        ]);
 
         if(Schema::hasTable('web_cache')){
 
@@ -126,11 +131,11 @@ class WebCacheService{
   }
 
 
-  public function clearAll($recache = false){
+  public function clearAll($recache = false)
+  {
+    Artisan::call('cache:clear');
 
     if(Schema::hasTable('web_cache')){
-
-      Artisan::call('cache:clear');
 
       if($recache)
       {

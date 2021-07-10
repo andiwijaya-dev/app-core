@@ -26,9 +26,7 @@ class ScheduledTaskRun extends Command
     if($delay > 0) sleep($delay);
 
     if($id > 0){
-      $task = ScheduledTask::findOrFail($id);
-      //Log::error("Run task:{$task->id}, description:{$task->description}");
-      $task->run();
+      ($task = ScheduledTask::find($id)) ? $task->run() : Log::info("schedule-task:run {$id} task not found");
     }
     else{
       if(!file_exists(storage_path('logs/scheduled-task-run.lock'))){

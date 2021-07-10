@@ -2,7 +2,7 @@
   <div class="message direction-in" data-id="{{ $message->id }}">
     <span>
       <div class="text">
-        <p>{!! $message->text !!}</p>
+        <p>{!! $message->html !!}</p>
       </div>
       @if(is_array($message->images) && count($message->images) > 0)
         <div class="images pad-1 vpadb-0">
@@ -25,7 +25,7 @@
   <div class="message direction-out" data-id="{{ $message->id }}">
     <span>
       <div class="text">
-        <p>{!! $message->text !!}</p>
+        <p>{!! $message->html !!}</p>
       </div>
       @if(is_array($message->images) && count($message->images) > 0)
         <div class="images pad-1 vpadb-0">

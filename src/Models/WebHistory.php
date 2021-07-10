@@ -2,10 +2,14 @@
 
 namespace Andiwijaya\AppCore\Models;
 
+use Andiwijaya\AppCore\Models\Traits\LoggedTraitV3;
+use App\Models\WebSession;
 use Illuminate\Database\Eloquent\Model;
 
 class WebHistory extends Model
 {
+  use LoggedTraitV3;
+
   protected $table = 'web_history';
 
   protected $fillable = [
@@ -33,4 +37,22 @@ class WebHistory extends Model
   const TYPE_HOVER = 6;
   const TYPE_SCROLL = 7;
 
+  public function calculate()
+  {
+    $session = WebSession::firstOrNew([
+      'session_id'=>session_id
+    ], [
+      'path'=>$this->path,
+      'remote_ip'=>$this->remote_ip,
+      'user_agent'=>$this->user_agent,
+      'referrer'=>$this->referrer
+    ]);
+  }
+
+  public function __construct(array $attributes = [])
+  {
+    $this->log = false;
+
+    parent::__construct($attributes);
+  }
 }

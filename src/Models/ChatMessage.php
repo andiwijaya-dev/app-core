@@ -21,7 +21,7 @@ class ChatMessage extends Model
 
   protected $fillable = [ 'type', 'discussion_id', 'session_id', 'reply_of', 'initial', 'first_reply_at', 'first_reply_after',
     'unread', 'direction', 'text', 'images', 'extra', 'notified', 'unsent',
-    'context', 'context_id', 'is_bot', 'is_system', 'notified_at', 'ref_id' ];
+    'context', 'context_id', 'is_bot', 'is_system', 'notified_at', 'ref_id', 'ref_type' ];
 
   protected $attributes = [
     'unread'=>1,
@@ -51,16 +51,15 @@ class ChatMessage extends Model
 
     preg_match_all('/([http:\/\/|https:\/\/]*\w+\.\w+\.\w+[\.\w]*[\/]*[\S]+)/', $this->text, $matches);
 
+    $text = $this->text;
     if(isset($matches[0]) && is_array($matches[0])){
-
       foreach($matches[0] as $link){
-
-        $this->text = str_replace($link, "<a href=\"{$link}\">{$link}</a>", $this->text);
+        $text = str_replace($link, "<a href=\"{$link}\">{$link}</a>", $text);
       }
+      $text = nl2br($text);
     }
 
-
-    return nl2br($this->text);
+    return $text;
   }
 
   public function reply_message(){
@@ -94,17 +93,6 @@ class ChatMessage extends Model
   }
 
   public function preSave(){
-
-    $validator = Validator::make(
-      $this->attributes,
-      [
-        'text'=>'required'
-      ],
-      [
-        'text.required'=>'Harap masukkan pesan yang mau dikirim'
-      ]
-    );
-    if($validator->fails()) exc($validator->errors()->first());
 
     if(isset($this->fill_attributes['images'])){
 

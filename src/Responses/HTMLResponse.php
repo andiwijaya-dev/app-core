@@ -20,14 +20,14 @@ class HTMLResponse implements Responsable {
     $this->headers['Content-Type'] = 'application/json';
   }
 
-  public function append($target, $html, $options = []){
-
-    $this->data[] = [ '_type'=>'html', 'html'=>$html, 'mode'=>'append', 'target'=>$target, 'options'=>$options ];
+  public function append($target, $value, $options = [])
+  {
+    $this->data[] = [ '_type'=>'append', 'value'=>$value, 'target'=>$target, 'options'=>$options ];
     return $this;
   }
 
-  public function prepend($target, $html, $options = []){
-
+  public function prepend($target, $html, $options = [])
+  {
     $this->data[] = [ '_type'=>'html', 'html'=>$html, 'mode'=>'prepend', 'target'=>$target, 'options'=>$options ];
     return $this;
   }
@@ -38,9 +38,33 @@ class HTMLResponse implements Responsable {
     return $this;
   }
 
-  public function replace($target, $html){
+  public function replace($target, $html, $options = []){
 
-    $this->data[] = [ '_type'=>'html', 'html'=>$html, 'mode'=>'replace', 'target'=>$target ];
+    $this->data[] = [ '_type'=>'html', 'html'=>$html, 'mode'=>'replace', 'target'=>$target, 'options'=>$options ];
+    return $this;
+  }
+  
+  public function replaceOrAppend($target, $html, $options = [])
+  {
+    $this->data[] = [ '_type'=>'html', 'html'=>$html, 'mode'=>'replace-or-append', 'target'=>$target, 'options'=>$options ];
+    return $this;
+  }
+  
+  public function replaceOrPrepend($target, $html, $options = [])
+  {
+    $this->data[] = [ '_type'=>'html', 'html'=>$html, 'mode'=>'replace-or-prepend', 'target'=>$target, 'options'=>$options ];
+    return $this;
+  }
+
+  public function remove($target, $options = []){
+
+    $this->data[] = [ '_type'=>'remove', 'target'=>$target, 'options'=>$options ];
+    return $this;
+  }
+
+  public function value($target, $value, array $options = [])
+  {
+    $this->data[] = [ '_type'=>'value', 'target'=>$target, 'value'=>$value, 'options'=>$options ];
     return $this;
   }
 
@@ -65,6 +89,12 @@ class HTMLResponse implements Responsable {
   public function form_errors($target, $errors, $options = []){
 
     $this->data[] = [ '_type'=>'method', 'target'=>$target, 'method'=>'form_errors', 'params'=>[ $errors ] ];
+    return $this;
+  }
+
+  public function htmlRequire($src, array $options = [])
+  {
+    $this->data[] = [ '_type'=>'require', 'src'=>$src, 'options'=>$options ];
     return $this;
   }
 
@@ -223,15 +253,9 @@ EOT;
     return $this;
   }
 
-  public function popup($content, $ref, array $options = []){
+  public function popup($id, $html, array $options = []){
 
-    $html = [];
-
-    $html[] = "<div class=\"popup\">";
-    $html[] = $content;
-    $html[] = "</div>";
-
-    $this->data[] = [ '_type'=>'popup', 'ref'=>$ref, 'html'=>implode('', $html) ];
+    $this->data[] = [ '_type'=>'popup', 'id'=>$id, 'html'=>$html, 'options'=>$options ];
 
     return $this;
   }
@@ -282,6 +306,8 @@ EOT;
 
   public function toResponse($request)
   {
+    $this->data[] = [ '_type'=>'script', 'script'=>"ui(\"meta[name='csrf-token']\").attr('content', '" . csrf_token() . "')" ];
+
     return response()->json($this->data, $this->status, $this->headers);
   }
 }

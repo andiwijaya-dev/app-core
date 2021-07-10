@@ -1,3 +1,3 @@
-<div class="align-center">
-  <strong class="less">Tidak ada diskusi</strong>
+<div class="align-center vmart-3 chat-no-discussion">
+  <strong style="color:#bcbcbc">Tidak ada pesan</strong>
 </div>

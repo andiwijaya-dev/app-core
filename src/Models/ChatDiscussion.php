@@ -29,11 +29,12 @@ class ChatDiscussion extends Model
   ];
 
   protected $fillable = [ 'status', 'avatar_image_url', 'key', 'name', 'title', 'extra', 'unreplied_count',
-    'handled_by', 'last_replied_at', 'context' ];
+    'handled_by', 'last_replied_at', 'context', 'is_new_customer' ];
 
   protected $attributes = [
     'status'=>self::STATUS_OPEN,
-    'unreplied_count'=>0
+    'unreplied_count'=>0,
+    'is_new_customer'=>1
   ];
 
   protected $casts = [
@@ -111,6 +112,8 @@ class ChatDiscussion extends Model
     $this->unreplied_count = isset($last_replied->id) ?
       ChatMessage::whereDiscussionId($this->id)->where('is_system', '<>', 1)->where('id', '>', $last_replied->id)->where('direction', ChatMessage::DIRECTION_IN)->count() :
       ChatMessage::whereDiscussionId($this->id)->where('is_system', '<>', 1)->where('direction', ChatMessage::DIRECTION_IN)->count();
+
+    $this->is_new_customer = count($this->customer->orders ?? []) <= 0 ? 1 : 0;
 
     parent::save();
   }

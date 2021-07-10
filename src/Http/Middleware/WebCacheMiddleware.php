@@ -11,8 +11,8 @@ class WebCacheMiddleware{
 
     $response = $next($request);
 
-    if(config('webcache.enabled') &&
-      in_array($request->getHttpHost(), config('webcache.hosts', [])) &&
+    if(config('webcache.enabled', 1) &&
+      (count(config('webcache.hosts', [])) <= 0 || in_array($request->getHttpHost(), config('webcache.hosts', []))) &&
       $request->method() == 'GET' &&
       isset(($route = $request->route())->action['middleware']) && is_array($route->action['middleware']) &&
       !in_array('web-cache-excluded', $route->action['middleware'])){

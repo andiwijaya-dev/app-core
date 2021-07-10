@@ -1,15 +1,5 @@
 @if($discussion->handled_by == $user->id)
 
-  @php $chat_message_templates = App\Models\ChatMessageTemplate::whereDirection(\Andiwijaya\AppCore\Models\ChatMessage::DIRECTION_OUT)->orderBy('id')->get() @endphp
-
-  @if(count($chat_message_templates) > 0)
-    <div class="chat-message-templates nowrap hmar-1">
-      @foreach($chat_message_templates as $chat_message_template)
-        <span class="chat-message-template" onclick="chatadmin_set_template.apply(this)">{{ $chat_message_template->text }}</span>
-      @endforeach
-    </div>
-  @endif
-
   <div class="srow pad-1 vpadt-0">
     <div>
       <div class="textarea" style="height:2.78rem">

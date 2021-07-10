@@ -1,12 +1,16 @@
 <?php
 
-namespace App\Exceptions;
+namespace Andiwijaya\AppCore\Exceptions;
 
+use Andiwijaya\AppCore\Models\ScheduledTask;
 use Andiwijaya\AppCore\Models\SysLog;
+use Andiwijaya\AppCore\Notifications\SlackNotification;
+use App\Notifications\LogToSlackNotification;
 use Exception;
 use Illuminate\Foundation\Exceptions\Handler as ExceptionHandler;
 use Illuminate\Http\Exceptions\PostTooLargeException;
 use Illuminate\Support\Facades\Log;
+use Illuminate\Support\Facades\Notification;
 use Illuminate\Support\Facades\Request;
 use Illuminate\Support\Facades\Session;
 
@@ -39,20 +43,54 @@ class Handler extends ExceptionHandler
      */
     public function report(Exception $exception)
     {
+      $message = substr($exception->getMessage(), 0, 255);
+      $traces = $exception->getTraceAsString();
+
       SysLog::create([
         'type'=>SysLog::TYPE_ERROR,
-        'message'=>substr($exception->getMessage(), 0, 255),
+        'message'=>$message,
         'data'=>[
           'console'=>app()->runningInConsole(),
           'session_id'=>Session::getId(),
           'method'=>Request::method(),
           'url'=>Request::fullUrl(),
           'data'=>Request::input(null),
-          'traces'=>$exception->getTrace()
+          'traces'=>$traces,
+          'session'=>Session::get(null),
+          'user_agent'=>$_SERVER['HTTP_USER_AGENT'] ?? '',
+          'remote_ip'=>$_SERVER['REMOTE_ADDR'] ?? '',
+          'cookies'=>$_COOKIE ?? '',
         ]
       ]);
 
-      //parent::report($exception);
+      if(strlen(env('LOG_SLACK_WEBHOOK_URL')) > 0){
+        try{
+          ScheduledTask::runOnce(function() use($message, $traces){
+            try{
+              Notification::route('slack', env('LOG_SLACK_WEBHOOK_URL'))
+                ->notify(new SlackNotification($message, 'error', $traces));
+            }
+            catch(\Exception $ex){
+              SysLog::create([
+                'type'=>SysLog::TYPE_ERROR,
+                'message'=>$ex->getMessage(),
+                'data'=>[
+                  'traces'=>$ex->getTraceAsString(),
+                ]
+              ]);
+            }
+          });
+        }
+        catch(\Exception $ex){
+          SysLog::create([
+            'type'=>SysLog::TYPE_ERROR,
+            'message'=>$ex->getMessage(),
+            'data'=>[
+              'traces'=>$ex->getTraceAsString(),
+            ]
+          ]);
+        }
+      }
     }
 
     /**
@@ -67,7 +105,7 @@ class Handler extends ExceptionHandler
       if($request->ajax()){
 
         if ($exception instanceof TokenMismatchException)
-          return response()->json([ 'script'=>"$.alert('Maaf, form ini tidak dapat dikirim. Silakan perbarui halaman ini dan lakukan pengisian ulang.')" ]);
+          return htmlresponse()->redirect($request->fullUrl());
 
         else if($exception->getMessage() == 'Login required')
           return response()->json([ 'script'=>"window.location = '/login';" ]);
@@ -100,13 +138,10 @@ class Handler extends ExceptionHandler
           }
 
         }
-
       }
       else{
-
         if ($exception instanceof TokenMismatchException)
-          return redirect($request->fullUrl())->with('warning', 'Maaf, form ini tidak dapat dikirim. Silakan perbarui halaman ini dan lakukan pengisian ulang.');
-
+          return redirect($request->fullUrl())->with('warning', 'Session expired, please reload the page.');
       }
 
       return parent::render($request, $exception);

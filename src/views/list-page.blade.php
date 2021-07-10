@@ -61,7 +61,7 @@
       @component($view_grid_item, [ 'item'=>$item, 'idx'=>$idx ])@endcomponent
     @endforeach
   @else
-    <tr>
+    <tr class="no-data">
       <th colspan="100" class="align-center"><strong>Tidak ada data</strong></th>
     </tr>
   @endif
