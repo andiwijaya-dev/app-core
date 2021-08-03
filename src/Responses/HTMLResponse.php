@@ -26,6 +26,23 @@ class HTMLResponse implements Responsable {
     return $this;
   }
 
+  public function addImage($target, $image_url){
+
+    $this->data[] = [ '_type'=>'method', 'method'=>'addImage', 'target'=>$target, 'params'=>[ $image_url ] ];
+    return $this;
+  }
+
+  public function toast($title, $icon, $type){
+
+    $this->data[] = [
+      '_type'=>'toast',
+      'title'=>$title,
+      'type'=>$type,
+      'icon'=>$icon
+    ];
+    return $this;
+  }
+
   public function prepend($target, $html, $options = [])
   {
     $this->data[] = [ '_type'=>'html', 'html'=>$html, 'mode'=>'prepend', 'target'=>$target, 'options'=>$options ];
@@ -59,6 +76,12 @@ class HTMLResponse implements Responsable {
   public function remove($target, $options = []){
 
     $this->data[] = [ '_type'=>'remove', 'target'=>$target, 'options'=>$options ];
+    return $this;
+  }
+
+  public function update($target, array $options = [])
+  {
+    $this->data[] = [ '_type'=>'method', 'method'=>'update', 'target'=>$target, 'options'=>$options ];
     return $this;
   }
 
