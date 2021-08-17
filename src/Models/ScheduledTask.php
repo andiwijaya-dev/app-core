@@ -53,6 +53,7 @@ class ScheduledTask extends Model
   protected $casts = [
     'repeat_custom'=>'array', // { every:{ n:1, unit:"day" }, max_count:10, except:{ dates:[], day:[] } }
     'updated_at'=>'datetime',
+    'last_run_at'=>'datetime',
     'remove_after_completed'=>0
   ];
 

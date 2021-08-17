@@ -32,7 +32,7 @@ class HTMLResponse implements Responsable {
     return $this;
   }
 
-  public function toast($title, $icon, $type){
+  public function toast($title, $icon = '', $type = ''){
 
     $this->data[] = [
       '_type'=>'toast',
