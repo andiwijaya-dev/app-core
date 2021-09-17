@@ -28,8 +28,8 @@ class ChatDiscussion extends Model
     'name:like',
   ];
 
-  protected $fillable = [ 'status', 'avatar_image_url', 'key', 'name', 'title', 'extra', 'unreplied_count',
-    'handled_by', 'last_replied_at', 'context', 'is_new_customer' ];
+  protected $fillable = [ 'status', 'avatar_image_url', 'key', 'name', 'mobile_number', 'whatsapp_number', 'title', 'extra', 'unreplied_count',
+    'handled_by', 'last_replied_at', 'context', 'is_new_customer', 'is_on_outgoing' ];
 
   protected $attributes = [
     'status'=>self::STATUS_OPEN,
@@ -71,10 +71,14 @@ class ChatDiscussion extends Model
       ->reverse();
   }
 
-  public function getLatestMessageAttribute(){
-
+  public function getLatestMessageAttribute()
+  {
     return ChatMessage::whereDiscussionId($this->id)->orderBy('created_at', 'desc')->first();
+  }
 
+  public function getLastMessageAttribute()
+  {
+    return ChatMessage::whereDiscussionId($this->id)->orderBy('id', 'desc')->first();
   }
 
 

@@ -1,9 +1,9 @@
 @if($discussion->handled_by == $user->id)
 
-  <div class="srow pad-1 vpadt-0">
+  <div class="srow pad-1 vpadt-0 valign-bottom">
     <div>
-      <div class="textarea" style="height:2.78rem">
-        <textarea rows="1" name="text"></textarea>
+      <div class="textarea">
+        <textarea rows="1" style="max-height:35vh;display: block" name="text" oninput="if(typeof chat_text_resize === 'function') chat_text_resize()"></textarea>
       </div>
     </div>
     <span>

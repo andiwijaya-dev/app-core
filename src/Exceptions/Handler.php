@@ -5,10 +5,13 @@ namespace Andiwijaya\AppCore\Exceptions;
 use Andiwijaya\AppCore\Models\ScheduledTask;
 use Andiwijaya\AppCore\Models\SysLog;
 use Andiwijaya\AppCore\Notifications\SlackNotification;
+use App\Exceptions\APIException;
+use App\Exceptions\InvalidTokenException;
 use App\Notifications\LogToSlackNotification;
 use Exception;
 use Illuminate\Foundation\Exceptions\Handler as ExceptionHandler;
 use Illuminate\Http\Exceptions\PostTooLargeException;
+use Illuminate\Session\TokenMismatchException;
 use Illuminate\Support\Facades\Log;
 use Illuminate\Support\Facades\Notification;
 use Illuminate\Support\Facades\Request;
@@ -43,6 +46,9 @@ class Handler extends ExceptionHandler
      */
     public function report(Exception $exception)
     {
+      if($exception instanceof KnownException || $exception instanceof APIException ||
+        $exception instanceof InvalidTokenException || $exception instanceof TokenMismatchException) return;
+
       $message = substr($exception->getMessage(), 0, 255);
       $traces = $exception->getTraceAsString();
 

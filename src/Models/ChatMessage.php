@@ -49,14 +49,37 @@ class ChatMessage extends Model
     //https://www.google.com
     // www.google.com
 
-    preg_match_all('/([http:\/\/|https:\/\/]*\w+\.\w+\.\w+[\.\w]*[\/]*[\S]+)/', $this->text, $matches);
-
     $text = $this->text;
-    if(isset($matches[0]) && is_array($matches[0])){
+
+    preg_match_all('/([http:\/\/|https:\/\/]*\w+\.\w+\.\w+[\.\w]*[\/]*[\S]+)/', $text, $matches);
+    if(isset($matches[0]) && isset($matches[0][0])){
       foreach($matches[0] as $link){
         $text = str_replace($link, "<a href=\"{$link}\">{$link}</a>", $text);
       }
-      $text = nl2br($text);
+    }
+
+    preg_match_all('/loc\:\{(.*?(?=\}))\}/', $text, $matches);
+    if(isset($matches[1]) && isset($matches[1][0])){
+      $latlng = json_decode('{' . $matches[1][0] . '}', true);
+      $lat = $latlng['lat'] ?? '';
+      $lng = $latlng['long'] ?? '';
+
+      $tag = "<a href='http://www.google.com/maps/place/{$lat},{$lng}' target='_blank'><span class='img unloaded' style='border-radius:.3rem;width:64px;height:64px' data-src='/images/chat-message-map-thumb.jpeg'></span></a>";
+      $text = str_replace($matches[0][0], $tag, $text);
+    }
+
+    $text = nl2br($text);
+
+    return $text;
+  }
+
+  public function getShortTextAttribute()
+  {
+    $text = $this->text;
+
+    preg_match_all('/loc\:\{(.*?(?=\}))\}/', $text, $matches);
+    if(isset($matches[1]) && isset($matches[1][0])){
+      $text = str_replace($matches[0][0], '(location)', $text);
     }
 
     return $text;

@@ -1726,3 +1726,43 @@ if(!function_exists('view_content')){
       view($view, $data, $mergeData);
   }
 }
+
+if(!function_exists('roundup')){
+
+  function roundup($float, $dec = 2){
+    if ($dec == 0) {
+      if ($float < 0) {
+        return floor($float);
+      } else {
+        return ceil($float);
+      }
+    } else {
+      $d = pow(10, $dec);
+      if ($float < 0) {
+        return floor($float * $d) / $d;
+      } else {
+        return ceil($float * $d) / $d;
+      }
+    }
+  }
+}
+
+if(!function_exists('rounddown')){
+
+  function rounddown($float, $dec = 2){
+    if ($dec == 0) {
+      if ($float < 0) {
+        return ceil($float);
+      } else {
+        return floor($float);
+      }
+    } else {
+      $d = pow(10, $dec);
+      if ($float < 0) {
+        return ceil($float * $d) / $d;
+      } else {
+        return floor($float * $d) / $d;
+      }
+    }
+  }
+}

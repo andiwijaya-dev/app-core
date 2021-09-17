@@ -115,6 +115,8 @@ trait SearchableTrait{
 
   function extractFilterFromTerm($term, &$filters){
 
+    $term = is_string($term) ? $term : '';
+
     preg_match_all('/(\w+)([\:\>\<\~]+)((\".*?(?=\")\")|(\'.*?(?=\')\')|(\w+))/', $term, $matches);
 
     if(isset($matches[0][0])){
