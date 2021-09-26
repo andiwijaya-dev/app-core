@@ -132,7 +132,6 @@ trait LoggedTraitV3{
 
       if($this->log &&
         (count($this->updates) > 0 &&
-          !app()->runningInConsole() &&
           (!isset($options['log']) || $options['log']))){
 
         $type = $exists ? Log::TYPE_UPDATE : Log::TYPE_CREATE;
@@ -148,6 +147,7 @@ trait LoggedTraitV3{
         ];
         if(isset($options['log_created_at'])) $log['created_at'] = date('Y-m-d H:i:s', strtotime($options['log_created_at']));
         if(isset($options['log_updated_at'])) $log['updated_at'] = date('Y-m-d H:i:s', strtotime($options['log_updated_at']));
+
         $this->logs()->create($log);
       }
 

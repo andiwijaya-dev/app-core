@@ -10,10 +10,17 @@ class Section extends Model
   use LoggedTraitV3;
 
   const TYPE_CUSTOM = 99;
+  const TYPE_BANNER = 1;
+  const TYPE_THUMBNAIL1 = 2;
+  const TYPE_THUMBNAIL2 = 3;
+  const TYPE_TEXT = 4;
+  const TYPE_STEP_BY_STEP = 5;
+  const TYPE_SPAREPART_CATEGORY = 6;
+  const TYPE_HMC_PRICE_TABLE= 7;
 
   protected $table = 'section';
 
-  protected $fillable = [ 'page_id', 'type', 'data' ];
+  protected $fillable = [ 'page_id', 'type', 'title', 'description', 'data' ];
 
   protected $casts = [
     'data'=>'array'
@@ -35,5 +42,10 @@ class Section extends Model
 
     $this->data = $data;
 
+  }
+
+  public function getTypeTextAttribute()
+  {
+    return __('models.section-type-' . $this->type);
   }
 }

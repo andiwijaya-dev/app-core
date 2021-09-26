@@ -9,9 +9,16 @@ class Page extends Model
 {
   use LoggedTraitV3;
 
+  const TYPE_ARTICLE = 1;
+  const TYPE_MARKETING = 2;
+
   protected $table = 'page';
 
-  protected $fillable = [ 'is_active', 'path', 'title', 'description', 'keywords', 'h1', 'p', 'offers', 'image_url' ];
+  protected $fillable = [ 'is_active', 'type', 'path', 'title', 'description', 'keywords', 'h1', 'p', 'offers', 'image_url' ];
+
+  protected $attributes = [
+    'type'=>1
+  ];
 
   protected $casts = [
     'offers'=>'array'
