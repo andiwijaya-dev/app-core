@@ -18,9 +18,19 @@ class Section extends Model
   const TYPE_SPAREPART_CATEGORY = 6;
   const TYPE_HMC_PRICE_TABLE= 7;
 
+  const TYPE_M2W_FORM_NAMA = 23;
+  const TYPE_M2W_FORM_SIMULASI = 24;
+  const TYPE_FAQ = 31;
+  const TYPE_SPAREPART_THUMBNAIL1 = 32;
+  const TYPE_SPAREPART_THUMBNAIL2 = 33;
+
   protected $table = 'section';
 
-  protected $fillable = [ 'page_id', 'type', 'title', 'description', 'data' ];
+  protected $fillable = [ 'page_id', 'is_active', 'type', 'title', 'description', 'data', 'thumbnail_type' ];
+
+  protected $attributes = [
+    'is_active'=>1
+  ];
 
   protected $casts = [
     'data'=>'array'

@@ -29,12 +29,13 @@ class ChatDiscussion extends Model
   ];
 
   protected $fillable = [ 'status', 'avatar_image_url', 'key', 'name', 'mobile_number', 'whatsapp_number', 'title', 'extra', 'unreplied_count',
-    'handled_by', 'last_replied_at', 'context', 'is_new_customer', 'is_on_outgoing' ];
+    'handled_by', 'last_replied_at', 'context', 'is_new_customer', 'is_on_outgoing', 'pickyassist_pid' ];
 
   protected $attributes = [
     'status'=>self::STATUS_OPEN,
     'unreplied_count'=>0,
-    'is_new_customer'=>1
+    'is_new_customer'=>1,
+    'context'=>1
   ];
 
   protected $casts = [
@@ -81,6 +82,16 @@ class ChatDiscussion extends Model
     return ChatMessage::whereDiscussionId($this->id)->orderBy('id', 'desc')->first();
   }
 
+
+  public function getPickyAssistPid()
+  {
+    if($this->pickyassist_pid > 0)
+      return $this->pickyassist_pid;
+
+    $pickyassist = ChatDiscussion::getPickyAssistByContext($this->context);
+
+    return $pickyassist['project_id'] ?? null;
+  }
 
   public function end(){
 
@@ -258,6 +269,17 @@ class ChatDiscussion extends Model
   public static function check(Command $command = null){
 
     self::detachHandled($command);
+  }
+
+  public static function getPickyAssistByContext($context)
+  {
+    $pickyassists = collect(Config::where('key', 'pickyassist')->pluck('value')->first() ?? []);
+
+    foreach($pickyassists as $pickyassist){
+      if(in_array($context, $pickyassist['context'] ?? []))
+        return $pickyassist;
+    }
+    return null;
   }
 
 }

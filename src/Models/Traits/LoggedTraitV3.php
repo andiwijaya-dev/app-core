@@ -167,7 +167,7 @@ trait LoggedTraitV3{
                 exc(__('validation.unique', [ 'attribute'=>collect(explode('|', $matches[1]))->last() ]));
               }
               else
-                exc(__('validation.unique', [ 'attribute'=>'Nilai kolom' ]));
+                throw $ex;
             }
 
             break;

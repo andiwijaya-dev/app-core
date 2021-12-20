@@ -23,6 +23,7 @@ class ChatEvent
     const TYPE_NEW_CHAT = 1;
     const TYPE_UPDATE_CHAT = 2;
     const TYPE_NEW_CHAT_MESSAGE = 3;
+    const TYPE_UPDATE_CHAT_MESSAGE = 4;
 
     /**
      * Create a new event instance.

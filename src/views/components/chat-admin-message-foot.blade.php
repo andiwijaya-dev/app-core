@@ -4,6 +4,7 @@
     <div>
       <div class="textarea">
         <textarea rows="1" style="max-height:35vh;display: block" name="text" oninput="if(typeof chat_text_resize === 'function') chat_text_resize()"></textarea>
+        <input type="hidden" name="template_id" />
       </div>
     </div>
     <span>

@@ -1766,3 +1766,9 @@ if(!function_exists('rounddown')){
     }
   }
 }
+
+if(!function_exists('ctlid')){
+  function ctlid($prefix = 'ctl'){
+    return $prefix . substr(md5(uniqid()), 0, 7);
+  }
+}

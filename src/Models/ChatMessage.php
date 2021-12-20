@@ -19,9 +19,13 @@ class ChatMessage extends Model
   const TYPE_WEB = 1;
   const TYPE_WHATSAPP = 2;
 
-  protected $fillable = [ 'type', 'discussion_id', 'session_id', 'reply_of', 'initial', 'first_reply_at', 'first_reply_after',
+  const STATUS_ERROR = -1;
+  const STATUS_SENT = 1;
+  const STATUS_DELIVERED = 2;
+
+  protected $fillable = [ 'status', 'type', 'discussion_id', 'session_id', 'reply_of', 'initial', 'first_reply_at', 'first_reply_after',
     'unread', 'direction', 'text', 'images', 'extra', 'notified', 'unsent',
-    'context', 'context_id', 'is_bot', 'is_system', 'notified_at', 'ref_id', 'ref_type' ];
+    'context', 'context_id', 'is_bot', 'is_system', 'notified_at', 'ref_id', 'ref_type', 'template_id', 'pickyassist_pid' ];
 
   protected $attributes = [
     'unread'=>1,
@@ -149,8 +153,10 @@ class ChatMessage extends Model
       $this->images = $images;
     }
 
-    $extra = array_merge($this->extra ?? [], [ 'user'=>User::find(Session::get('user_id'))->name ?? '', 'user_id'=>Session::get('user_id') ]);
-    $this->extra = $extra;
+    if(!$this->id){
+      $extra = array_merge($this->extra ?? [], [ 'user'=>User::find(Session::get('user_id'))->name ?? '', 'user_id'=>Session::get('user_id') ]);
+      $this->extra = $extra;
+    }
   }
 
   public function postSave()

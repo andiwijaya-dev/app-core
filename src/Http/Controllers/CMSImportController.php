@@ -13,6 +13,8 @@ use Illuminate\Routing\Controller as BaseController;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Storage;
 use Maatwebsite\Excel\Facades\Excel;
+use phpDocumentor\Reflection\Types\Integer;
+use PhpOffice\PhpSpreadsheet\IOFactory;
 use PhpOffice\PhpSpreadsheet\Shared\Date;
 
 class CMSImportController extends BaseController{
@@ -116,7 +118,10 @@ class CMSImportController extends BaseController{
         $rows = [ $sheets ];
       }
       else{
-        $rows = Excel::toArray(new GenericImport, $csv_path);
+
+        $rows = $this->excelToArray($csv_path);
+
+        //$rows = Excel::toArray(new GenericImport, $csv_path);
       }
 
       $csv_columns = array_filter($rows[0][0] ?? []);
@@ -167,7 +172,7 @@ class CMSImportController extends BaseController{
           if(strpos($csv_path, '.csv') !== false)
             $rows = array_merge($rows, csv_to_array($csv_path));
           else
-            $rows = array_merge($rows, Excel::toArray(new GenericImport, $csv_path));
+            $rows = array_merge($rows, $this->excelToArray($csv_path));
         }
 
         $files = rglob("{$path}/*.*");
@@ -186,7 +191,7 @@ class CMSImportController extends BaseController{
         if(strpos($csv_path, '.csv') !== false)
           $rows = csv_to_array($csv_path);
         else
-          $rows = Excel::toArray(new GenericImport, $csv_path);
+          $rows = $this->excelToArray($csv_path);
       }
 
       // Convert mapped column text to index
@@ -386,6 +391,40 @@ class CMSImportController extends BaseController{
     }
 
     return $value;
+  }
+
+  private function excelToArray($csv_path)
+  {
+    $rows = [];
+    $fileObj = IOFactory::load($csv_path);
+    foreach($fileObj->getAllSheets() as $sheet){
+
+      $sheet_rows = [];
+      $maxRows = $sheet->getHighestDataRow();
+      $maxRows = $maxRows > 200000 ? 200000 : $maxRows;
+      $limit = $maxRows > 300 ? 300 : $maxRows;
+      for($i = 0 ; $i < ceil($maxRows / $limit) ; $i++){
+        $startFrom = 1 + ($i * $limit);
+        $curLimit = $startFrom + $limit;
+        foreach($sheet->getRowIterator($startFrom, $curLimit) as $row){
+          $obj = [];
+          foreach($row->getCellIterator() as $cell){
+            try{
+              $value = $cell->getCalculatedValue();
+            }
+            catch(\Exception $ex){
+              $value = 'N/A';
+            }
+            $obj[] = $value;
+          }
+          if(count(array_filter($obj, function($obj){ return $obj && strlen($obj) > 0; })) > 0)
+            $sheet_rows[] = $obj;
+        }
+      }
+      $rows[] = $sheet_rows;
+    }
+
+    return $rows;
   }
 
 }

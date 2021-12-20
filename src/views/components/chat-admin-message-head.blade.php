@@ -1,6 +1,6 @@
 <input type="hidden" name="id" value="{{ $discussion->id }}" />
 
-<div class="hidden-sm">
+<div class="hidden-sm relative">
   <div class="srow pad-1">
     <span>
       @if(strlen($discussion->avatar_image_url) > 0)
@@ -27,15 +27,20 @@
 
         @if(isset($discussion->extra['whatsapp_number']) && strlen($discussion->extra['whatsapp_number']) > 0)
           <div class="pc-33">
-            <a href="https://wa.me/{{ str_replace('+', '', $discussion->extra['whatsapp_number']) }}" target="_blank"><small><span class="fab fa-whatsapp"></span> {{ $discussion->extra['whatsapp_number'] }}</small></a>
+            <a href="https://wa.me/{{ str_replace('+', '', $discussion->extra['whatsapp_number']) }}" target="_blank" class="nowrap"><small><span class="fab fa-whatsapp"></span> {{ $discussion->extra['whatsapp_number'] }}</small></a>
           </div>
         @elseif(strlen($discussion->whatsapp_number) > 0)
           <div class="pc-33">
-            <a href="https://wa.me/{{ str_replace('+', '', $discussion->whatsapp_number) }}" target="_blank"><small><span class="fab fa-whatsapp"></span> {{ $discussion->whatsapp_number }}</small></a>
+            <a href="https://wa.me/{{ str_replace('+', '', $discussion->whatsapp_number) }}" target="_blank" class="nowrap"><small><span class="fab fa-whatsapp"></span> {{ $discussion->whatsapp_number }}</small></a>
           </div>
         @endif
       </div>
 
     </div>
+  </div>
+  <div style="position: absolute;top:0;right:0" class="vpad-1">
+    <a href="?action=open-discussion-detail&id={{ $discussion->id }}" class="async pad-1" data-push-state="0">
+      <span class="fa fa-ellipsis-v" style="color:#999"></span>
+    </a>
   </div>
 </div>

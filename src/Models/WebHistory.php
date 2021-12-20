@@ -39,14 +39,14 @@ class WebHistory extends Model
 
   public function calculate()
   {
-    $session = WebSession::firstOrNew([
-      'session_id'=>session_id
+    /*$session = WebSession::firstOrNew([
+      'session_id'=>$this->session_id
     ], [
       'path'=>$this->path,
       'remote_ip'=>$this->remote_ip,
       'user_agent'=>$this->user_agent,
       'referrer'=>$this->referrer
-    ]);
+    ]);*/
   }
 
   public function __construct(array $attributes = [])

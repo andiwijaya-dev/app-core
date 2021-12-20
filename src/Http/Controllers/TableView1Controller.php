@@ -28,32 +28,9 @@ class TableView1Controller extends ActionableController
 
   protected $searchable = true;
 
-  protected $view = 'andiwijaya::tableview1';
+  protected $view = 'webfxfy::tableview1';
   protected $items_per_page = 20;
   protected $meta_row_click;
-
-  protected function columnOptions($obj, $column)
-  {
-    return <<<EOF
-<div class="align-center">
-  <a href="/module/{$obj['id']}" class="async" data-history="none"><span class="fa fa-bars cl-gray-400 p-1"></span></a>
-  <a href="/module/{$obj['id']}" class="async" data-history="none" data-method="DELETE" data-confirm="Hapus?"><span class="fa fa-times cl-gray-300 p-1"></span></a>
-</div>
-EOF;
-  }
-
-  protected function columnImage($obj, $column)
-  {
-    return <<<EOF
-<div class="p-1">
-  <div data-type="img" class="b-3 rounded-2 ratio-1-1 relative" data-src="{$obj->image_url}">
-    <div class="dock-center no-image-img">
-      <span class="fa fa-image font-size-6 cl-gray-300"></span>
-    </div>
-  </div>
-</div>
-EOF;
-  }
 
   public function view(Request $request)
   {
@@ -63,10 +40,16 @@ EOF;
       'id'=>$this->id,
       'column_html'=>$this->renderHeader()
     ]);
-    
+
     return view_content($this->view);
   }
 
+  /**
+   * @param Request $request
+   * @return \WebFxFy\WebApp\Responses\HTMLResponse
+   * @ajax true
+   * @method POST
+   */
   public function load(Request $request)
   {
     $this->id = $request->input('_tableview1_id');
@@ -74,10 +57,12 @@ EOF;
     list($data, $page, $next, $builder) = $this->loadData($request);
 
     $html = [];
-    foreach($data as $obj){
-      
-      $html[] = $this->renderItem($obj);
+    if(count($data) > 0){
+      foreach($data as $obj)
+        $html[] = $this->renderItem($obj);
     }
+    else
+      $html[] = "<tr><td colspan='100'><div class='p-2 px-3'>No data</div></td></tr>";
     $html = implode('', $html);
 
     $response = htmlresponse();
@@ -91,42 +76,74 @@ EOF;
     return $response;
   }
 
-  protected function getBuilder(Request $request)
+  /**
+   * @param Request $request
+   * @return \WebFxFy\WebApp\Responses\HTMLResponse
+   * @throws \Throwable
+   * @ajax true
+   * @method POST
+   */
+  public function openFilters(Request $request)
   {
-    return $this->model::whereRaw('1=1');
-  }
+    foreach($this->filters as $idx=>$filter){
+      if(($filter['type'] ?? '') == 'enum'){
+        if(method_exists($this, ($method = 'enum' . ucwords(Str::camel($filter['name']))))){
+          $enums = $this->{$method}($request);
+          $this->filters[$idx]['enums'] = $enums;
+        }
+        if(!is_array($this->filters[$idx]['enums'] ?? null) || count($this->filters[$idx]['enums'] ?? []) == 0)
+          $this->filters[$idx]['type'] = 'string';
+      }
+    }
+    View::share([ 'filters'=>$this->filters ]);
 
-  protected function loadData(Request $request)
-  {
-    $page = explode('|', $request->input('action'))[1] ?? 1;
+    $id = explode('|', $request->input('action'))[1] ?? null;
+    $value = null;
 
-    $sorts = $request->input('sorts', []);
+    Session::put('tableview1', $request->all());
 
-    $filters = $request->input('filters', []);
-    foreach($filters as $idx=>$filter)
-      if(is_string($filter))
-        $filters[$idx] = json_decode($filter, 1);
+    if($id){
+      $filters = $request->input('filters', []);
+      foreach($filters as $idx=>$filter)
+        if(is_string($filter))
+          $filters[$idx] = json_decode($filter, true);
 
-    $builder = $this->getBuilder($request);
-    
-    $this->applyFilters($builder, $filters);
+      $value = collect($filters)->where('id', $id)->first();
 
-    if($request->has('search') && $this->searchable)
-      $builder->search($request->input('search'));
+      if($value){
+        foreach($value['filters'] as $idx=>$exp){
 
-    foreach($sorts as $sort){
-      list($sort_name, $sort_type) = explode('|', $sort);
-      $builder->orderBy($sort_name, $sort_type);
+          list($operand, $operator, $val) = explode('|', $exp);
+
+          if($operator == 'in'){
+            $val = explode(',', $val);
+          }
+
+          $value['filters'][$idx] = [
+            'operand'=>$operand,
+            'operator'=>$operator,
+            'value'=>$val
+          ];
+        }
+      }
     }
 
-    $offset = ($page - 1) * $this->items_per_page;
-    $data = $builder->limit($this->items_per_page + 1)->offset($offset)->get();
-    $next = count($data) > $this->items_per_page ? $page + 1 : -1;
-    $data = $data->splice(0, $this->items_per_page);
-
-    return [ $data, $page, $next, $builder ];
+    return htmlresponse()
+      ->modal(
+        'tableview1-filter',
+        view('webfxfy::sections.tableview1-filter', compact('value'))->render(),
+        [
+          'width'=>600
+        ]
+      );
   }
 
+  /**
+   * @param $builder
+   * @param array $filters
+   * @ajax true
+   * @method POST
+   */
   protected function applyFilters($builder, array $filters)
   {
     foreach($filters as $filter){
@@ -189,211 +206,14 @@ EOF;
     }
   }
 
-  protected function sort(Request $request)
-  {
-    $sorts = $request->input('sorts', []);
-
-    $name = explode('|', $request->input('action'))[1] ?? null;
-
-    if(count($sorts) == 0)
-      $sorts = [ $name . '|asc' ];
-    else{
-
-      $exists_and_inverted = false;
-      foreach($sorts as $idx=>$sort){
-        list($sort_name, $sort_type) = explode('|', $sort);
-        if($sort_name == $name){
-          $sort_type = $sort_type == 'desc' ? 'asc' : 'desc';
-          $sorts[$idx] = $name . '|' . $sort_type;
-          $exists_and_inverted = true;
-        }
-      }
-
-      if(!$exists_and_inverted)
-        $sorts = [ $name . '|asc' ];
-    }
-
-    $request->merge([
-      'sorts'=>$sorts,
-      'action'=>'load'
-    ]);
-
-    $response = $this->load($request);
-    $response->remove("input[name='sorts[]']");
-    foreach($sorts as $sort)
-      $response->append("th[name='$name']", "<input type='hidden' name='sorts[]' value=\"{$sort}\" />");
-    return $response;
-  }
-
-  protected function renderHeader(array $options = [])
-  {
-    $html = [];
-    $columns = $this->columns;
-    foreach($columns as $column){
-
-      $name = $column['name'] ?? '';
-      $width = $column['width'] ?? 100;
-      $text = $column['text'] ?? ($column['name'] ?? '');
-      $datatype = $column['datatype'] ?? 'text';
-      $align = $column['align'] ?? '';
-      $sortable = $options['sortable'] ?? ($column['sortable'] ?? false);
-
-      switch($datatype)
-      {
-        case 'bool':
-        case 'boolean':
-          if(!$align) $align = 'align-center';
-          break;
-
-        case 'number':
-          if(!$align) $align = 'align-right';
-          break;
-      }
-
-      $html[] = "<th class='{$align}' width=\"{$width}px\" name=\"{$name}\">";
-      if($sortable)
-        $html[] = "<button name='action' value=\"sort|{$name}\">{$text}</button>";
-      else
-        $html[] = $text;
-      $html[] = "<div class=\"table-resize\"></div>";
-      $html[] = "</th>";
-    }
-    $html[] = '<th width="100%"></th>';
-
-    return implode('', $html);
-  }
-  
-  protected function renderItem($obj){
-
-    $id = $obj['id'] ?? '';
-    $tag = "<tr data-id=\"{$id}\" class='tableview1-row'>";
-    foreach($this->columns as $column){
-
-      $name = $column['name'] ?? '';
-      $text = $obj[$name] ?? '';
-      $datatype = $column['datatype'] ?? 'text';
-      $align = $column['align'] ?? '';
-      $class = $column['class'] ?? '';
-
-      switch($datatype){
-
-        case 'bool':
-        case 'boolean':
-        case 'sort-order':
-          if(!$align) $align = 'align-center';
-          break;
-
-        case 'number':
-          $text = number_format(doubleval($text));
-          if(!$align) $align = 'align-right';
-          break;
-
-        case 'date':
-          $dateformat = $column['dateformat'] ?? 'j M Y';
-          $text = date('Y', strtotime($text)) > 1970 ? date($dateformat, strtotime($text)) : '';
-          break;
-
-        case 'datetime':
-          $dateformat = $column['dateformat'] ?? 'j M Y H:i';
-          $text = date('Y', strtotime($text)) > 1970 ? date($dateformat, strtotime($text)) : '';
-          break;
-      }
-
-      $tag .= "<td class='{$align}'>";
-      switch($datatype){
-
-        case 'bool':
-        case 'boolean':
-          if($text)
-            $tag .= "<label class='ellipsis'><span class='fa fa-check-circle cl-green'></span></label>";
-          else
-            $tag .= "<label class='ellipsis'><span class='fa fa-minus-circle cl-gray-500'></span></label>";
-          break;
-
-        case 'sort-order':
-          $tag .= "<span class=\"fa fa-grip-vertical cl-primary p-1\" data-event
-        data-mousedown-start-reorder=\"parent(.tableview1-row)|tableview1-row\"></span>";
-          $tag .= "<span class=\"fa fa-arrow-up cl-primary p-1\" data-event data-click-reorder-up='parent(.tableview1-row)'></span>";
-          $tag .= "<span class=\"fa fa-arrow-down cl-primary p-1\" data-event data-click-reorder-down='parent(.tableview1-row)'></span>";
-          $tag .= "<input type='hidden' name='sort_order[]' value='{$obj->id}' />";
-          break;
-
-        default:
-          if(method_exists($this, ($method = 'column' . ucwords(Str::camel($name))))){
-            $tag .= $this->$method($obj, $column);
-          }
-          else{
-            $tag .= "<label class=\"ellipsis {$class}\">{$text}</label>";
-          }
-      }
-      $tag .= "</td>";
-    }
-    $tag .= '<td width="100%"></td>';
-    $tag .= "</tr>";
-    
-    return $tag;
-  }
-
-  protected function renderFooter($builder)
-  {
-    return '';
-  }
-
-  protected function openFilters(Request $request)
-  {
-    foreach($this->filters as $idx=>$filter){
-      if(($filter['type'] ?? '') == 'enum'){
-        if(method_exists($this, ($method = 'enum' . ucwords(Str::camel($filter['name']))))){
-          $enums = $this->{$method}($request);
-          $this->filters[$idx]['enums'] = $enums;
-        }
-        if(!is_array($this->filters[$idx]['enums'] ?? null) || count($this->filters[$idx]['enums'] ?? []) == 0)
-          $this->filters[$idx]['type'] = 'string';
-      }
-    }
-    View::share([ 'filters'=>$this->filters ]);
-
-    $id = explode('|', $request->input('action'))[1] ?? null;
-    $value = null;
-
-    Session::put('tableview1', $request->all());
-
-    if($id){
-      $filters = $request->input('filters', []);
-      foreach($filters as $idx=>$filter)
-        if(is_string($filter))
-          $filters[$idx] = json_decode($filter, true);
-
-      $value = collect($filters)->where('id', $id)->first();
-
-      if($value){
-        foreach($value['filters'] as $idx=>$exp){
-
-          list($operand, $operator, $val) = explode('|', $exp);
-
-          if($operator == 'in'){
-            $val = explode(',', $val);
-          }
-
-          $value['filters'][$idx] = [
-            'operand'=>$operand,
-            'operator'=>$operator,
-            'value'=>$val
-          ];
-        }
-      }
-    }
-
-    return htmlresponse()
-      ->modal(
-        'tableview1-filter',
-        view('andiwijaya::sections.tableview1-filter', compact('value'))->render(),
-        [
-          'width'=>600
-        ]
-      );
-  }
-
+  /**
+   * @param Request $request
+   * @return \WebFxFy\WebApp\Responses\HTMLResponse
+   * @throws \Throwable
+   * @throws \WebFxFy\WebApp\Exceptions\UserException
+   * @ajax true
+   * @method POST
+   */
   protected function addFilter(Request $request)
   {
     $id = $request->input('id');
@@ -465,16 +285,230 @@ EOF;
     $response = $this->load($request);
 
     if($id){
-      $response->replace('#filter-item-' . $id, view('andiwijaya::components.tableview1-filter-item', compact('filter'))->render());
+      $response->replace('#filter-item-' . $id, view('webfxfy::components.tableview1-filter-item', compact('filter'))->render());
     }
     else
-      $response->append('.filter-area', view('andiwijaya::components.tableview1-filter-item', compact('filter'))->render());
+      $response->append('.filter-area', view('webfxfy::components.tableview1-filter-item', compact('filter'))->render());
 
     $response->script("ui('#tableview1-filter').modal_close()");
 
     return $response;
-    // { name: "or|contains|123", "|between|2012-04-01,2021-04-22" }}
+  }
 
+  /**
+   * @param Request $request
+   * @return \WebFxFy\WebApp\Responses\HTMLResponse
+   * @ajax true
+   * @method POST
+   */
+  protected function sort(Request $request)
+  {
+    $sorts = $request->input('sorts', []);
+
+    $name = explode('|', $request->input('action'))[1] ?? null;
+
+    if(count($sorts) == 0)
+      $sorts = [ $name . '|asc' ];
+    else{
+
+      $exists_and_inverted = false;
+      foreach($sorts as $idx=>$sort){
+        list($sort_name, $sort_type) = explode('|', $sort);
+        if($sort_name == $name){
+          $sort_type = $sort_type == 'desc' ? 'asc' : 'desc';
+          $sorts[$idx] = $name . '|' . $sort_type;
+          $exists_and_inverted = true;
+        }
+      }
+
+      if(!$exists_and_inverted)
+        $sorts = [ $name . '|asc' ];
+    }
+
+    $request->merge([
+      'sorts'=>$sorts,
+      'action'=>'load'
+    ]);
+
+    $response = $this->load($request);
+    $response->remove("input[name='sorts[]']");
+    foreach($sorts as $sort)
+      $response->append("th[name='$name']", "<input type='hidden' name='sorts[]' value=\"{$sort}\" />");
+    return $response;
+  }
+
+
+  protected function columnImage($obj, $column)
+  {
+    return <<<EOF
+<div class="p-1">
+  <div data-type="img" class="b-3 rounded-2 ratio-1-1 relative" data-src="{$obj->image_url}">
+    <div class="dock-center no-image-img">
+      <span class="fa fa-image font-size-6 cl-gray-300"></span>
+    </div>
+  </div>
+</div>
+EOF;
+  }
+
+  protected function columnOptions($obj, $column)
+  {
+    return <<<EOF
+<div class="align-center">
+  <a href="/module/{$obj['id']}" class="async" data-history="none"><span class="fa fa-bars cl-gray-400 p-1"></span></a>
+  <a href="/module/{$obj['id']}" class="async" data-history="none" data-method="DELETE" data-confirm="Hapus?"><span class="fa fa-times cl-gray-300 p-1"></span></a>
+</div>
+EOF;
+  }
+
+  protected function getBuilder(Request $request)
+  {
+    return $this->model::whereRaw('1=1');
+  }
+
+  protected function renderFooter($builder)
+  {
+    return '';
+  }
+
+  protected function renderHeader(array $options = [])
+  {
+    $html = [];
+    $columns = $this->columns;
+    foreach($columns as $column){
+
+      $name = $column['name'] ?? '';
+      $width = $column['width'] ?? 100;
+      $text = $column['text'] ?? ($column['name'] ?? '');
+      $datatype = $column['datatype'] ?? 'text';
+      $align = $column['align'] ?? '';
+      $sortable = $options['sortable'] ?? ($column['sortable'] ?? false);
+
+      switch($datatype)
+      {
+        case 'bool':
+        case 'boolean':
+          if(!$align) $align = 'align-center';
+          break;
+
+        case 'number':
+          if(!$align) $align = 'align-right';
+          break;
+      }
+
+      $html[] = "<th class='{$align}' width=\"{$width}px\" name=\"{$name}\">";
+      if($sortable)
+        $html[] = "<button name='action' value=\"sort|{$name}\">{$text}</button>";
+      else
+        $html[] = $text;
+      $html[] = "<div class=\"table-resize\"></div>";
+      $html[] = "</th>";
+    }
+    $html[] = '<th width="100%"></th>';
+
+    return implode('', $html);
+  }
+
+  protected function renderItem($obj){
+
+    $id = $obj['id'] ?? '';
+    $tag = "<tr data-id=\"{$id}\" class='tableview1-row'>";
+    foreach($this->columns as $column){
+
+      $name = $column['name'] ?? '';
+      $text = $obj[$name] ?? '';
+      $datatype = $column['datatype'] ?? 'text';
+      $align = $column['align'] ?? '';
+      $class = $column['class'] ?? '';
+
+      switch($datatype){
+
+        case 'bool':
+        case 'boolean':
+        case 'sort-order':
+          if(!$align) $align = 'align-center';
+          break;
+
+        case 'number':
+          $text = number_format(doubleval($text));
+          if(!$align) $align = 'align-right';
+          break;
+
+        case 'date':
+          $dateformat = $column['dateformat'] ?? 'j M Y';
+          $text = date('Y', strtotime($text)) > 1970 ? date($dateformat, strtotime($text)) : '';
+          break;
+
+        case 'datetime':
+          $dateformat = $column['dateformat'] ?? 'j M Y H:i';
+          $text = date('Y', strtotime($text)) > 1970 ? date($dateformat, strtotime($text)) : '';
+          break;
+      }
+
+      $tag .= "<td class='{$align}'>";
+      switch($datatype){
+
+        case 'bool':
+        case 'boolean':
+          if($text)
+            $tag .= "<label class='ellipsis'><span class='fa fa-check-circle cl-green'></span></label>";
+          else
+            $tag .= "<label class='ellipsis'><span class='fa fa-minus-circle cl-gray-500'></span></label>";
+          break;
+
+        case 'sort-order':
+          $tag .= "<span class=\"fa fa-grip-vertical cl-primary p-1\" data-event
+        data-mousedown-start-reorder=\"parent(.tableview1-row)|tableview1-row\"></span>";
+          $tag .= "<span class=\"fa fa-arrow-up cl-primary p-1\" data-event data-click-reorder-up='parent(.tableview1-row)'></span>";
+          $tag .= "<span class=\"fa fa-arrow-down cl-primary p-1\" data-event data-click-reorder-down='parent(.tableview1-row)'></span>";
+          $tag .= "<input type='hidden' name='sort_order[]' value='{$obj->id}' />";
+          break;
+
+        default:
+          if(method_exists($this, ($method = 'column' . ucwords(Str::camel($name))))){
+            $tag .= $this->$method($obj, $column);
+          }
+          else{
+            $tag .= "<label class=\"ellipsis {$class}\">{$text}</label>";
+          }
+      }
+      $tag .= "</td>";
+    }
+    $tag .= '<td width="100%"></td>';
+    $tag .= "</tr>";
+
+    return $tag;
+  }
+
+  protected function loadData(Request $request)
+  {
+    $page = explode('|', $request->input('action'))[1] ?? 1;
+
+    $sorts = $request->input('sorts', []);
+
+    $filters = $request->input('filters', []);
+    foreach($filters as $idx=>$filter)
+      if(is_string($filter))
+        $filters[$idx] = json_decode($filter, 1);
+
+    $builder = $this->getBuilder($request);
+
+    $this->applyFilters($builder, $filters);
+
+    if($request->has('search') && $this->searchable)
+      $builder->search($request->input('search'));
+
+    foreach($sorts as $sort){
+      list($sort_name, $sort_type) = explode('|', $sort);
+      $builder->orderBy($sort_name, $sort_type);
+    }
+
+    $offset = ($page - 1) * $this->items_per_page;
+    $data = $builder->limit($this->items_per_page + 1)->offset($offset)->get();
+    $next = count($data) > $this->items_per_page ? $page + 1 : -1;
+    $data = $data->splice(0, $this->items_per_page);
+
+    return [ $data, $page, $next, $builder ];
   }
 
   public function __construct()
