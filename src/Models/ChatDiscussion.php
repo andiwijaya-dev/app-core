@@ -35,7 +35,7 @@ class ChatDiscussion extends Model
     'status'=>self::STATUS_OPEN,
     'unreplied_count'=>0,
     'is_new_customer'=>1,
-    'context'=>1
+    'context'=>0
   ];
 
   protected $casts = [
@@ -60,6 +60,11 @@ class ChatDiscussion extends Model
     if(substr($this->key, 0, 1) == '+')
       return $this->belongsTo('App\Models\Customer', 'key', 'whatsapp_number');
     return $this->belongsTo('App\Models\Customer', 'key');
+  }
+
+  public function activities(){
+
+    return $this->hasMany('App\Models\ChatDiscussionActivity', 'discussion_id');
   }
 
   public function getLatestMessagesAttribute(){
@@ -257,10 +262,15 @@ class ChatDiscussion extends Model
       ->get()
       ->each(function($discussion) use($cmd){
 
-        if(Carbon::create($discussion->last_updated_at)->diffInMinutes() > 5){
-          $cmd->info("Close discussion {$discussion->id}");
+        try{
+          if(Carbon::create($discussion->last_updated_at)->diffInMinutes() > 5){
+            $cmd->info("Close discussion {$discussion->id}");
 
-          ChatDiscussion::findOrFail($discussion->id)->update([ 'handled_by'=>null ]);
+            ChatDiscussion::findOrFail($discussion->id)->update([ 'handled_by'=>null ]);
+          }
+        }
+        catch(\Exception $ex){
+          report($ex);
         }
 
       });

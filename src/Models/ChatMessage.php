@@ -4,6 +4,7 @@ namespace Andiwijaya\AppCore\Models;
 
 use Andiwijaya\AppCore\Models\Traits\LoggedTraitV3;
 use Andiwijaya\AppCore\Events\ChatEvent;
+use Carbon\Carbon;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Http\UploadedFile;
 use Illuminate\Support\Facades\Session;
@@ -23,7 +24,7 @@ class ChatMessage extends Model
   const STATUS_SENT = 1;
   const STATUS_DELIVERED = 2;
 
-  protected $fillable = [ 'status', 'type', 'discussion_id', 'session_id', 'reply_of', 'initial', 'first_reply_at', 'first_reply_after',
+  protected $fillable = [ 'uid', 'status', 'type', 'discussion_id', 'session_id', 'reply_of', 'initial', 'first_reply_at', 'first_reply_after',
     'unread', 'direction', 'text', 'images', 'extra', 'notified', 'unsent',
     'context', 'context_id', 'is_bot', 'is_system', 'notified_at', 'ref_id', 'ref_type', 'template_id', 'pickyassist_pid' ];
 
@@ -44,6 +45,22 @@ class ChatMessage extends Model
   public function discussion()
   {
     return $this->belongsTo('Andiwijaya\AppCore\Models\ChatDiscussion', 'discussion_id', 'id');
+  }
+
+  public function prev_message_in(){
+
+    return $this->hasOne(ChatMessage::class, 'discussion_id', 'discussion_id')
+      ->where('id', '<', $this->id)
+      ->where('direction', ChatMessage::DIRECTION_IN)
+      ->orderBy('id', 'desc');
+  }
+
+  public function prev_message_out(){
+
+    return $this->hasOne(ChatMessage::class, 'discussion_id', 'discussion_id')
+      ->where('id', '<', $this->id)
+      ->where('direction', ChatMessage::DIRECTION_OUT)
+      ->orderBy('id', 'desc');
   }
 
 
@@ -87,6 +104,16 @@ class ChatMessage extends Model
     }
 
     return $text;
+  }
+
+  public function getIsInitialAttribute(){
+
+    if($this->type == ChatMessage::TYPE_WHATSAPP)
+      //return strpos($this->text, '[Initial]') !== false;
+      //return (!isset($this->prev_message_in->id) || $this->prev_message_in->created_at->diffInMinutes(Carbon::now()) > 0) ? 1 : 0;
+      return !isset($this->prev_message_in->id) ? 1 : 0;
+    else
+      return $this->initial;
   }
 
   public function reply_message(){
@@ -168,6 +195,72 @@ class ChatMessage extends Model
   public function calculate()
   {
     $this->discussion->calculate();
+  }
+
+
+  public static function businessNearestStart(&$time){
+
+    $chat_online_start = config('chat.online-start');
+    $chat_online_end = config('chat.online-end');
+    $chat_online_days = config('chat.online-days');
+
+    if($time->format('Hi') > date('Hi', strtotime($chat_online_end))){
+      $time = Carbon::createFromFormat('Y-m-d H:i:s', $time->addDays(1)->format('Y-m-d') . ' ' . date('H:i:s', strtotime($chat_online_start)));
+    }
+    else if($time->format('Hi') < date('Hi', strtotime($chat_online_start))){
+      $time = Carbon::createFromFormat('Y-m-d H:i:s', $time->format('Y-m-d') . ' ' . date('H:i:s', strtotime($chat_online_start)));
+    }
+
+    $counter = 0;
+    while(!in_array($time->format('w'), $chat_online_days)){
+      $time->addDays(1);
+      $counter++;
+      if($counter > 7)
+        exc('System failure');
+    }
+  }
+
+  public static function businessDiffInSeconds($start, $end){
+
+    /*
+     * 26 = sat, 27 = sun
+     * 04:30 08:30 -> 06:00 - 08:30
+     * 17:30 23:30 -> 17:30 - 06:00 -8
+     * start: convert to nearest online business start
+     * end: convert to nearest online business start
+     * end - start - substractMinutes
+     * substractMinutes = loop start to end, if weekdays -8, if holiday -24
+     */
+
+    $start = Carbon::createFromFormat('Y-m-d H:i:s', $start->format('Y-m-d H:i:s'));
+    $end = Carbon::createFromFormat('Y-m-d H:i:s', $end->format('Y-m-d H:i:s'));
+
+    $chat_online_start = config('chat.online-start');
+    $chat_online_end = config('chat.online-end');
+    $chat_online_days = config('chat.online-days'); // 16:49 vs 09:26
+    $offline_hour_in_seconds = 86400 - (strtotime($chat_online_end) - strtotime($chat_online_start));
+
+    self::businessNearestStart($start);
+    self::businessNearestStart($end);
+
+    $substractMinutes = 0;
+    $current = $start->copy();
+    $debug = [];
+    while($current->format('Ymd') < $end->format('Ymd')){
+      if(!in_array($current->format('w'), $chat_online_days)){
+        $substractMinutes += 86400;
+        $debug[] = 86400;
+      }
+      else{
+        $substractMinutes += $offline_hour_in_seconds;
+        $debug[] = $offline_hour_in_seconds;
+      }
+      $current->addDays(1);
+    }
+
+    $seconds = $end->diffInSeconds($start);
+
+    return $seconds - $substractMinutes;
   }
 
 }

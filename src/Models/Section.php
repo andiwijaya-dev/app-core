@@ -17,23 +17,36 @@ class Section extends Model
   const TYPE_STEP_BY_STEP = 5;
   const TYPE_SPAREPART_CATEGORY = 6;
   const TYPE_HMC_PRICE_TABLE= 7;
+  const TYPE_LOCATION = 8;
+  const TYPE_DISCUSSION = 9;
+  const TYPE_REVIEW = 10;
 
   const TYPE_M2W_FORM_NAMA = 23;
   const TYPE_M2W_FORM_SIMULASI = 24;
   const TYPE_FAQ = 31;
+
   const TYPE_SPAREPART_THUMBNAIL1 = 32;
   const TYPE_SPAREPART_THUMBNAIL2 = 33;
+  const TYPE_SPAREPART_DETAIL = 34;
+  const TYPE_SPAREPART_CATEGORIES = 35;
+  const TYPE_CATEGORIES_SPAREPART = 38;
+
+  const TYPE_M4W_FORM_NAMA = 43;
+  const TYPE_M4W_FORM_SIMULASI = 44;
+  const TYPE_M4W_BENEFIT = 45;
+  const TYPE_M4W_STEP_BY_STEP = 46;
 
   protected $table = 'section';
 
-  protected $fillable = [ 'page_id', 'is_active', 'type', 'title', 'description', 'data', 'thumbnail_type' ];
+  protected $fillable = [ 'page_id', 'is_active', 'type', 'title', 'description', 'extra', 'data', 'thumbnail_type' ];
 
   protected $attributes = [
     'is_active'=>1
   ];
 
   protected $casts = [
-    'data'=>'array'
+    'data'=>'array',
+    'extra'=>'array'
   ];
 
   public function __construct(array $attributes = [])

@@ -36,6 +36,7 @@ class WebHistory extends Model
   const TYPE_CLICK = 5;
   const TYPE_HOVER = 6;
   const TYPE_SCROLL = 7;
+  const TYPE_APPEAR = 8;
 
   public function calculate()
   {

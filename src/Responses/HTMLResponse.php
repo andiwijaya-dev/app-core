@@ -60,13 +60,13 @@ class HTMLResponse implements Responsable {
     $this->data[] = [ '_type'=>'html', 'html'=>$html, 'mode'=>'replace', 'target'=>$target, 'options'=>$options ];
     return $this;
   }
-  
+
   public function replaceOrAppend($target, $html, $options = [])
   {
     $this->data[] = [ '_type'=>'html', 'html'=>$html, 'mode'=>'replace-or-append', 'target'=>$target, 'options'=>$options ];
     return $this;
   }
-  
+
   public function replaceOrPrepend($target, $html, $options = [])
   {
     $this->data[] = [ '_type'=>'html', 'html'=>$html, 'mode'=>'replace-or-prepend', 'target'=>$target, 'options'=>$options ];
@@ -132,6 +132,15 @@ class HTMLResponse implements Responsable {
       'type'=>$type,
       'text'=>[ 'title'=>nl2br($title), 'description'=>$description ],
       'options'=>$options
+    ];
+    return $this;
+  }
+
+  public function click($target){
+
+    $this->data[] = [
+      '_type'=>'click',
+      'target'=>$target
     ];
     return $this;
   }
@@ -282,6 +291,13 @@ EOT;
 
     return $this;
   }
+  
+  public function call($fn, $params = [], $thisArg = null){
+
+    $this->data[] = [ '_type'=>'call', 'fn'=>$fn, 'params'=>$params, 'thisArg'=>$thisArg ];
+
+    return $this;
+  }
 
   /**
    * @param $title
@@ -312,6 +328,38 @@ EOT;
     $this->data[] = [ '_type'=>'redirect', 'target'=>$url, 'options'=>$options ];
     return $this;
   }
+
+
+
+  public function debug(){
+
+    $this->data[] = [
+      '_type'=>'debug',
+      'data'=>func_get_args()
+    ];
+
+    return $this;
+  }
+
+  public function openModal($id, $params = [], $html = ''){
+
+    $this->data[] = [ '_type'=>'open-modal', 'target'=>$id, 'html'=>$html, 'params'=>$params ];
+    return $this;
+  }
+
+  public function closeModal($url){
+
+    $this->data[] = [ '_type'=>'close-modal', 'target'=>$url ];
+    return $this;
+  }
+
+  public function openPopup($id, $params = [], $html = ''){
+
+    $this->data[] = [ '_type'=>'open-popup', 'target'=>$id, 'params'=>$params, 'html'=>$html ];
+    return $this;
+  }
+
+
 
 
   public function merge(array $data){

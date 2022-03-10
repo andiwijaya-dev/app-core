@@ -759,7 +759,7 @@ if(!function_exists('save_image')){
       $ext
     ]);
     //list($width, $height) = getimagesize($image);
-    
+
     if(strlen($dir) > 0) $dir = $dir . '/';
 
     if(!\Illuminate\Support\Facades\Storage::disk($disk)->exists($dir . $file_md5))
@@ -1546,7 +1546,7 @@ if(!function_exists('memory_get_usage_text')){
 }
 
 if(!function_exists('db_insert_batch')){
-  
+
   function db_insert_batch($query, $obj){
 
     $queries = $params = [];
@@ -1597,7 +1597,7 @@ if(!function_exists('db_insert_batch')){
       \Illuminate\Support\Facades\DB::statement($currentQuery, $params);
     }
   }
-  
+
 }
 
 if(!function_exists('money_split')){
@@ -1770,5 +1770,15 @@ if(!function_exists('rounddown')){
 if(!function_exists('ctlid')){
   function ctlid($prefix = 'ctl'){
     return $prefix . substr(md5(uniqid()), 0, 7);
+  }
+}
+
+if(!function_exists('gmdate2')){
+
+  function gmdate2($seconds){
+    $H = floor($seconds / 3600);
+    $i = ($seconds / 60) % 60;
+    $s = $seconds % 60;
+    return sprintf("%02d:%02d:%02d", $H, $i, $s);
   }
 }

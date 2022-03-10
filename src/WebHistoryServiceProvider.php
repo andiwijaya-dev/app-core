@@ -40,7 +40,20 @@ class WebHistoryServiceProvider extends ServiceProvider
 
         global $kernel;
 
-        $data = $request->json('data');
+        /*if($request->ip() == '103.164.223.110')
+          file_put_contents(storage_path('logs/debug.log'), json_encode([
+            Carbon::now()->format('Y-m-d H:i:s'),
+            $request->header('Content-Type'),
+            $request->input(null),
+            $request->getContent()
+          ], JSON_PRETTY_PRINT));*/
+
+        if(strpos($request->header('Content-Type'), 'text/plain') !== false){
+          $data = json_decode($request->getContent(), true);
+        }
+        else{
+          $data = $request->input('data');
+        }
 
         $this->saveHistory($request, $data);
 
