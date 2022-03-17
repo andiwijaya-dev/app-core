@@ -1782,3 +1782,21 @@ if(!function_exists('gmdate2')){
     return sprintf("%02d:%02d:%02d", $H, $i, $s);
   }
 }
+
+if(!function_exists('bench_start')){
+
+  function bench_start($log){
+    file_put_contents(storage_path('logs/' . $log), "[BEGIN at " . \Carbon\Carbon::now()->format('Y-m-d H:i:s') . ']' . PHP_EOL);
+    $_SERVER['__BENCH'] = [ 'last'=>microtime(1), 'log'=>$log ];
+  }
+
+  function bench_add($text){
+    if(!isset($_SERVER['__BENCH']['log'])) return;
+    
+    $duration = number_format(microtime(1) - $_SERVER['__BENCH']['last'], 8);
+    $log = $_SERVER['__BENCH']['log'];
+    file_put_contents(storage_path('logs/' . $log), "[{$duration}] {$text}" . PHP_EOL, FILE_APPEND);
+    $_SERVER['__BENCH']['last'] = microtime(1);
+  }
+
+}

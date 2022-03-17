@@ -14,6 +14,7 @@ class WebHistory extends Model
 
   protected $fillable = [
     'type',
+    'date',
     'session_id',
     'path',
     'query',

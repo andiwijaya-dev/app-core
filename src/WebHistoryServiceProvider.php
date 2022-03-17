@@ -95,10 +95,12 @@ class WebHistoryServiceProvider extends ServiceProvider
         $remote_ip = $request->server('REMOTE_ADDR');
         $user_agent = $request->server('HTTP_USER_AGENT');
         $created_at = Carbon::now()->format('Y-m-d H:i:s');
+        $date = Carbon::now()->format('ymd');
 
-        $queries[] = "(?, ?, ?, ?, ?, ?, ?, ?, ?, ?)";
+        $queries[] = "(?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)";
         array_push($params,
           $type,
+          $date,
           $session_id,
           $path,
           $referrer,
@@ -115,8 +117,7 @@ class WebHistoryServiceProvider extends ServiceProvider
     try{
 
       if(count($queries) > 0){
-
-        DB::statement("INSERT INTO web_history(`type`, session_id, path, referrer, remote_ip, user_agent, extra, created_at, updated_at, `timestamp`) VALUES " . implode(', ', $queries), $params);
+        DB::statement("INSERT INTO web_history(`type`, `date`, session_id, path, referrer, remote_ip, user_agent, extra, created_at, updated_at, `timestamp`) VALUES " . implode(', ', $queries), $params);
       }
     }
     catch(\Exception $ex){
